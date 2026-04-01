@@ -1,0 +1,40 @@
+
+<div>
+  <h1 class="text-2xl font-bold mb-6">Collected Items</h1>
+
+  <div class="space-y-2">
+    <% items.forEach(function(item) { %>
+      <div class="bg-stone-900 border border-stone-800 rounded-lg p-4">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-stone-800 text-stone-400"><%= categories.find(c => c.slug === item.category)?.label || item.category %></span>
+              <span class="text-xs text-stone-600"><%= item.region.toUpperCase() %></span>
+              <span class="text-xs <%= item.status === 'newsletter' ? 'text-brand-400' : item.status === 'approved' || item.status === 'feed' ? 'text-blue-400' : item.status === 'pending' ? 'text-amber-400' : 'text-stone-600' %>"><%= item.status %></span>
+              <span class="text-xs text-stone-600">Score: <%= item.total_score.toFixed(2) %></span>
+            </div>
+            <div class="font-medium text-sm"><%= item.title %></div>
+            <% if (item.summary) { %>
+              <div class="text-xs text-stone-400 mt-1"><%= item.summary %></div>
+            <% } %>
+            <div class="text-xs text-stone-500 mt-2">
+              <%= item.source_name || 'User submitted' %> &middot;
+              <%= new Date(item.collected_at).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' }) %>
+            </div>
+          </div>
+          <div class="shrink-0">
+            <form method="POST" action="/admin/items/<%= item.id %>/status" class="flex gap-1">
+              <select name="status" class="bg-stone-800 border border-stone-700 rounded px-2 py-1 text-xs">
+                <option value="pending" <%= item.status === 'pending' ? 'selected' : '' %>>Pending</option>
+                <option value="approved" <%= item.status === 'approved' ? 'selected' : '' %>>Approved</option>
+                <option value="feed" <%= item.status === 'feed' ? 'selected' : '' %>>Feed</option>
+                <option value="archived" <%= item.status === 'archived' ? 'selected' : '' %>>Archived</option>
+              </select>
+              <button type="submit" class="text-xs bg-stone-700 hover:bg-stone-600 px-2 py-1 rounded transition">Set</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+</div>

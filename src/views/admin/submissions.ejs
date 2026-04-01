@@ -1,0 +1,45 @@
+
+<div>
+  <h1 class="text-2xl font-bold mb-6">Submissions</h1>
+
+  <% if (submissions.length === 0) { %>
+    <p class="text-stone-500">No submissions yet.</p>
+  <% } else { %>
+    <div class="space-y-2">
+      <% submissions.forEach(function(sub) { %>
+        <div class="bg-stone-900 border border-stone-800 rounded-lg p-4 <%= sub.status === 'pending' ? 'border-l-2 border-l-amber-400' : '' %>">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-stone-800 text-stone-400"><%= sub.type %></span>
+                <span class="text-xs text-stone-600"><%= sub.category %> &middot; <%= sub.region.toUpperCase() %></span>
+                <span class="text-xs <%= sub.status === 'pending' ? 'text-amber-400' : sub.status === 'approved' ? 'text-brand-400' : 'text-red-400' %>"><%= sub.status %></span>
+              </div>
+              <div class="font-medium text-sm"><%= sub.title %></div>
+              <% if (sub.description) { %>
+                <div class="text-xs text-stone-400 mt-1"><%= sub.description %></div>
+              <% } %>
+              <% if (sub.url) { %>
+                <a href="<%= sub.url %>" target="_blank" class="text-xs text-brand-400 mt-1 inline-block"><%= sub.url %></a>
+              <% } %>
+              <div class="text-xs text-stone-500 mt-2">
+                By <%= sub.user_name %> (<%= sub.user_email %>) &middot;
+                <%= new Date(sub.created_at).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' }) %>
+              </div>
+            </div>
+            <% if (sub.status === 'pending') { %>
+              <div class="flex gap-2 shrink-0">
+                <form method="POST" action="/admin/submissions/<%= sub.id %>/approve">
+                  <button type="submit" class="text-xs bg-brand-500 hover:bg-brand-600 text-white px-3 py-1.5 rounded transition">Approve</button>
+                </form>
+                <form method="POST" action="/admin/submissions/<%= sub.id %>/reject">
+                  <button type="submit" class="text-xs border border-stone-700 text-stone-400 hover:border-red-500 hover:text-red-400 px-3 py-1.5 rounded transition">Reject</button>
+                </form>
+              </div>
+            <% } %>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+</div>

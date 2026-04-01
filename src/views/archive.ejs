@@ -1,0 +1,19 @@
+
+<div class="max-w-3xl mx-auto">
+  <h1 class="text-2xl font-bold mb-6">Newsletter Archive</h1>
+
+  <% if (newsletters.length === 0) { %>
+    <p class="text-stone-500">No newsletters sent yet.</p>
+  <% } else { %>
+    <div class="space-y-2">
+      <% newsletters.forEach(function(nl) { %>
+        <div class="bg-stone-900 border border-stone-800 rounded-lg p-4 flex items-center justify-between">
+          <div>
+            <div class="font-medium text-sm">Issue #<%= nl.issue_number %> &mdash; <%= nl.subject %></div>
+            <div class="text-xs text-stone-500"><%= new Date(nl.sent_at).toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' }) %></div>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+</div>

@@ -1,0 +1,93 @@
+
+<div>
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold">Sources</h1>
+  </div>
+
+  <!-- Add Source Form -->
+  <details class="bg-stone-900 border border-stone-800 rounded-lg mb-6">
+    <summary class="px-4 py-3 cursor-pointer text-sm font-medium hover:text-brand-400 transition">+ Add New Source</summary>
+    <form method="POST" action="/admin/sources" class="p-4 pt-0 space-y-4">
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-medium mb-1">Name</label>
+          <input type="text" name="name" required class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-medium mb-1">URL</label>
+          <input type="url" name="url" required class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm">
+        </div>
+      </div>
+      <div class="grid sm:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-xs font-medium mb-1">Type</label>
+          <select name="type" class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm">
+            <option value="rss">RSS</option>
+            <option value="html">HTML Scrape</option>
+            <option value="api">API</option>
+            <option value="manual">Manual</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium mb-1">Region</label>
+          <select name="region" class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm">
+            <% regions.forEach(function(r) { %>
+              <option value="<%= r.slug %>"><%= r.label %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium mb-1">Trust Level</label>
+          <select name="trust_level" class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm">
+            <option value="core">Core</option>
+            <option value="candidate" selected>Candidate</option>
+            <option value="probation">Probation</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-medium mb-1">Categories</label>
+        <div class="flex flex-wrap gap-2">
+          <% categories.forEach(function(cat) { %>
+            <label class="flex items-center gap-1 text-xs">
+              <input type="checkbox" name="categories" value="<%= cat.slug %>" class="rounded border-stone-600 bg-stone-800 text-brand-500">
+              <%= cat.label %>
+            </label>
+          <% }) %>
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-medium mb-1">Scrape Frequency (cron)</label>
+        <input type="text" name="scrape_frequency" value="0 6 * * *" class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm">
+      </div>
+      <div>
+        <label class="block text-xs font-medium mb-1">Notes</label>
+        <textarea name="notes" rows="2" class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm"></textarea>
+      </div>
+      <button type="submit" class="bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition">Add Source</button>
+    </form>
+  </details>
+
+  <!-- Sources List -->
+  <div class="space-y-2">
+    <% sources.forEach(function(source) { %>
+      <div class="bg-stone-900 border border-stone-800 rounded-lg p-4 flex items-center justify-between <%= !source.active ? 'opacity-50' : '' %>">
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <span class="font-medium text-sm"><%= source.name %></span>
+            <span class="text-xs px-2 py-0.5 rounded-full <%= source.trust_level === 'core' ? 'bg-brand-500/20 text-brand-400' : source.trust_level === 'probation' ? 'bg-red-500/20 text-red-400' : 'bg-stone-700 text-stone-400' %>"><%= source.trust_level %></span>
+            <span class="text-xs text-stone-600"><%= source.type %></span>
+            <span class="text-xs text-stone-600"><%= source.region.toUpperCase() %></span>
+          </div>
+          <div class="text-xs text-stone-500"><%= source.url %></div>
+          <div class="text-xs text-stone-600 mt-1">Yield: <%= (source.yield_score * 100).toFixed(0) %>% &middot; Categories: <%= source.categories.join(', ') %></div>
+        </div>
+        <form method="POST" action="/admin/sources/<%= source.id %>/toggle">
+          <button type="submit" class="text-xs px-3 py-1 rounded border <%= source.active ? 'border-stone-700 text-stone-400 hover:border-red-500 hover:text-red-400' : 'border-brand-500 text-brand-400' %> transition">
+            <%= source.active ? 'Disable' : 'Enable' %>
+          </button>
+        </form>
+      </div>
+    <% }) %>
+  </div>
+</div>

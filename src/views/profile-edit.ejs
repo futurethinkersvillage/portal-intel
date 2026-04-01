@@ -1,0 +1,70 @@
+
+<div class="max-w-2xl mx-auto">
+  <h1 class="text-2xl font-bold mb-2">Your Operator Profile</h1>
+  <p class="text-sm text-stone-400 mb-6">Tell the community what you're working on. Your profile appears on the Intel Feed when visible.</p>
+
+  <% if (success) { %>
+    <div class="bg-brand-400/10 text-brand-400 text-sm px-4 py-3 rounded-lg mb-6">Profile saved.</div>
+  <% } %>
+
+  <form method="POST" action="/profile/edit" class="space-y-6">
+    <div>
+      <label class="block text-sm font-medium mb-1">Business / Project Name</label>
+      <input type="text" name="display_name" required value="<%= profile ? profile.display_name : '' %>" placeholder="e.g. Clearwater Prefab Co."
+        class="w-full bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium mb-1">Tagline</label>
+      <input type="text" name="tagline" value="<%= profile ? profile.tagline || '' : '' %>" placeholder="One-liner: Building prefab cabins in Kamloops"
+        class="w-full bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium mb-1">Description</label>
+      <textarea name="description" rows="4" placeholder="What you do, where, and what you're looking for."
+        class="w-full bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500"><%= profile ? profile.description || '' : '' %></textarea>
+    </div>
+
+    <div class="grid sm:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium mb-1">Primary Category</label>
+        <select name="category" required class="w-full bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
+          <% categories.forEach(function(cat) { %>
+            <option value="<%= cat.slug %>" <%= profile && profile.category === cat.slug ? 'selected' : '' %>><%= cat.label %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">Region</label>
+        <select name="region" class="w-full bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
+          <% regions.forEach(function(r) { %>
+            <option value="<%= r.slug %>" <%= profile && profile.region === r.slug ? 'selected' : '' %>><%= r.label %></option>
+          <% }) %>
+        </select>
+      </div>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium mb-1">Website (optional)</label>
+      <input type="url" name="website_url" value="<%= profile ? profile.website_url || '' : '' %>" placeholder="https://..."
+        class="w-full bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium mb-1">Contact Method</label>
+      <input type="text" name="contact_method" value="<%= profile ? profile.contact_method || '' : '' %>" placeholder="Email, phone, or 'via website'"
+        class="w-full bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
+    </div>
+
+    <label class="flex items-center gap-3 cursor-pointer">
+      <input type="checkbox" name="visible" <%= !profile || profile.visible ? 'checked' : '' %>
+        class="rounded border-stone-600 bg-stone-800 text-brand-500 focus:ring-brand-500">
+      <span class="text-sm">Make profile visible on the Intel Feed</span>
+    </label>
+
+    <button type="submit" class="bg-brand-500 hover:bg-brand-600 text-white font-medium px-6 py-3 rounded-lg transition">
+      Save Profile
+    </button>
+  </form>
+</div>

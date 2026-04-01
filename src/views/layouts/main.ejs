@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-stone-950 text-stone-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof title !== 'undefined' ? title + ' — ' : '' %>Portal.Place Intel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { 50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac', 400: '#4ade80', 500: '#22c55e', 600: '#16a34a', 700: '#15803d', 800: '#166534', 900: '#14532d' },
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    [x-cloak] { display: none !important; }
+  </style>
+</head>
+<body class="min-h-screen">
+  <% if (typeof user !== 'undefined' && user) { %>
+  <nav class="border-b border-stone-800 bg-stone-900/50 backdrop-blur-sm sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
+      <div class="flex items-center gap-6">
+        <a href="/feed" class="font-semibold text-brand-400 tracking-tight">Portal.Place Intel</a>
+        <div class="hidden sm:flex items-center gap-4 text-sm text-stone-400">
+          <a href="/feed" class="hover:text-stone-100 transition">Feed</a>
+          <a href="/submit" class="hover:text-stone-100 transition">Submit</a>
+          <a href="/feed/watchlist" class="hover:text-stone-100 transition">Watchlist</a>
+          <a href="/profile/edit" class="hover:text-stone-100 transition">Profile</a>
+          <% if (user.role === 'admin') { %>
+          <a href="/admin" class="text-brand-400 hover:text-brand-300 transition">Admin</a>
+          <% } %>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="/preferences" class="text-sm text-stone-400 hover:text-stone-100 transition">Preferences</a>
+        <span class="text-sm text-stone-500"><%= user.name %></span>
+      </div>
+    </div>
+  </nav>
+  <% } %>
+
+  <main class="max-w-6xl mx-auto px-4 py-8">
+    <%- body %>
+  </main>
+
+  <footer class="border-t border-stone-800 mt-16">
+    <div class="max-w-6xl mx-auto px-4 py-8 text-center text-sm text-stone-600">
+      Portal.Place Intel &middot; BC &amp; Alberta Regional Intelligence
+    </div>
+  </footer>
+</body>
+</html>

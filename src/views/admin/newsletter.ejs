@@ -1,0 +1,64 @@
+
+<div x-data="newsletterBuilder()">
+  <h1 class="text-2xl font-bold mb-6">Newsletter Builder — Issue #<%= nextIssue %></h1>
+
+  <form method="POST" action="/admin/newsletter/send" class="space-y-6">
+    <div class="grid sm:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium mb-1">Subject Line</label>
+        <input type="text" name="subject" required placeholder="Portal.Place Intel #<%= nextIssue %> — ..."
+          class="w-full bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">Engagement Question</label>
+        <input type="text" name="engagement_question" placeholder="Know a BC grant program we're missing?"
+          class="w-full bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
+      </div>
+    </div>
+
+    <div>
+      <h2 class="text-lg font-semibold mb-3">Select Items (<span x-text="selectedCount"></span>/15 selected)</h2>
+      <p class="text-xs text-stone-400 mb-4">Items are ranked by score. Check the ones to include in the newsletter.</p>
+
+      <div class="space-y-2">
+        <% items.forEach(function(item, i) { %>
+          <label class="flex items-start gap-3 bg-stone-900 border border-stone-800 rounded-lg p-3 cursor-pointer hover:border-stone-700 transition">
+            <input type="checkbox" name="item_ids" value="<%= item.id %>"
+              @change="updateCount()"
+              <%= i < 15 ? 'checked' : '' %>
+              class="mt-1 rounded border-stone-600 bg-stone-800 text-brand-500 focus:ring-brand-500">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-stone-800 text-stone-400"><%= categories.find(c => c.slug === item.category)?.label || item.category %></span>
+                <span class="text-xs text-stone-600"><%= item.region.toUpperCase() %></span>
+                <span class="text-xs text-stone-600">Score: <%= item.total_score.toFixed(2) %></span>
+              </div>
+              <div class="font-medium text-sm mt-1"><%= item.title %></div>
+              <% if (item.summary) { %>
+                <div class="text-xs text-stone-400 mt-0.5"><%= item.summary %></div>
+              <% } %>
+            </div>
+          </label>
+        <% }) %>
+      </div>
+    </div>
+
+    <div class="flex gap-3">
+      <button type="submit" class="bg-brand-500 hover:bg-brand-600 text-white font-medium px-6 py-3 rounded-lg transition">
+        Create Newsletter #<%= nextIssue %>
+      </button>
+      <span class="text-xs text-stone-500 self-center">This will mark selected items as published and create the newsletter record.</span>
+    </div>
+  </form>
+</div>
+
+<script>
+function newsletterBuilder() {
+  return {
+    selectedCount: Math.min(<%= items.length %>, 15),
+    updateCount() {
+      this.selectedCount = document.querySelectorAll('input[name="item_ids"]:checked').length;
+    }
+  };
+}
+</script>
