@@ -39,7 +39,7 @@ await app.register(fastifyStatic, {
 });
 await app.register(fastifyView, {
   engine: { ejs },
-  root: path.join(__dirname, "views"),
+  root: path.join(__dirname, "../src/views"),
   layout: "layouts/main.ejs",
   defaultContext: {
     siteName: "Portal.Place Intel",
