@@ -41,7 +41,23 @@ The current whitelisted IP (`129.222.139.208`) is stale. If you want Claude to m
 - Namecheap dashboard → Profile → Tools → API Access
 - Update the whitelisted IP to your current IP (or the Hetzner server IP `5.161.236.48`)
 
-## 5. First Admin User
+## 5. Anthropic API Key (for AI Source Search)
+
+Required for the admin AI source search tool.
+
+- Get an API key from [console.anthropic.com](https://console.anthropic.com/)
+- In Coolify, add `ANTHROPIC_API_KEY` env var with your key
+- Redeploy
+
+## 6. Brave Search API Key (optional, enhances AI Source Search)
+
+Without this, the AI source search will still work using the model's knowledge, but web search results make it much better.
+
+- Sign up at [brave.com/search/api/](https://brave.com/search/api/) (free tier: 2000 queries/month)
+- In Coolify, add `BRAVE_SEARCH_API_KEY` env var with your key
+- Redeploy
+
+## 7. First Admin User
 
 After Google OAuth is set up:
 

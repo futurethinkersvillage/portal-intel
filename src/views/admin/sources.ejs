@@ -1,7 +1,7 @@
 
 <div>
   <div class="flex items-center justify-between mb-6">
-    <h1 class="text-2xl font-bold">Sources</h1>
+    <h1 class="text-2xl font-display font-bold">Sources</h1>
   </div>
 
   <!-- Add Source Form -->
@@ -11,11 +11,11 @@
       <div class="grid sm:grid-cols-2 gap-4">
         <div>
           <label class="block text-xs font-medium mb-1">Name</label>
-          <input type="text" name="name" required class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm">
+          <input type="text" name="name" required class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
         </div>
         <div>
           <label class="block text-xs font-medium mb-1">URL</label>
-          <input type="url" name="url" required class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm">
+          <input type="url" name="url" required class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
         </div>
       </div>
       <div class="grid sm:grid-cols-3 gap-4">
@@ -51,7 +51,7 @@
           <% categories.forEach(function(cat) { %>
             <label class="flex items-center gap-1 text-xs">
               <input type="checkbox" name="categories" value="<%= cat.slug %>" class="rounded border-stone-600 bg-stone-800 text-brand-500">
-              <%= cat.label %>
+              <%= cat.icon %> <%= cat.label %>
             </label>
           <% }) %>
         </div>
@@ -69,11 +69,12 @@
   </details>
 
   <!-- Sources List -->
-  <div class="space-y-2">
+  <div class="space-y-3">
     <% sources.forEach(function(source) { %>
-      <div class="bg-stone-900 border border-stone-800 rounded-lg p-4 flex items-center justify-between <%= !source.active ? 'opacity-50' : '' %>">
+      <div class="bg-stone-900 border border-stone-800 rounded-lg p-5 flex items-center justify-between hover:border-stone-700 transition">
         <div>
           <div class="flex items-center gap-2 mb-1">
+            <span class="w-2 h-2 rounded-full <%= source.active ? 'bg-emerald-400' : 'bg-red-400' %>"></span>
             <span class="font-medium text-sm"><%= source.name %></span>
             <span class="text-xs px-2 py-0.5 rounded-full <%= source.trust_level === 'core' ? 'bg-brand-500/20 text-brand-400' : source.trust_level === 'probation' ? 'bg-red-500/20 text-red-400' : 'bg-stone-700 text-stone-400' %>"><%= source.trust_level %></span>
             <span class="text-xs text-stone-600"><%= source.type %></span>
@@ -83,7 +84,7 @@
           <div class="text-xs text-stone-600 mt-1">Yield: <%= (source.yield_score * 100).toFixed(0) %>% &middot; Categories: <%= source.categories.join(', ') %></div>
         </div>
         <form method="POST" action="/admin/sources/<%= source.id %>/toggle">
-          <button type="submit" class="text-xs px-3 py-1 rounded border <%= source.active ? 'border-stone-700 text-stone-400 hover:border-red-500 hover:text-red-400' : 'border-brand-500 text-brand-400' %> transition">
+          <button type="submit" class="text-xs px-3 py-1.5 rounded border <%= source.active ? 'border-stone-700 text-stone-400 hover:border-red-500 hover:text-red-400' : 'border-brand-500 text-brand-400 hover:bg-brand-500/10' %> transition">
             <%= source.active ? 'Disable' : 'Enable' %>
           </button>
         </form>

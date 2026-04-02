@@ -1,9 +1,9 @@
 
 <div>
-  <h1 class="text-2xl font-bold mb-6">Admin Dashboard</h1>
+  <h1 class="text-2xl font-display font-bold mb-6">Admin Dashboard</h1>
 
   <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-    <div class="bg-stone-900 border border-stone-800 rounded-lg p-5">
+    <div class="bg-stone-900 border border-brand-600/30 rounded-lg p-5">
       <div class="text-3xl font-bold text-brand-400"><%= stats.subscribers %></div>
       <div class="text-sm text-stone-400">Active Subscribers</div>
     </div>
@@ -15,28 +15,32 @@
       <div class="text-3xl font-bold"><%= stats.sources %></div>
       <div class="text-sm text-stone-400">Active Sources</div>
     </div>
-    <div class="bg-stone-900 border border-stone-800 rounded-lg p-5">
+    <div class="bg-stone-900 border <%= stats.pendingSubmissions > 0 ? 'border-amber-500/40' : 'border-stone-800' %> rounded-lg p-5">
       <div class="text-3xl font-bold <%= stats.pendingSubmissions > 0 ? 'text-amber-400' : '' %>"><%= stats.pendingSubmissions %></div>
       <div class="text-sm text-stone-400">Pending Submissions</div>
     </div>
   </div>
 
-  <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-    <a href="/admin/sources" class="bg-stone-900 border border-stone-800 rounded-lg p-4 hover:border-stone-700 transition text-center">
+  <div class="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
+    <a href="/admin/sources" class="bg-stone-900 border border-stone-800 rounded-lg p-4 hover:border-brand-600/50 transition text-center">
       <div class="font-medium">Sources</div>
       <div class="text-xs text-stone-500">Manage scraper sources</div>
     </a>
-    <a href="/admin/submissions" class="bg-stone-900 border border-stone-800 rounded-lg p-4 hover:border-stone-700 transition text-center">
+    <a href="/admin/submissions" class="bg-stone-900 border border-stone-800 rounded-lg p-4 hover:border-brand-600/50 transition text-center">
       <div class="font-medium">Submissions</div>
       <div class="text-xs text-stone-500">Review user submissions</div>
     </a>
-    <a href="/admin/items" class="bg-stone-900 border border-stone-800 rounded-lg p-4 hover:border-stone-700 transition text-center">
+    <a href="/admin/items" class="bg-stone-900 border border-stone-800 rounded-lg p-4 hover:border-brand-600/50 transition text-center">
       <div class="font-medium">Items</div>
       <div class="text-xs text-stone-500">Manage collected items</div>
     </a>
-    <a href="/admin/newsletter" class="bg-stone-900 border border-stone-800 rounded-lg p-4 hover:border-stone-700 transition text-center">
+    <a href="/admin/newsletter" class="bg-stone-900 border border-stone-800 rounded-lg p-4 hover:border-brand-600/50 transition text-center">
       <div class="font-medium">Newsletter</div>
       <div class="text-xs text-stone-500">Build &amp; send issues</div>
+    </a>
+    <a href="/admin/source-search" class="bg-stone-900 border border-accent-500/30 rounded-lg p-4 hover:border-accent-500/50 transition text-center">
+      <div class="font-medium text-accent-400">AI Search</div>
+      <div class="text-xs text-stone-500">Find new sources</div>
     </a>
   </div>
 </div>

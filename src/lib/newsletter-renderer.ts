@@ -45,7 +45,7 @@ export function renderNewsletter(data: NewsletterData, unsubscribeToken: string)
     const itemsHTML = catItems
       .map((item) => {
         const submittedBadge = item.submitted_by
-          ? `<span style="color: #86efac; font-size: 11px;"> &middot; Community submitted</span>`
+          ? `<span style="color: #EA824E; font-size: 11px;"> &middot; Community submitted</span>`
           : "";
         return `
         <tr>
@@ -61,7 +61,7 @@ export function renderNewsletter(data: NewsletterData, unsubscribeToken: string)
     categoryHTML += `
       <tr>
         <td style="padding: 20px 0 8px 0;">
-          <span style="color: #4ade80; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px;">${label}</span>
+          <span style="color: #6B6BAA; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px;">${label}</span>
         </td>
       </tr>
       ${itemsHTML}`;
@@ -101,7 +101,7 @@ export function renderNewsletter(data: NewsletterData, unsubscribeToken: string)
           <!-- Header -->
           <tr>
             <td style="padding: 0 0 24px 0; border-bottom: 1px solid #292524;">
-              <span style="color: #4ade80; font-weight: 700; font-size: 16px;">Portal.Place Intel</span>
+              <span style="color: #6B6BAA; font-weight: 700; font-size: 16px;">Portal.Place Intel</span>
               <span style="color: #57534e; font-size: 13px; float: right;">Issue #${issueNumber}</span>
             </td>
           </tr>
@@ -118,7 +118,7 @@ export function renderNewsletter(data: NewsletterData, unsubscribeToken: string)
               <div style="background: #1c1917; border: 1px solid #292524; border-radius: 8px; padding: 16px;">
                 <div style="color: #a8a29e; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">Your Input</div>
                 <div style="color: #e7e5e4; font-size: 14px; margin-bottom: 12px;">${engagementQuestion}</div>
-                <a href="${baseUrl}/submit" style="color: #4ade80; font-size: 13px; text-decoration: none;">Submit to Intel &rarr;</a>
+                <a href="${baseUrl}/submit" style="color: #6B6BAA; font-size: 13px; text-decoration: none;">Submit to Intel &rarr;</a>
               </div>
             </td>
           </tr>
@@ -126,7 +126,7 @@ export function renderNewsletter(data: NewsletterData, unsubscribeToken: string)
           <!-- Feed CTA -->
           <tr>
             <td align="center" style="padding: 16px 0;">
-              <a href="${baseUrl}/feed" style="display: inline-block; background: #16a34a; color: white; text-decoration: none; font-weight: 500; font-size: 14px; padding: 12px 24px; border-radius: 8px;">See Everything on the Intel Feed &rarr;</a>
+              <a href="${baseUrl}/feed" style="display: inline-block; background: #4D4DC0; color: white; text-decoration: none; font-weight: 500; font-size: 14px; padding: 12px 24px; border-radius: 8px;">See Everything on the Intel Feed &rarr;</a>
             </td>
           </tr>
 

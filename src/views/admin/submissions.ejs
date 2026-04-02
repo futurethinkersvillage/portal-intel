@@ -1,26 +1,31 @@
 
 <div>
-  <h1 class="text-2xl font-bold mb-6">Submissions</h1>
+  <h1 class="text-2xl font-display font-bold mb-6">Submissions</h1>
 
   <% if (submissions.length === 0) { %>
-    <p class="text-stone-500">No submissions yet.</p>
+    <div class="text-center py-16 text-stone-500">
+      <div class="text-4xl mb-4">📬</div>
+      <p>No submissions yet.</p>
+    </div>
   <% } else { %>
-    <div class="space-y-2">
+    <div class="space-y-3">
+      <% const catColors = { land: 'bg-emerald-500/10 text-emerald-400', grants: 'bg-amber-500/10 text-amber-400', operators: 'bg-sky-500/10 text-sky-400', jobs: 'bg-violet-500/10 text-violet-400', events: 'bg-rose-500/10 text-rose-400', infrastructure: 'bg-orange-500/10 text-orange-400' }; %>
       <% submissions.forEach(function(sub) { %>
-        <div class="bg-stone-900 border border-stone-800 rounded-lg p-4 <%= sub.status === 'pending' ? 'border-l-2 border-l-amber-400' : '' %>">
+        <div class="bg-stone-900 border border-stone-800 rounded-lg p-5 <%= sub.status === 'pending' ? 'border-l-2 border-l-amber-400' : '' %> hover:border-stone-700 transition">
           <div class="flex items-start justify-between gap-4">
-            <div>
-              <div class="flex items-center gap-2 mb-1">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1.5">
                 <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-stone-800 text-stone-400"><%= sub.type %></span>
-                <span class="text-xs text-stone-600"><%= sub.category %> &middot; <%= sub.region.toUpperCase() %></span>
-                <span class="text-xs <%= sub.status === 'pending' ? 'text-amber-400' : sub.status === 'approved' ? 'text-brand-400' : 'text-red-400' %>"><%= sub.status %></span>
+                <span class="text-xs font-medium px-2 py-0.5 rounded-full <%= catColors[sub.category] || 'bg-stone-800 text-stone-400' %>"><%= sub.category %></span>
+                <span class="text-xs text-stone-600"><%= sub.region.toUpperCase() %></span>
+                <span class="text-xs font-medium <%= sub.status === 'pending' ? 'text-amber-400' : sub.status === 'approved' ? 'text-brand-400' : 'text-red-400' %>"><%= sub.status %></span>
               </div>
               <div class="font-medium text-sm"><%= sub.title %></div>
               <% if (sub.description) { %>
-                <div class="text-xs text-stone-400 mt-1"><%= sub.description %></div>
+                <div class="text-xs text-stone-400 mt-1.5 leading-relaxed"><%= sub.description %></div>
               <% } %>
               <% if (sub.url) { %>
-                <a href="<%= sub.url %>" target="_blank" class="text-xs text-brand-400 mt-1 inline-block"><%= sub.url %></a>
+                <a href="<%= sub.url %>" target="_blank" class="text-xs text-accent-400 hover:text-accent-300 mt-1.5 inline-block font-medium"><%= sub.url %> &rarr;</a>
               <% } %>
               <div class="text-xs text-stone-500 mt-2">
                 By <%= sub.user_name %> (<%= sub.user_email %>) &middot;

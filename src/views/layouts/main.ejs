@@ -4,14 +4,39 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= typeof title !== 'undefined' ? title + ' — ' : '' %>Portal.Place Intel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Marcellus+SC&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <script>
     tailwind.config = {
       theme: {
         extend: {
+          fontFamily: {
+            sans: ['Montserrat', 'system-ui', 'sans-serif'],
+            display: ['"Marcellus SC"', 'serif'],
+          },
           colors: {
-            brand: { 50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac', 400: '#4ade80', 500: '#22c55e', 600: '#16a34a', 700: '#15803d', 800: '#166534', 900: '#14532d' },
+            brand: {
+              50:  '#eef2ff',
+              100: '#e0e7ff',
+              200: '#c7d2fe',
+              300: '#a5b4fc',
+              400: '#6B6BAA',
+              500: '#4D4DC0',
+              600: '#38387F',
+              700: '#2E2E6B',
+              800: '#1F1F4E',
+              900: '#181835',
+            },
+            accent: {
+              300: '#f4a67a',
+              400: '#EA824E',
+              500: '#9F3C2D',
+              600: '#8A3326',
+              700: '#6E2A1F',
+            },
           }
         }
       }
@@ -19,6 +44,7 @@
   </script>
   <style>
     [x-cloak] { display: none !important; }
+    .font-display { font-family: 'Marcellus SC', serif; }
   </style>
 </head>
 <body class="min-h-screen">
@@ -33,7 +59,7 @@
           <a href="/feed/watchlist" class="hover:text-stone-100 transition">Watchlist</a>
           <a href="/profile/edit" class="hover:text-stone-100 transition">Profile</a>
           <% if (user.role === 'admin') { %>
-          <a href="/admin" class="text-brand-400 hover:text-brand-300 transition">Admin</a>
+          <a href="/admin" class="text-accent-400 hover:text-accent-300 transition">Admin</a>
           <% } %>
         </div>
       </div>

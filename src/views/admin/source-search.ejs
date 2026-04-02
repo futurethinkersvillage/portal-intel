@@ -1,0 +1,97 @@
+
+<div>
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-display font-bold">AI Source Search</h1>
+      <p class="text-sm text-stone-400 mt-1">Use AI to discover new data sources for the Intel Feed</p>
+    </div>
+    <a href="/admin" class="text-sm text-stone-400 hover:text-stone-100 transition">&larr; Dashboard</a>
+  </div>
+
+  <form method="POST" action="/admin/source-search" class="mb-8">
+    <div class="flex gap-3">
+      <input type="text" name="prompt" required
+        placeholder="e.g. BC grant programs for rural businesses, Alberta agricultural land listings, Okanagan events..."
+        value="<%= typeof prompt !== 'undefined' ? prompt : '' %>"
+        class="flex-1 bg-stone-900 border border-stone-700 rounded-lg px-4 py-3 text-sm focus:border-accent-500 focus:ring-1 focus:ring-accent-500">
+      <button type="submit" class="bg-accent-500 hover:bg-accent-600 text-white font-medium px-6 py-3 rounded-lg transition shrink-0">
+        Search with AI
+      </button>
+    </div>
+    <p class="text-xs text-stone-500 mt-2">The AI will expand your prompt, search the web, and recommend sources to add.</p>
+  </form>
+
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="bg-red-400/10 text-red-400 text-sm px-4 py-3 rounded-lg mb-6"><%= error %></div>
+  <% } %>
+
+  <% if (typeof results !== 'undefined' && results) { %>
+    <div class="bg-stone-900 border border-stone-800 rounded-lg p-5 mb-6">
+      <div class="text-xs text-stone-500 uppercase tracking-widest mb-1">AI Expanded Prompt</div>
+      <div class="text-sm text-stone-300"><%= results.expandedPrompt %></div>
+    </div>
+
+    <% if (results.sources.length === 0) { %>
+      <div class="text-center py-12 text-stone-500">
+        <div class="text-4xl mb-4">🤷</div>
+        <p>No sources found. Try a different or more specific prompt.</p>
+      </div>
+    <% } else { %>
+      <h2 class="text-lg font-semibold mb-4">Found <%= results.sources.length %> potential sources</h2>
+      <div class="space-y-3">
+        <% results.sources.forEach(function(source, i) { %>
+          <div class="bg-stone-900 border border-stone-800 rounded-lg p-5 hover:border-stone-700 transition">
+            <div class="flex items-start justify-between gap-4">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-1.5">
+                  <span class="font-medium text-sm"><%= source.name %></span>
+                  <span class="text-xs px-2 py-0.5 rounded-full
+                    <%= source.confidence === 'high' ? 'bg-emerald-500/10 text-emerald-400' :
+                       source.confidence === 'medium' ? 'bg-amber-500/10 text-amber-400' :
+                       'bg-stone-700 text-stone-400' %>"><%= source.confidence %></span>
+                  <span class="text-xs text-stone-600"><%= source.type %></span>
+                  <span class="text-xs text-stone-600"><%= source.region.toUpperCase() %></span>
+                </div>
+                <div class="text-xs text-stone-400 mb-1.5 leading-relaxed"><%= source.description %></div>
+                <div class="text-xs text-stone-500 break-all"><%= source.url %></div>
+                <div class="flex flex-wrap gap-1 mt-2">
+                  <% source.categories.forEach(function(cat) { %>
+                    <% const catColors = { land: 'bg-emerald-500/10 text-emerald-400', grants: 'bg-amber-500/10 text-amber-400', operators: 'bg-sky-500/10 text-sky-400', jobs: 'bg-violet-500/10 text-violet-400', events: 'bg-rose-500/10 text-rose-400', infrastructure: 'bg-orange-500/10 text-orange-400' }; %>
+                    <span class="text-xs px-2 py-0.5 rounded-full <%= catColors[cat] || 'bg-stone-700 text-stone-400' %>"><%= cat %></span>
+                  <% }) %>
+                </div>
+              </div>
+              <form method="POST" action="/admin/sources" class="shrink-0">
+                <input type="hidden" name="name" value="<%= source.name %>">
+                <input type="hidden" name="url" value="<%= source.url %>">
+                <input type="hidden" name="type" value="<%= source.type %>">
+                <input type="hidden" name="region" value="<%= source.region %>">
+                <input type="hidden" name="trust_level" value="candidate">
+                <% source.categories.forEach(function(cat) { %>
+                  <input type="hidden" name="categories" value="<%= cat %>">
+                <% }) %>
+                <button type="submit" class="text-xs bg-brand-600 hover:bg-brand-500 text-white px-3 py-1.5 rounded transition font-medium">
+                  + Add Source
+                </button>
+              </form>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+
+    <% if (results.webResults && results.webResults.length > 0) { %>
+      <details class="mt-8">
+        <summary class="text-sm text-stone-500 cursor-pointer hover:text-stone-300">Raw web search results (<%= results.webResults.length %>)</summary>
+        <div class="mt-3 space-y-2">
+          <% results.webResults.forEach(function(r) { %>
+            <div class="text-xs">
+              <a href="<%= r.url %>" target="_blank" class="text-accent-400 hover:text-accent-300"><%= r.title %></a>
+              <div class="text-stone-500 mt-0.5"><%= r.description %></div>
+            </div>
+          <% }) %>
+        </div>
+      </details>
+    <% } %>
+  <% } %>
+</div>

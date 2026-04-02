@@ -1,6 +1,8 @@
 import { FastifyInstance } from "fastify";
 import { requireAdmin } from "../lib/middleware.js";
 import { CATEGORIES, REGIONS } from "../lib/categories.js";
+import { renderNewsletter } from "../lib/newsletter-renderer.js";
+import { aiSourceSearch } from "../lib/source-search.js";
 import pool from "../lib/db.js";
 
 export async function adminRoutes(app: FastifyInstance) {
@@ -138,6 +140,62 @@ export async function adminRoutes(app: FastifyInstance) {
     });
   });
 
+  // Newsletter preview
+  app.post("/newsletter/preview", async (request, reply) => {
+    const user = (request as any).user;
+    const body = request.body as {
+      subject: string;
+      engagement_question: string;
+      item_ids: string | string[];
+    };
+
+    const itemIds = Array.isArray(body.item_ids) ? body.item_ids : body.item_ids ? [body.item_ids] : [];
+
+    // Get latest issue number
+    const { rows: latest } = await pool.query(
+      `SELECT issue_number FROM newsletters ORDER BY issue_number DESC LIMIT 1`
+    );
+    const issueNumber = (latest[0]?.issue_number || 0) + 1;
+
+    // Fetch selected items
+    const { rows: items } = await pool.query(
+      `SELECT ci.*, s.name as source_name
+       FROM collected_items ci
+       LEFT JOIN sources s ON ci.source_id = s.id
+       WHERE ci.id = ANY($1)
+       ORDER BY ci.total_score DESC`,
+      [itemIds]
+    );
+
+    const baseUrl = process.env.BASE_URL || "https://portalplaceintel.designspore.co";
+
+    // Render the newsletter HTML
+    const emailHtml = renderNewsletter(
+      {
+        issueNumber,
+        subject: body.subject,
+        engagementQuestion: body.engagement_question || "",
+        items,
+        baseUrl,
+      },
+      "preview-token"
+    );
+
+    // Count unique categories
+    const categories = new Set(items.map((i: any) => i.category));
+
+    return reply.view("admin/newsletter-preview.ejs", {
+      user,
+      emailHtml,
+      subject: body.subject,
+      engagementQuestion: body.engagement_question || "",
+      issueNumber,
+      itemIds,
+      itemCount: items.length,
+      categoryCount: categories.size,
+    });
+  });
+
   app.post("/newsletter/send", async (request, reply) => {
     const body = request.body as {
       subject: string;
@@ -183,6 +241,28 @@ export async function adminRoutes(app: FastifyInstance) {
        LIMIT 100`
     );
     return reply.view("admin/items.ejs", { user, items, categories: CATEGORIES });
+  });
+
+  // AI Source Search
+  app.get("/source-search", async (request, reply) => {
+    const user = (request as any).user;
+    return reply.view("admin/source-search.ejs", { user });
+  });
+
+  app.post("/source-search", async (request, reply) => {
+    const user = (request as any).user;
+    const { prompt } = request.body as { prompt: string };
+
+    try {
+      const results = await aiSourceSearch(prompt);
+      return reply.view("admin/source-search.ejs", { user, results, prompt });
+    } catch (err: any) {
+      return reply.view("admin/source-search.ejs", {
+        user,
+        error: err.message || "Search failed",
+        prompt,
+      });
+    }
   });
 
   app.post("/items/:id/status", async (request, reply) => {

@@ -1,21 +1,41 @@
 
-<div>
-  <h1 class="text-2xl font-bold mb-6">Collected Items</h1>
+<div x-data="{ activeStatus: '' }">
+  <h1 class="text-2xl font-display font-bold mb-6">Collected Items</h1>
 
-  <div class="space-y-2">
+  <!-- Status Filter Tabs -->
+  <div class="flex flex-wrap gap-2 mb-6">
+    <button @click="activeStatus = ''" :class="activeStatus === '' ? 'bg-brand-500 text-white' : 'bg-stone-800 text-stone-300 hover:bg-stone-700'"
+      class="text-sm px-3 py-1.5 rounded-full transition">All</button>
+    <button @click="activeStatus = 'pending'" :class="activeStatus === 'pending' ? 'bg-amber-500 text-white' : 'bg-stone-800 text-stone-300 hover:bg-stone-700'"
+      class="text-sm px-3 py-1.5 rounded-full transition">Pending</button>
+    <button @click="activeStatus = 'approved'" :class="activeStatus === 'approved' ? 'bg-blue-500 text-white' : 'bg-stone-800 text-stone-300 hover:bg-stone-700'"
+      class="text-sm px-3 py-1.5 rounded-full transition">Approved</button>
+    <button @click="activeStatus = 'feed'" :class="activeStatus === 'feed' ? 'bg-brand-500 text-white' : 'bg-stone-800 text-stone-300 hover:bg-stone-700'"
+      class="text-sm px-3 py-1.5 rounded-full transition">Feed</button>
+    <button @click="activeStatus = 'newsletter'" :class="activeStatus === 'newsletter' ? 'bg-accent-500 text-white' : 'bg-stone-800 text-stone-300 hover:bg-stone-700'"
+      class="text-sm px-3 py-1.5 rounded-full transition">Newsletter</button>
+    <button @click="activeStatus = 'archived'" :class="activeStatus === 'archived' ? 'bg-stone-600 text-white' : 'bg-stone-800 text-stone-300 hover:bg-stone-700'"
+      class="text-sm px-3 py-1.5 rounded-full transition">Archived</button>
+  </div>
+
+  <div class="space-y-3">
     <% items.forEach(function(item) { %>
-      <div class="bg-stone-900 border border-stone-800 rounded-lg p-4">
+      <div class="bg-stone-900 border border-stone-800 rounded-lg p-5 hover:border-stone-700 transition"
+           x-show="activeStatus === '' || activeStatus === '<%= item.status %>'"
+           x-transition>
         <div class="flex items-start justify-between gap-4">
-          <div>
-            <div class="flex items-center gap-2 mb-1">
-              <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-stone-800 text-stone-400"><%= categories.find(c => c.slug === item.category)?.label || item.category %></span>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-1.5">
+              <span class="text-xs font-medium px-2 py-0.5 rounded-full
+                <% const catColors = { land: 'bg-emerald-500/10 text-emerald-400', grants: 'bg-amber-500/10 text-amber-400', operators: 'bg-sky-500/10 text-sky-400', jobs: 'bg-violet-500/10 text-violet-400', events: 'bg-rose-500/10 text-rose-400', infrastructure: 'bg-orange-500/10 text-orange-400' }; %>
+                <%= catColors[item.category] || 'bg-stone-800 text-stone-400' %>"><%= categories.find(c => c.slug === item.category)?.icon || '' %> <%= categories.find(c => c.slug === item.category)?.label || item.category %></span>
               <span class="text-xs text-stone-600"><%= item.region.toUpperCase() %></span>
-              <span class="text-xs <%= item.status === 'newsletter' ? 'text-brand-400' : item.status === 'approved' || item.status === 'feed' ? 'text-blue-400' : item.status === 'pending' ? 'text-amber-400' : 'text-stone-600' %>"><%= item.status %></span>
+              <span class="text-xs font-medium <%= item.status === 'newsletter' ? 'text-accent-400' : item.status === 'approved' || item.status === 'feed' ? 'text-brand-400' : item.status === 'pending' ? 'text-amber-400' : 'text-stone-600' %>"><%= item.status %></span>
               <span class="text-xs text-stone-600">Score: <%= item.total_score.toFixed(2) %></span>
             </div>
             <div class="font-medium text-sm"><%= item.title %></div>
             <% if (item.summary) { %>
-              <div class="text-xs text-stone-400 mt-1"><%= item.summary %></div>
+              <div class="text-xs text-stone-400 mt-1.5 leading-relaxed"><%= item.summary %></div>
             <% } %>
             <div class="text-xs text-stone-500 mt-2">
               <%= item.source_name || 'User submitted' %> &middot;
@@ -28,9 +48,10 @@
                 <option value="pending" <%= item.status === 'pending' ? 'selected' : '' %>>Pending</option>
                 <option value="approved" <%= item.status === 'approved' ? 'selected' : '' %>>Approved</option>
                 <option value="feed" <%= item.status === 'feed' ? 'selected' : '' %>>Feed</option>
+                <option value="newsletter" <%= item.status === 'newsletter' ? 'selected' : '' %>>Newsletter</option>
                 <option value="archived" <%= item.status === 'archived' ? 'selected' : '' %>>Archived</option>
               </select>
-              <button type="submit" class="text-xs bg-stone-700 hover:bg-stone-600 px-2 py-1 rounded transition">Set</button>
+              <button type="submit" class="text-xs bg-brand-600 hover:bg-brand-500 text-white px-2 py-1 rounded transition">Set</button>
             </form>
           </div>
         </div>

@@ -2,21 +2,21 @@
 <div x-data="feedApp()" x-cloak>
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
     <div>
-      <h1 class="text-2xl font-bold">Intel Feed</h1>
-      <p class="text-sm text-stone-400">Filtered to your preferences. <span x-text="filteredItems.length"></span> items.</p>
+      <h1 class="text-2xl font-display font-bold">Intel Feed</h1>
+      <p class="text-sm text-stone-400 mt-1"><span x-text="filteredItems.length"></span> opportunities across BC &amp; Alberta</p>
     </div>
     <div class="flex items-center gap-2">
-      <a href="/submit" class="bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition">+ Submit</a>
+      <a href="/submit" class="bg-accent-500 hover:bg-accent-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition">+ Submit Intel</a>
     </div>
   </div>
 
   <!-- Filters -->
-  <div class="flex flex-wrap gap-2 mb-6">
+  <div class="flex flex-wrap gap-2 mb-4">
     <button @click="activeCategory = ''" :class="activeCategory === '' ? 'bg-brand-500 text-white' : 'bg-stone-800 text-stone-300 hover:bg-stone-700'"
       class="text-sm px-3 py-1.5 rounded-full transition">All</button>
     <% categories.forEach(function(cat) { %>
       <button @click="activeCategory = '<%= cat.slug %>'" :class="activeCategory === '<%= cat.slug %>' ? 'bg-brand-500 text-white' : 'bg-stone-800 text-stone-300 hover:bg-stone-700'"
-        class="text-sm px-3 py-1.5 rounded-full transition"><%= cat.label %></button>
+        class="text-sm px-3 py-1.5 rounded-full transition"><%= cat.icon %> <%= cat.label %></button>
     <% }) %>
   </div>
 
@@ -31,17 +31,19 @@
 
   <!-- Closing Soon -->
   <template x-if="closingSoon.length > 0 && activeCategory === ''">
-    <div class="mb-8">
-      <h2 class="text-sm font-medium tracking-widest uppercase text-amber-400 mb-3">Closing Soon</h2>
-      <div class="grid gap-2">
+    <div class="mb-10">
+      <h2 class="text-sm font-semibold tracking-widest uppercase text-amber-400 mb-3 flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> Closing Soon
+      </h2>
+      <div class="grid gap-3">
         <template x-for="item in closingSoon" :key="item.id">
-          <div class="bg-amber-500/5 border border-amber-500/20 rounded-lg p-4 flex items-start justify-between gap-4">
+          <div class="bg-amber-500/5 border border-amber-500/20 rounded-lg p-5 flex items-start justify-between gap-4">
             <div>
               <div class="font-medium text-sm" x-text="item.title"></div>
-              <div class="text-xs text-stone-400 mt-1" x-text="item.summary"></div>
-              <div class="text-xs text-amber-400 mt-1">Closes <span x-text="formatDate(item.expires_at)"></span></div>
+              <div class="text-xs text-stone-400 mt-1.5 leading-relaxed" x-text="item.summary"></div>
+              <div class="text-xs text-amber-400 mt-2 font-medium">Closes <span x-text="formatDate(item.expires_at)"></span></div>
             </div>
-            <a :href="item.url" target="_blank" class="text-xs text-brand-400 hover:text-brand-300 shrink-0">View &rarr;</a>
+            <a :href="item.url" target="_blank" class="text-xs text-accent-400 hover:text-accent-300 shrink-0 font-medium">View &rarr;</a>
           </div>
         </template>
       </div>
@@ -49,25 +51,28 @@
   </template>
 
   <!-- Profiles Section -->
-  <template x-if="profiles.length > 0 && activeCategory === '' || activeCategory === 'operators'">
-    <div class="mb-8">
-      <h2 class="text-sm font-medium tracking-widest uppercase text-stone-500 mb-3">Operator Profiles</h2>
+  <template x-if="profiles.length > 0 && (activeCategory === '' || activeCategory === 'operators')">
+    <div class="mb-10">
+      <h2 class="text-sm font-semibold tracking-widest uppercase text-stone-500 mb-3">🔧 Operator Profiles</h2>
       <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
         <template x-for="profile in filteredProfiles" :key="profile.id">
-          <div class="bg-stone-900 border border-stone-800 rounded-lg p-4">
+          <div class="bg-stone-900 border border-stone-800 rounded-lg p-5 hover:border-brand-600/50 transition">
             <div class="flex items-center gap-2 mb-2">
               <template x-if="profile.user_image">
                 <img :src="profile.user_image" class="w-8 h-8 rounded-full" :alt="profile.display_name">
+              </template>
+              <template x-if="!profile.user_image">
+                <div class="w-8 h-8 rounded-full bg-brand-500/20 flex items-center justify-center text-brand-400 text-xs font-semibold" x-text="profile.display_name?.charAt(0)?.toUpperCase()"></div>
               </template>
               <div>
                 <div class="font-medium text-sm" x-text="profile.display_name"></div>
                 <div class="text-xs text-stone-500" x-text="profile.region.toUpperCase()"></div>
               </div>
             </div>
-            <div class="text-xs text-brand-400 mb-1" x-text="profile.tagline"></div>
-            <div class="text-xs text-stone-400" x-text="profile.description?.substring(0, 120) + (profile.description?.length > 120 ? '...' : '')"></div>
+            <div class="text-xs text-brand-400 mb-1 font-medium" x-text="profile.tagline"></div>
+            <div class="text-xs text-stone-400 leading-relaxed" x-text="profile.description?.substring(0, 120) + (profile.description?.length > 120 ? '...' : '')"></div>
             <template x-if="profile.website_url">
-              <a :href="profile.website_url" target="_blank" class="text-xs text-brand-400 hover:text-brand-300 mt-2 inline-block">Website &rarr;</a>
+              <a :href="profile.website_url" target="_blank" class="text-xs text-accent-400 hover:text-accent-300 mt-2 inline-block font-medium">Website &rarr;</a>
             </template>
           </div>
         </template>
@@ -75,46 +80,111 @@
     </div>
   </template>
 
-  <!-- Items -->
-  <div class="space-y-2">
-    <template x-for="item in filteredItems" :key="item.id">
-      <div class="bg-stone-900 border border-stone-800 rounded-lg p-4 hover:border-stone-700 transition">
-        <div class="flex items-start justify-between gap-4">
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2 mb-1">
-              <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-stone-800 text-stone-400" x-text="categoryLabel(item.category)"></span>
-              <span class="text-xs text-stone-600" x-text="item.region.toUpperCase()"></span>
-              <template x-if="item.save_count > 0">
-                <span class="text-xs text-stone-600"><span x-text="item.save_count"></span> watching</span>
-              </template>
-            </div>
-            <a :href="item.url" target="_blank" class="font-medium text-sm hover:text-brand-400 transition" x-text="item.title"></a>
-            <div class="text-xs text-stone-400 mt-1" x-text="item.summary"></div>
-            <div class="flex items-center gap-3 mt-2 text-xs text-stone-500">
-              <span x-text="item.source_name || 'User submitted'"></span>
-              <span x-text="formatDate(item.collected_at)"></span>
-              <template x-if="item.expires_at">
-                <span class="text-amber-400">Expires <span x-text="formatDate(item.expires_at)"></span></span>
-              </template>
-            </div>
-          </div>
-          <div class="flex items-center gap-2 shrink-0">
-            <button @click="toggleSave(item.id)" class="p-1.5 rounded hover:bg-stone-800 transition"
-              :class="savedIds.has(item.id) ? 'text-brand-400' : 'text-stone-600'">
-              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"/>
-              </svg>
-            </button>
-            <a :href="item.url" target="_blank" class="text-xs text-brand-400 hover:text-brand-300">View &rarr;</a>
+  <!-- Grouped Items (when "All" is selected) -->
+  <template x-if="activeCategory === '' && filteredItems.length > 0">
+    <div class="space-y-10">
+      <template x-for="group in groupedItems" :key="group.slug">
+        <div>
+          <h2 class="text-sm font-semibold tracking-widest uppercase mb-4 flex items-center gap-2"
+              :class="categoryTextColor(group.slug)">
+            <span x-text="categoryIcon(group.slug)"></span>
+            <span x-text="categoryLabel(group.slug)"></span>
+            <span class="text-xs font-normal text-stone-600" x-text="'(' + group.items.length + ')'"></span>
+          </h2>
+          <div class="space-y-3">
+            <template x-for="item in group.items" :key="item.id">
+              <div class="bg-stone-900 border border-stone-800 rounded-lg p-5 hover:border-stone-700 transition">
+                <div class="flex items-start justify-between gap-4">
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 mb-1.5">
+                      <span class="text-xs font-medium px-2 py-0.5 rounded-full"
+                            :class="categoryBadgeClass(item.category)"
+                            x-text="categoryLabel(item.category)"></span>
+                      <span class="text-xs text-stone-600" x-text="item.region.toUpperCase()"></span>
+                      <template x-if="item.save_count > 0">
+                        <span class="text-xs text-stone-500"><span x-text="item.save_count"></span> watching</span>
+                      </template>
+                      <span class="w-1.5 h-1.5 rounded-full" :class="scoreColor(item.total_score)"></span>
+                    </div>
+                    <a :href="item.url" target="_blank" class="font-medium text-sm hover:text-brand-400 transition leading-snug" x-text="item.title"></a>
+                    <template x-if="item.summary">
+                      <div class="text-xs text-stone-400 mt-1.5 leading-relaxed" x-text="item.summary"></div>
+                    </template>
+                    <div class="flex items-center gap-3 mt-2.5 text-xs text-stone-500">
+                      <span x-text="item.source_name || 'User submitted'"></span>
+                      <span x-text="formatDate(item.collected_at)"></span>
+                      <template x-if="item.expires_at">
+                        <span class="text-amber-400 font-medium">Expires <span x-text="formatDate(item.expires_at)"></span></span>
+                      </template>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2 shrink-0">
+                    <button @click="toggleSave(item.id)" class="p-1.5 rounded hover:bg-stone-800 transition"
+                      :class="savedIds.has(item.id) ? 'text-brand-400' : 'text-stone-600'">
+                      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"/>
+                      </svg>
+                    </button>
+                    <a :href="item.url" target="_blank" class="text-xs text-brand-400 hover:text-brand-300 font-medium">View &rarr;</a>
+                  </div>
+                </div>
+              </div>
+            </template>
           </div>
         </div>
-      </div>
-    </template>
-  </div>
+      </template>
+    </div>
+  </template>
+
+  <!-- Flat Items (when a category is selected) -->
+  <template x-if="activeCategory !== '' && filteredItems.length > 0">
+    <div class="space-y-3">
+      <template x-for="item in filteredItems" :key="item.id">
+        <div class="bg-stone-900 border border-stone-800 rounded-lg p-5 hover:border-stone-700 transition">
+          <div class="flex items-start justify-between gap-4">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1.5">
+                <span class="text-xs font-medium px-2 py-0.5 rounded-full"
+                      :class="categoryBadgeClass(item.category)"
+                      x-text="categoryLabel(item.category)"></span>
+                <span class="text-xs text-stone-600" x-text="item.region.toUpperCase()"></span>
+                <template x-if="item.save_count > 0">
+                  <span class="text-xs text-stone-500"><span x-text="item.save_count"></span> watching</span>
+                </template>
+                <span class="w-1.5 h-1.5 rounded-full" :class="scoreColor(item.total_score)"></span>
+              </div>
+              <a :href="item.url" target="_blank" class="font-medium text-sm hover:text-brand-400 transition leading-snug" x-text="item.title"></a>
+              <template x-if="item.summary">
+                <div class="text-xs text-stone-400 mt-1.5 leading-relaxed" x-text="item.summary"></div>
+              </template>
+              <div class="flex items-center gap-3 mt-2.5 text-xs text-stone-500">
+                <span x-text="item.source_name || 'User submitted'"></span>
+                <span x-text="formatDate(item.collected_at)"></span>
+                <template x-if="item.expires_at">
+                  <span class="text-amber-400 font-medium">Expires <span x-text="formatDate(item.expires_at)"></span></span>
+                </template>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <button @click="toggleSave(item.id)" class="p-1.5 rounded hover:bg-stone-800 transition"
+                :class="savedIds.has(item.id) ? 'text-brand-400' : 'text-stone-600'">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"/>
+                </svg>
+              </button>
+              <a :href="item.url" target="_blank" class="text-xs text-brand-400 hover:text-brand-300 font-medium">View &rarr;</a>
+            </div>
+          </div>
+        </div>
+      </template>
+    </div>
+  </template>
 
   <template x-if="filteredItems.length === 0">
-    <div class="text-center py-16 text-stone-500">
-      <p>No items match your current filters.</p>
+    <div class="text-center py-16">
+      <div class="text-4xl mb-4" x-text="activeCategory ? categoryIcon(activeCategory) : '🔍'"></div>
+      <p class="text-stone-400 mb-2" x-text="activeCategory ? 'No ' + categoryLabel(activeCategory).toLowerCase() + ' items yet.' : 'No items match your current filters.'"></p>
+      <p class="text-xs text-stone-600">New items are collected daily from regional sources.</p>
     </div>
   </template>
 </div>
@@ -124,6 +194,26 @@ function feedApp() {
   const categoryMap = {
     <% categories.forEach(function(cat, i) { %>'<%= cat.slug %>': '<%= cat.label %>'<%= i < categories.length - 1 ? ',' : '' %><% }) %>
   };
+  const iconMap = {
+    <% categories.forEach(function(cat, i) { %>'<%= cat.slug %>': '<%= cat.icon %>'<%= i < categories.length - 1 ? ',' : '' %><% }) %>
+  };
+  const badgeColors = {
+    land:           'bg-emerald-500/10 text-emerald-400',
+    grants:         'bg-amber-500/10 text-amber-400',
+    operators:      'bg-sky-500/10 text-sky-400',
+    jobs:           'bg-violet-500/10 text-violet-400',
+    events:         'bg-rose-500/10 text-rose-400',
+    infrastructure: 'bg-orange-500/10 text-orange-400',
+  };
+  const textColors = {
+    land:           'text-emerald-400',
+    grants:         'text-amber-400',
+    operators:      'text-sky-400',
+    jobs:           'text-violet-400',
+    events:         'text-rose-400',
+    infrastructure: 'text-orange-400',
+  };
+  const categoryOrder = ['land', 'grants', 'operators', 'jobs', 'events', 'infrastructure'];
 
   return {
     items: <%- items %>,
@@ -141,6 +231,17 @@ function feedApp() {
       });
     },
 
+    get groupedItems() {
+      const groups = {};
+      for (const item of this.filteredItems) {
+        if (!groups[item.category]) groups[item.category] = [];
+        groups[item.category].push(item);
+      }
+      return categoryOrder
+        .filter(slug => groups[slug])
+        .map(slug => ({ slug, items: groups[slug] }));
+    },
+
     get filteredProfiles() {
       return this.profiles.filter(p => {
         if (this.activeCategory && this.activeCategory !== 'operators' && p.category !== this.activeCategory) return false;
@@ -149,8 +250,15 @@ function feedApp() {
       });
     },
 
-    categoryLabel(slug) {
-      return categoryMap[slug] || slug;
+    categoryLabel(slug) { return categoryMap[slug] || slug; },
+    categoryIcon(slug) { return iconMap[slug] || '📋'; },
+    categoryBadgeClass(slug) { return badgeColors[slug] || 'bg-stone-800 text-stone-400'; },
+    categoryTextColor(slug) { return textColors[slug] || 'text-stone-500'; },
+
+    scoreColor(score) {
+      if (score >= 0.7) return 'bg-emerald-400';
+      if (score >= 0.4) return 'bg-amber-400';
+      return 'bg-stone-600';
     },
 
     formatDate(dateStr) {
@@ -167,7 +275,7 @@ function feedApp() {
       } else {
         this.savedIds.delete(itemId);
       }
-      this.savedIds = new Set(this.savedIds); // trigger reactivity
+      this.savedIds = new Set(this.savedIds);
     }
   };
 }

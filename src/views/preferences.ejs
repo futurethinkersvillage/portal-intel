@@ -2,11 +2,11 @@
 <div class="max-w-2xl mx-auto">
   <% if (isOnboarding) { %>
     <div class="text-center mb-8">
-      <h1 class="text-3xl font-bold mb-2">Welcome to Portal.Place Intel</h1>
+      <h1 class="text-3xl font-display font-bold mb-2">Welcome to Portal.Place Intel</h1>
       <p class="text-stone-400">Choose the categories you care about. You can change these anytime.</p>
     </div>
   <% } else { %>
-    <h1 class="text-2xl font-bold mb-6">Preferences</h1>
+    <h1 class="text-2xl font-display font-bold mb-6">Preferences</h1>
     <% if (success) { %>
       <div class="bg-brand-400/10 text-brand-400 text-sm px-4 py-3 rounded-lg mb-6">Preferences saved.</div>
     <% } %>
@@ -23,7 +23,7 @@
               <%= prefs.preferences && prefs.preferences.includes(cat.slug) ? 'checked' : '' %>
               class="mt-0.5 rounded border-stone-600 bg-stone-800 text-brand-500 focus:ring-brand-500">
             <div>
-              <div class="font-medium text-sm"><%= cat.label %></div>
+              <div class="font-medium text-sm"><%= cat.icon %> <%= cat.label %></div>
               <div class="text-xs text-stone-500"><%= cat.description %></div>
             </div>
           </label>
@@ -40,7 +40,7 @@
             <input type="checkbox" name="alert_categories" value="<%= cat.slug %>"
               <%= prefs.alert_categories && prefs.alert_categories.includes(cat.slug) ? 'checked' : '' %>
               class="rounded border-stone-600 bg-stone-800 text-brand-500 focus:ring-brand-500">
-            <span class="text-sm"><%= cat.label %></span>
+            <span class="text-sm"><%= cat.icon %> <%= cat.label %></span>
           </label>
         <% }) %>
       </div>
