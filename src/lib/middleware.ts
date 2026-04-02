@@ -41,8 +41,21 @@ export async function getUser(request: FastifyRequest): Promise<AuthUser | null>
   }
 }
 
+const DEV_USER: AuthUser = {
+  id: "dev",
+  email: "dev@portal.place",
+  name: "Dev Mode",
+  image: null,
+  role: "admin",
+  onboarded: true,
+};
+
 // Require authentication
 export async function requireAuth(request: FastifyRequest, reply: FastifyReply) {
+  if (process.env.DEV_MODE === "true") {
+    (request as any).user = DEV_USER;
+    return;
+  }
   const user = await getUser(request);
   if (!user) {
     reply.redirect("/");
@@ -53,6 +66,10 @@ export async function requireAuth(request: FastifyRequest, reply: FastifyReply) 
 
 // Require admin role
 export async function requireAdmin(request: FastifyRequest, reply: FastifyReply) {
+  if (process.env.DEV_MODE === "true") {
+    (request as any).user = DEV_USER;
+    return;
+  }
   const user = await getUser(request);
   if (!user || user.role !== "admin") {
     reply.status(403).send({ error: "Forbidden" });
