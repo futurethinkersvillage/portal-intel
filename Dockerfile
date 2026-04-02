@@ -11,6 +11,4 @@ RUN npm prune --omit=dev
 
 EXPOSE 3000
 
-RUN sed -i 's/\r$//' start.sh && chmod +x start.sh
-
-CMD ["sh", "start.sh"]
+CMD ["node", "dist/server.js"]
