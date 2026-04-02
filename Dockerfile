@@ -8,7 +8,8 @@ RUN npm ci
 COPY . .
 RUN npx tsc
 RUN npm prune --omit=dev
+RUN sed -i 's/\r$//' start.sh && chmod +x start.sh
 
 EXPOSE 3000
 
-CMD ["node", "dist/server.js"]
+CMD ["sh", "start.sh"]
