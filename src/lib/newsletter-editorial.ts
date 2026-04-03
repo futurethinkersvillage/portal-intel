@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { CATEGORIES } from "./categories.js";
+import { trackUsage } from "./api-usage.js";
 
 const categoryLabels: Record<string, string> = {};
 CATEGORIES.forEach((c) => { categoryLabels[c.slug] = c.label; });
@@ -42,6 +43,14 @@ ${itemList}
 Write ONLY the paragraph, no heading or greeting.`,
         },
       ],
+    });
+
+    await trackUsage({
+      service: "anthropic",
+      operation: "editorial",
+      inputTokens: resp.usage.input_tokens,
+      outputTokens: resp.usage.output_tokens,
+      metadata: { model: "claude-haiku-4-5-20251001", itemCount: items.length },
     });
 
     const text = (resp.content[0] as any).text?.trim();

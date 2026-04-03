@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import pool from "../lib/db.js";
 import { CATEGORIES } from "../lib/categories.js";
+import { trackUsage } from "../lib/api-usage.js";
 
 const categoryList = CATEGORIES.map((c) => `${c.slug}: ${c.label}`).join(", ");
 
@@ -75,6 +76,15 @@ Respond in JSON only:
 }`,
         },
       ],
+    });
+
+    await trackUsage({
+      service: "anthropic",
+      operation: "enrichment",
+      inputTokens: resp.usage.input_tokens,
+      outputTokens: resp.usage.output_tokens,
+      units: items.length,
+      metadata: { model: "claude-haiku-4-5-20251001", itemCount: items.length },
     });
 
     const text = (resp.content[0] as any).text;

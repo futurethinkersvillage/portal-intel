@@ -4,6 +4,7 @@ import { CATEGORIES, REGIONS } from "../lib/categories.js";
 import { renderNewsletter } from "../lib/newsletter-renderer.js";
 import { aiSourceSearch } from "../lib/source-search.js";
 import { generateEditorialIntro } from "../lib/newsletter-editorial.js";
+import { getUsageSummary } from "../lib/api-usage.js";
 import pool from "../lib/db.js";
 
 export async function adminRoutes(app: FastifyInstance) {
@@ -13,11 +14,12 @@ export async function adminRoutes(app: FastifyInstance) {
   app.get("/", async (request, reply) => {
     const user = (request as any).user;
 
-    const [itemCount, subCount, pendingSubs, sourceCount] = await Promise.all([
+    const [itemCount, subCount, pendingSubs, sourceCount, usage] = await Promise.all([
       pool.query(`SELECT COUNT(*) as count FROM collected_items WHERE status != 'archived'`),
       pool.query(`SELECT COUNT(*) as count FROM user_profiles WHERE status = 'active'`),
       pool.query(`SELECT COUNT(*) as count FROM submissions WHERE status = 'pending'`),
       pool.query(`SELECT COUNT(*) as count FROM sources WHERE active = true`),
+      getUsageSummary(),
     ]);
 
     return reply.view("admin/dashboard.ejs", {
@@ -28,6 +30,7 @@ export async function adminRoutes(app: FastifyInstance) {
         pendingSubmissions: pendingSubs.rows[0].count,
         sources: sourceCount.rows[0].count,
       },
+      usage,
     });
   });
 

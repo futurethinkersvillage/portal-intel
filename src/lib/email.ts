@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { trackUsage } from "./api-usage.js";
 
 const apiKey = process.env.RESEND_API_KEY;
 const resend = apiKey && apiKey !== "PLACEHOLDER_NEEDS_SETUP" ? new Resend(apiKey) : null;
@@ -9,12 +10,14 @@ export async function sendEmail(to: string, subject: string, html: string) {
     console.log(`[email] Would send to ${to}: ${subject} (no Resend API key configured)`);
     return null;
   }
-  return resend.emails.send({
+  const result = await resend.emails.send({
     from: `Portal.Place Intel <${fromEmail}>`,
     to,
     subject,
     html,
   });
+  await trackUsage({ service: "resend", operation: "email", units: 1 });
+  return result;
 }
 
 export async function sendBulkEmails(
@@ -38,6 +41,7 @@ export async function sendBulkEmails(
   for (let i = 0; i < batch.length; i += 50) {
     const chunk = batch.slice(i, i + 50);
     const result = await resend.batch.send(chunk);
+    await trackUsage({ service: "resend", operation: "email-batch", units: chunk.length });
     results.push(result);
   }
 

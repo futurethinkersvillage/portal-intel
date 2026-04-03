@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { CATEGORIES, REGIONS } from "./categories.js";
+import { trackUsage } from "./api-usage.js";
 
 const categoryList = CATEGORIES.map((c) => `${c.slug}: ${c.label} — ${c.description}`).join("\n");
 const regionList = REGIONS.map((r) => `${r.slug}: ${r.label}`).join(", ");
@@ -33,6 +34,7 @@ async function searchBrave(query: string): Promise<any[]> {
       }
     );
     if (!res.ok) return [];
+    await trackUsage({ service: "brave", operation: "web-search", units: 1, metadata: { query } });
     const data = await res.json();
     return (data.web?.results || []).map((r: any) => ({
       title: r.title,
@@ -77,6 +79,14 @@ Respond in JSON format only:
 }`,
       },
     ],
+  });
+
+  await trackUsage({
+    service: "anthropic",
+    operation: "source-search-expand",
+    inputTokens: expandResp.usage.input_tokens,
+    outputTokens: expandResp.usage.output_tokens,
+    metadata: { model: "claude-haiku-4-5-20251001" },
   });
 
   let expandedPrompt = userPrompt;
@@ -153,6 +163,14 @@ Respond in JSON format only:
 }`,
       },
     ],
+  });
+
+  await trackUsage({
+    service: "anthropic",
+    operation: "source-search-analyze",
+    inputTokens: analyzeResp.usage.input_tokens,
+    outputTokens: analyzeResp.usage.output_tokens,
+    metadata: { model: "claude-haiku-4-5-20251001", webResultCount: uniqueResults.length },
   });
 
   let sources: SourceResult[] = [];

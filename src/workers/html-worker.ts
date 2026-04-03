@@ -3,6 +3,7 @@ import { FirecrawlClient } from "firecrawl";
 import pool from "../lib/db.js";
 import redis from "../lib/redis.js";
 import { CATEGORIES } from "../lib/categories.js";
+import { trackUsage } from "../lib/api-usage.js";
 
 const categoryDescriptions = CATEGORIES.map(
   (c) => `${c.slug}: ${c.label} — ${c.description}`
@@ -87,6 +88,13 @@ async function processHTMLScrape(job: Job<HTMLJobData>) {
       },
       waitFor: 5000,
       onlyMainContent: true,
+    });
+
+    await trackUsage({
+      service: "firecrawl",
+      operation: "scrape",
+      units: 1,
+      metadata: { url, categories, region },
     });
 
     const items: ExtractedItem[] = (result as any)?.json?.items || [];
