@@ -81,7 +81,13 @@
             <span class="text-xs text-stone-600"><%= source.region.toUpperCase() %></span>
           </div>
           <div class="text-xs text-stone-500"><%= source.url %></div>
-          <div class="text-xs text-stone-600 mt-1">Yield: <%= (source.yield_score * 100).toFixed(0) %>% &middot; Categories: <%= source.categories.join(', ') %></div>
+          <div class="text-xs text-stone-600 mt-1">
+            Yield: <%= (source.yield_score * 100).toFixed(0) %>% &middot;
+            Categories: <%= source.categories.join(', ') %>
+            <% if (source.last_scraped_at) { %>&middot; Last scraped: <%= new Date(source.last_scraped_at).toLocaleDateString('en-CA', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) %><% } %>
+            <% if (source.last_yield != null) { %>&middot; Last yield: <span class="<%= source.last_yield > 0 ? 'text-emerald-400' : 'text-red-400' %>"><%= source.last_yield %> items</span><% } %>
+            <% if (source.consecutive_failures > 0) { %>&middot; <span class="text-red-400"><%= source.consecutive_failures %> failures</span><% } %>
+          </div>
         </div>
         <form method="POST" action="/admin/sources/<%= source.id %>/toggle">
           <button type="submit" class="text-xs px-3 py-1.5 rounded border <%= source.active ? 'border-stone-700 text-stone-400 hover:border-red-500 hover:text-red-400' : 'border-brand-500 text-brand-400 hover:bg-brand-500/10' %> transition">

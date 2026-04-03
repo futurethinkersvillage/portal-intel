@@ -21,6 +21,7 @@ import { startHTMLWorker } from "./workers/html-worker.js";
 import { startScheduler } from "./workers/scheduler.js";
 import { startScoringLoop } from "./workers/scoring.js";
 import { startDailyAlertLoop } from "./workers/daily-alerts.js";
+import { startEnrichmentLoop } from "./workers/enrichment.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -82,5 +83,6 @@ app.listen({ port, host }, (err) => {
   startScheduler();
   startScoringLoop();
   startDailyAlertLoop();
+  startEnrichmentLoop();
   console.log("Background workers started.");
 });

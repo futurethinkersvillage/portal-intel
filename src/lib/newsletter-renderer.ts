@@ -15,6 +15,7 @@ interface NewsletterData {
   issueNumber: number;
   subject: string;
   engagementQuestion: string;
+  editorialIntro?: string;
   items: NewsletterItem[];
   baseUrl: string;
 }
@@ -23,7 +24,7 @@ const categoryLabels: Record<string, string> = {};
 CATEGORIES.forEach((c) => { categoryLabels[c.slug] = c.label; });
 
 export function renderNewsletter(data: NewsletterData, unsubscribeToken: string): string {
-  const { issueNumber, subject, engagementQuestion, items, baseUrl } = data;
+  const { issueNumber, subject, engagementQuestion, editorialIntro, items, baseUrl } = data;
 
   // Group items by category
   const grouped: Record<string, NewsletterItem[]> = {};
@@ -105,6 +106,13 @@ export function renderNewsletter(data: NewsletterData, unsubscribeToken: string)
               <span style="color: #57534e; font-size: 13px; float: right;">Issue #${issueNumber}</span>
             </td>
           </tr>
+
+          <!-- Editorial Intro -->
+          ${editorialIntro ? `<tr>
+            <td style="padding: 20px 0 16px 0; color: #a8a29e; font-size: 14px; line-height: 1.6;">
+              ${editorialIntro}
+            </td>
+          </tr>` : ""}
 
           <!-- Items by Category -->
           ${categoryHTML}

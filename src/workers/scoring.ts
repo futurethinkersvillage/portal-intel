@@ -59,12 +59,13 @@ async function scoreUniqueness(title: string, itemId: string): Promise<number> {
 }
 
 export async function scoreItems() {
-  // Get all pending items that haven't been scored yet
+  // Get pending items that have been enriched (or waited long enough)
   const { rows: items } = await pool.query(
     `SELECT ci.*, s.yield_score as source_yield
      FROM collected_items ci
      LEFT JOIN sources s ON ci.source_id = s.id
      WHERE ci.status = 'pending'
+       AND (ci.enriched_at IS NOT NULL OR ci.collected_at < now() - interval '15 minutes')
      ORDER BY ci.collected_at DESC
      LIMIT 100`
   );
@@ -72,7 +73,10 @@ export async function scoreItems() {
   let scored = 0;
   for (const item of items) {
     const recency = scoreRecency(new Date(item.collected_at));
-    const actionability = scoreActionability(item.title, item.summary || "");
+    // Use AI score if available, otherwise fall back to keyword scoring
+    const actionability = item.ai_score != null
+      ? item.ai_score
+      : scoreActionability(item.title, item.summary || "");
     const uniqueness = await scoreUniqueness(item.title, item.id);
     const sourceQuality = item.source_yield ?? 0.5;
 

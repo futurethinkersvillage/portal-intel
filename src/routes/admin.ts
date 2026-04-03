@@ -3,6 +3,7 @@ import { requireAdmin } from "../lib/middleware.js";
 import { CATEGORIES, REGIONS } from "../lib/categories.js";
 import { renderNewsletter } from "../lib/newsletter-renderer.js";
 import { aiSourceSearch } from "../lib/source-search.js";
+import { generateEditorialIntro } from "../lib/newsletter-editorial.js";
 import pool from "../lib/db.js";
 
 export async function adminRoutes(app: FastifyInstance) {
@@ -169,12 +170,16 @@ export async function adminRoutes(app: FastifyInstance) {
 
     const baseUrl = process.env.BASE_URL || "https://portalplaceintel.designspore.co";
 
+    // Generate AI editorial intro
+    const editorialIntro = await generateEditorialIntro(items);
+
     // Render the newsletter HTML
     const emailHtml = renderNewsletter(
       {
         issueNumber,
         subject: body.subject,
         engagementQuestion: body.engagement_question || "",
+        editorialIntro: editorialIntro || undefined,
         items,
         baseUrl,
       },

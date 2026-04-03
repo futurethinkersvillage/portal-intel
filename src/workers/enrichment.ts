@@ -1,0 +1,149 @@
+import Anthropic from "@anthropic-ai/sdk";
+import pool from "../lib/db.js";
+import { CATEGORIES } from "../lib/categories.js";
+
+const categoryList = CATEGORIES.map((c) => `${c.slug}: ${c.label}`).join(", ");
+
+interface ItemRow {
+  id: string;
+  title: string;
+  summary: string | null;
+  category: string;
+  region: string;
+  url: string | null;
+  expires_at: string | null;
+}
+
+function getClient(): Anthropic | null {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) return null;
+  return new Anthropic({ apiKey });
+}
+
+export async function enrichItems() {
+  const client = getClient();
+  if (!client) {
+    console.log("[Enrichment] No ANTHROPIC_API_KEY — skipping");
+    return 0;
+  }
+
+  // Get unenriched pending items (batch of 10)
+  const { rows: items } = await pool.query<ItemRow>(
+    `SELECT id, title, summary, category, region, url, expires_at
+     FROM collected_items
+     WHERE enriched_at IS NULL AND status = 'pending'
+     ORDER BY collected_at DESC
+     LIMIT 10`
+  );
+
+  if (items.length === 0) return 0;
+
+  // Build a batch prompt — process all items in one API call for efficiency
+  const itemDescriptions = items
+    .map(
+      (item, i) =>
+        `[${i + 1}] Title: ${item.title}\nSummary: ${item.summary || "none"}\nCategory: ${item.category}\nRegion: ${item.region}\nURL: ${item.url || "none"}\nExpires: ${item.expires_at || "unknown"}`
+    )
+    .join("\n\n");
+
+  try {
+    const resp = await client.messages.create({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 2048,
+      messages: [
+        {
+          role: "user",
+          content: `You are an intelligence analyst for a regional platform covering British Columbia and Alberta, Canada. Analyze these items and provide enrichment data.
+
+Categories: ${categoryList}
+
+Items to analyze:
+${itemDescriptions}
+
+For each item (by number), provide:
+1. "summary" — A concise 1-2 sentence actionable summary. Focus on what someone can DO with this information. If the original summary is good, improve it slightly.
+2. "actionability" — Brief note: what action can someone take? (e.g. "Apply by June 15", "Register online", "Visit listing", "Informational only")
+3. "score" — Actionability score 0.0-1.0 (1.0 = immediate action possible with clear deadline, 0.5 = useful but no urgency, 0.1 = informational/not actionable)
+4. "best_category" — The single best category slug from: land, grants, operators, jobs, events, infrastructure
+5. "expires" — ISO date string if you can infer a deadline/expiry, or null
+
+Respond in JSON only:
+{
+  "items": [
+    {"index": 1, "summary": "...", "actionability": "...", "score": 0.7, "best_category": "grants", "expires": "2026-06-15T00:00:00Z"}
+  ]
+}`,
+        },
+      ],
+    });
+
+    const text = (resp.content[0] as any).text;
+    let enriched: any[] = [];
+    try {
+      const parsed = JSON.parse(text);
+      enriched = parsed.items || [];
+    } catch {
+      console.error("[Enrichment] Failed to parse AI response");
+      return 0;
+    }
+
+    let updated = 0;
+    for (const e of enriched) {
+      const item = items[e.index - 1];
+      if (!item) continue;
+
+      // Update the item with AI enrichment
+      await pool.query(
+        `UPDATE collected_items SET
+          ai_summary = $1,
+          ai_actionability = $2,
+          ai_score = $3,
+          category = COALESCE($4, category),
+          expires_at = COALESCE($5, expires_at),
+          enriched_at = now()
+         WHERE id = $6`,
+        [
+          e.summary?.substring(0, 500) || null,
+          e.actionability?.substring(0, 200) || null,
+          typeof e.score === "number" ? e.score : null,
+          e.best_category || null,
+          e.expires || null,
+          item.id,
+        ]
+      );
+      updated++;
+    }
+
+    // Mark any items that weren't in the response as enriched (to avoid reprocessing)
+    const enrichedIds = enriched.map((e: any) => items[e.index - 1]?.id).filter(Boolean);
+    const missedIds = items.map((i) => i.id).filter((id) => !enrichedIds.includes(id));
+    if (missedIds.length > 0) {
+      await pool.query(
+        `UPDATE collected_items SET enriched_at = now() WHERE id = ANY($1)`,
+        [missedIds]
+      );
+    }
+
+    console.log(`[Enrichment] Enriched ${updated} of ${items.length} items`);
+    return updated;
+  } catch (err: any) {
+    console.error("[Enrichment] Error:", err.message);
+    return 0;
+  }
+}
+
+export function startEnrichmentLoop() {
+  // Run every 5 minutes
+  const interval = setInterval(async () => {
+    try {
+      await enrichItems();
+    } catch (err) {
+      console.error("[Enrichment] Loop error:", err);
+    }
+  }, 5 * 60 * 1000);
+
+  // Run immediately
+  enrichItems().catch(console.error);
+
+  return interval;
+}

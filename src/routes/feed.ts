@@ -9,9 +9,11 @@ export async function feedRoutes(app: FastifyInstance) {
   app.get("/", async (request, reply) => {
     const user = (request as any).user;
 
-    // Get all feed-eligible items
-    const { rows: items } = await pool.query(
-      `SELECT ci.*, s.name as source_name,
+    // Get all feed-eligible items — prefer AI summary over raw summary
+    const { rows: rawItems } = await pool.query(
+      `SELECT ci.*, COALESCE(ci.ai_summary, ci.summary) as summary,
+              ci.ai_actionability,
+              s.name as source_name,
               (SELECT COUNT(*) FROM saved_items si WHERE si.item_id = ci.id) as save_count
        FROM collected_items ci
        LEFT JOIN sources s ON ci.source_id = s.id
@@ -20,6 +22,7 @@ export async function feedRoutes(app: FastifyInstance) {
        ORDER BY ci.total_score DESC, ci.collected_at DESC
        LIMIT 200`
     );
+    const items = rawItems;
 
     // Get visible profiles
     const { rows: profiles } = await pool.query(

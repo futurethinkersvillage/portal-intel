@@ -110,6 +110,9 @@
                     <template x-if="item.summary">
                       <div class="text-xs text-stone-400 mt-1.5 leading-relaxed" x-text="item.summary"></div>
                     </template>
+                    <template x-if="item.ai_actionability">
+                      <div class="text-xs text-brand-400 mt-1.5 font-medium" x-text="item.ai_actionability"></div>
+                    </template>
                     <div class="flex items-center gap-3 mt-2.5 text-xs text-stone-500">
                       <span x-text="item.source_name || 'User submitted'"></span>
                       <span x-text="formatDate(item.collected_at)"></span>
