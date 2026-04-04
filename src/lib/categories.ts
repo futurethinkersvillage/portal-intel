@@ -1,5 +1,5 @@
 export const CATEGORIES = [
-  { slug: "land", label: "Land & Property", description: "Listings, auctions, agricultural land, rural property", icon: "🏔️", color: "emerald" },
+  { slug: "land", label: "Rural Land & Property", description: "Farms, ranches, homesteads, acreage, rural hospitality properties, campgrounds, recreational land, and rural real estate listings for sale across BC and Alberta", icon: "🏔️", color: "emerald" },
   { slug: "grants", label: "Grants & Funding", description: "Government grants, incentive programs, funding rounds", icon: "💰", color: "amber" },
   { slug: "operators", label: "Operators & Trades", description: "Contractors, services, trades, maker spaces", icon: "🔧", color: "sky" },
   { slug: "jobs", label: "Jobs & Work Opportunities", description: "Work-stay, project gigs, seasonal work, remote roles", icon: "💼", color: "violet" },

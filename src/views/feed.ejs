@@ -92,58 +92,28 @@
     </div>
   </template>
 
-  <!-- Grouped Items (when "All" is selected) -->
-  <template x-if="activeCategory === '' && filteredItems.length > 0">
-    <div class="space-y-10">
+  <!-- Grouped view: All categories, 3 items each -->
+  <template x-if="activeCategory === '' && !search && filteredItems.length > 0">
+    <div class="space-y-12">
       <template x-for="group in groupedItems" :key="group.slug">
         <div>
-          <h2 class="text-sm font-semibold tracking-widest uppercase mb-4 flex items-center gap-2"
-              :class="categoryTextColor(group.slug)">
-            <span x-text="categoryIcon(group.slug)"></span>
-            <span x-text="categoryLabel(group.slug)"></span>
-            <span class="text-xs font-normal text-stone-600" x-text="'(' + group.items.length + ')'"></span>
-          </h2>
+          <!-- Category header -->
+          <div class="flex items-center justify-between mb-4 pb-3 border-b border-stone-800">
+            <div class="flex items-center gap-2.5">
+              <span class="text-xl" x-text="categoryIcon(group.slug)"></span>
+              <span class="font-display font-bold text-base" :class="categoryTextColor(group.slug)" x-text="categoryLabel(group.slug)"></span>
+              <span class="text-xs text-stone-600" x-text="'(' + group.total + ')'"></span>
+            </div>
+            <button @click="activeCategory = group.slug; resetPagination()"
+              class="text-xs text-stone-500 hover:text-stone-200 border border-stone-800 hover:border-stone-600 px-3 py-1.5 rounded-lg transition">
+              View all <span x-text="group.total"></span> &rarr;
+            </button>
+          </div>
+
+          <!-- 3 preview cards -->
           <div class="space-y-3">
-            <template x-for="item in group.items" :key="item.id">
-              <div class="bg-stone-900 border border-stone-800 rounded-lg p-5 hover:border-stone-700 transition">
-                <div class="flex items-start justify-between gap-4">
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-2 mb-1.5">
-                      <span class="text-xs font-medium px-2 py-0.5 rounded-full"
-                            :class="categoryBadgeClass(item.category)"
-                            x-text="categoryLabel(item.category)"></span>
-                      <span class="text-xs text-stone-600" x-text="item.region.toUpperCase()"></span>
-                      <template x-if="item.save_count > 0">
-                        <span class="text-xs text-stone-500"><span x-text="item.save_count"></span> watching</span>
-                      </template>
-                      <span class="w-1.5 h-1.5 rounded-full" :class="scoreColor(item.total_score)"></span>
-                    </div>
-                    <a :href="item.url" target="_blank" class="font-medium text-sm hover:text-brand-400 transition leading-snug" x-text="item.title"></a>
-                    <template x-if="item.summary">
-                      <div class="text-xs text-stone-400 mt-1.5 leading-relaxed" x-text="item.summary"></div>
-                    </template>
-                    <template x-if="item.ai_actionability">
-                      <div class="text-xs text-brand-400 mt-1.5 font-medium" x-text="item.ai_actionability"></div>
-                    </template>
-                    <div class="flex items-center gap-3 mt-2.5 text-xs text-stone-500">
-                      <span x-text="item.source_name || 'User submitted'"></span>
-                      <span x-text="formatDate(item.collected_at)"></span>
-                      <template x-if="item.expires_at">
-                        <span class="text-amber-400 font-medium">Expires <span x-text="formatDate(item.expires_at)"></span></span>
-                      </template>
-                    </div>
-                  </div>
-                  <div class="flex items-center gap-2 shrink-0">
-                    <button @click="toggleSave(item.id)" class="p-1.5 rounded hover:bg-stone-800 transition"
-                      :class="savedIds.has(item.id) ? 'text-brand-400' : 'text-stone-600'">
-                      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"/>
-                      </svg>
-                    </button>
-                    <a :href="item.url" target="_blank" class="text-xs text-brand-400 hover:text-brand-300 font-medium">View &rarr;</a>
-                  </div>
-                </div>
-              </div>
+            <template x-for="item in group.preview" :key="item.id">
+              <%- include('../partials/item-card.ejs') %>
             </template>
           </div>
         </div>
@@ -151,46 +121,14 @@
     </div>
   </template>
 
-  <!-- Flat Items (when a category is selected) -->
-  <template x-if="activeCategory !== '' && filteredItems.length > 0">
+  <!-- Flat view: category selected or search active -->
+  <template x-if="(activeCategory !== '' || search) && filteredItems.length > 0">
     <div class="space-y-3">
+      <template x-if="!!search">
+        <div class="text-xs text-stone-500 mb-4"><span x-text="filteredItems.length"></span> results for "<span x-text="search"></span>"</div>
+      </template>
       <template x-for="item in visibleItems" :key="item.id">
-        <div class="bg-stone-900 border border-stone-800 rounded-lg p-5 hover:border-stone-700 transition">
-          <div class="flex items-start justify-between gap-4">
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2 mb-1.5">
-                <span class="text-xs font-medium px-2 py-0.5 rounded-full"
-                      :class="categoryBadgeClass(item.category)"
-                      x-text="categoryLabel(item.category)"></span>
-                <span class="text-xs text-stone-600" x-text="item.region.toUpperCase()"></span>
-                <template x-if="item.save_count > 0">
-                  <span class="text-xs text-stone-500"><span x-text="item.save_count"></span> watching</span>
-                </template>
-                <span class="w-1.5 h-1.5 rounded-full" :class="scoreColor(item.total_score)"></span>
-              </div>
-              <a :href="item.url" target="_blank" class="font-medium text-sm hover:text-brand-400 transition leading-snug" x-text="item.title"></a>
-              <template x-if="item.summary">
-                <div class="text-xs text-stone-400 mt-1.5 leading-relaxed" x-text="item.summary"></div>
-              </template>
-              <div class="flex items-center gap-3 mt-2.5 text-xs text-stone-500">
-                <span x-text="item.source_name || 'User submitted'"></span>
-                <span x-text="formatDate(item.collected_at)"></span>
-                <template x-if="item.expires_at">
-                  <span class="text-amber-400 font-medium">Expires <span x-text="formatDate(item.expires_at)"></span></span>
-                </template>
-              </div>
-            </div>
-            <div class="flex items-center gap-2 shrink-0">
-              <button @click="toggleSave(item.id)" class="p-1.5 rounded hover:bg-stone-800 transition"
-                :class="savedIds.has(item.id) ? 'text-brand-400' : 'text-stone-600'">
-                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"/>
-                </svg>
-              </button>
-              <a :href="item.url" target="_blank" class="text-xs text-brand-400 hover:text-brand-300 font-medium">View &rarr;</a>
-            </div>
-          </div>
-        </div>
+        <%- include('../partials/item-card.ejs') %>
       </template>
     </div>
   </template>
@@ -217,10 +155,10 @@
 <script>
 function feedApp() {
   const categoryMap = {
-    <% categories.forEach(function(cat, i) { %>'<%= cat.slug %>': '<%= cat.label %>'<%= i < categories.length - 1 ? ',' : '' %><% }) %>
+    <% categories.forEach(function(cat, i) { %>'<%- cat.slug %>': '<%- cat.label %>'<%= i < categories.length - 1 ? ',' : '' %><% }) %>
   };
   const iconMap = {
-    <% categories.forEach(function(cat, i) { %>'<%= cat.slug %>': '<%= cat.icon %>'<%= i < categories.length - 1 ? ',' : '' %><% }) %>
+    <% categories.forEach(function(cat, i) { %>'<%- cat.slug %>': '<%- cat.icon %>'<%= i < categories.length - 1 ? ',' : '' %><% }) %>
   };
   const badgeColors = {
     land:           'bg-emerald-500/10 text-emerald-400',
@@ -269,13 +207,13 @@ function feedApp() {
 
     get groupedItems() {
       const groups = {};
-      for (const item of this.visibleItems) {
+      for (const item of this.filteredItems) {
         if (!groups[item.category]) groups[item.category] = [];
         groups[item.category].push(item);
       }
       return categoryOrder
         .filter(slug => groups[slug])
-        .map(slug => ({ slug, items: groups[slug] }));
+        .map(slug => ({ slug, preview: groups[slug].slice(0, 3), total: groups[slug].length }));
     },
 
     get filteredProfiles() {

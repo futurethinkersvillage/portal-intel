@@ -1,0 +1,60 @@
+<div class="bg-stone-900 border border-stone-800 rounded-xl p-5 hover:border-stone-700 transition">
+  <div class="flex items-start gap-4">
+    <div class="flex-1 min-w-0">
+      <!-- Meta row -->
+      <div class="flex flex-wrap items-center gap-2 mb-2">
+        <span class="text-xs font-medium px-2 py-0.5 rounded-full shrink-0"
+              :class="categoryBadgeClass(item.category)"
+              x-text="categoryLabel(item.category)"></span>
+        <span class="text-xs text-stone-600 uppercase tracking-wide" x-text="item.region"></span>
+        <template x-if="item.expires_at">
+          <span class="text-xs text-amber-400 font-medium">⏳ <span x-text="formatDate(item.expires_at)"></span></span>
+        </template>
+        <span class="w-1.5 h-1.5 rounded-full shrink-0" :class="scoreColor(item.total_score)"></span>
+        <template x-if="item.save_count > 0">
+          <span class="text-xs text-stone-600 ml-auto"><span x-text="item.save_count"></span> watching</span>
+        </template>
+      </div>
+
+      <!-- Title -->
+      <a :href="item.url" target="_blank" rel="noopener noreferrer"
+        class="font-semibold text-sm text-stone-100 hover:text-brand-300 transition leading-snug block mb-2"
+        x-text="item.title"></a>
+
+      <!-- AI Summary -->
+      <template x-if="item.summary">
+        <p class="text-sm text-stone-400 leading-relaxed mb-2.5" x-text="item.summary"></p>
+      </template>
+
+      <!-- AI Actionability chip -->
+      <template x-if="item.ai_actionability">
+        <div class="inline-flex items-center gap-1 text-xs text-brand-300 bg-brand-900/40 border border-brand-800/50 px-2.5 py-1 rounded-full font-medium mb-2.5">
+          <span>→</span>
+          <span x-text="item.ai_actionability"></span>
+        </div>
+      </template>
+
+      <!-- Footer -->
+      <div class="flex items-center gap-3 text-xs text-stone-600">
+        <span x-text="item.source_name || 'Community'"></span>
+        <span>·</span>
+        <span x-text="formatDate(item.collected_at)"></span>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex flex-col items-end gap-2 shrink-0 pt-0.5">
+      <a :href="item.url" target="_blank" rel="noopener noreferrer"
+        class="text-xs bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white px-3 py-1.5 rounded-lg transition font-medium whitespace-nowrap">
+        View &rarr;
+      </a>
+      <button @click="toggleSave(item.id)"
+        class="p-1.5 rounded-lg hover:bg-stone-800 transition"
+        :class="savedIds.has(item.id) ? 'text-brand-400' : 'text-stone-700 hover:text-stone-400'">
+        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>

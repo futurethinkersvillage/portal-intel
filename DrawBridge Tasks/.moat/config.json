@@ -1,0 +1,14 @@
+{
+  "version": "1.0.0",
+  "projectName": "DrawBridge Tasks",
+  "createdAt": "2026-04-04T02:54:43.986Z",
+  "streaming": {
+    "enabled": true,
+    "format": "jsonl",
+    "cursorIntegration": true
+  },
+  "ui": {
+    "autoShowMoat": true,
+    "confirmBeforeSend": false
+  }
+}
