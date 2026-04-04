@@ -113,7 +113,7 @@
           <!-- 3 preview cards -->
           <div class="space-y-3">
             <template x-for="item in group.preview" :key="item.id">
-              <%- include('../partials/item-card.ejs') %>
+              <%- include('./partials/item-card.ejs') %>
             </template>
           </div>
         </div>
@@ -128,7 +128,7 @@
         <div class="text-xs text-stone-500 mb-4"><span x-text="filteredItems.length"></span> results for "<span x-text="search"></span>"</div>
       </template>
       <template x-for="item in visibleItems" :key="item.id">
-        <%- include('../partials/item-card.ejs') %>
+        <%- include('./partials/item-card.ejs') %>
       </template>
     </div>
   </template>
