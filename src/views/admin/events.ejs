@@ -1,0 +1,85 @@
+
+<div>
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-display font-bold">Meetups & Events</h1>
+    <a href="/events" target="_blank" class="text-xs text-stone-500 hover:text-stone-300">View public page →</a>
+  </div>
+
+  <!-- Create Event Form -->
+  <details class="bg-stone-900 border border-stone-800 rounded-lg mb-6">
+    <summary class="px-4 py-3 cursor-pointer text-sm font-medium hover:text-brand-400 transition">+ Create New Event</summary>
+    <form method="POST" action="/admin/events" class="p-4 pt-0 space-y-4">
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-medium mb-1">Title</label>
+          <input type="text" name="title" required placeholder="Clearwater Resilience Meetup" class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-medium mb-1">Slug (URL)</label>
+          <input type="text" name="slug" placeholder="clearwater-meetup-april (auto-generated if blank)" class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none">
+        </div>
+      </div>
+      <div class="grid sm:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-xs font-medium mb-1">Date & Time</label>
+          <input type="datetime-local" name="event_date" required class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-medium mb-1">Location (City)</label>
+          <input type="text" name="location" required placeholder="Clearwater, BC" class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-medium mb-1">Capacity (optional)</label>
+          <input type="number" name="capacity" placeholder="30" class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none">
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-medium mb-1">Full Address</label>
+        <input type="text" name="address" placeholder="1234 Wells Gray Rd, Clearwater, BC" class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none">
+      </div>
+      <div>
+        <label class="block text-xs font-medium mb-1">Description</label>
+        <textarea name="description" rows="3" class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none" placeholder="An evening for investors, operators, and landowners building resilience infrastructure in the Thompson region..."></textarea>
+      </div>
+      <div class="flex items-center gap-2">
+        <input type="checkbox" name="is_public" value="true" checked id="is_public" class="rounded border-stone-600 bg-stone-800 text-brand-500">
+        <label for="is_public" class="text-xs">Publicly listed</label>
+      </div>
+      <button type="submit" class="bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition">Create Event</button>
+    </form>
+  </details>
+
+  <!-- Events List -->
+  <% if (meetups.length === 0) { %>
+    <p class="text-stone-500 text-sm">No events created yet.</p>
+  <% } else { %>
+    <div class="space-y-3">
+      <% meetups.forEach(function(m) {
+        var isPast = new Date(m.event_date) < new Date();
+      %>
+        <div class="bg-stone-900 border border-stone-800 rounded-lg p-5 flex items-center justify-between">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="w-2 h-2 rounded-full <%= isPast ? 'bg-stone-600' : 'bg-rose-400' %>"></span>
+              <span class="font-medium text-sm"><%= m.title %></span>
+              <span class="text-xs text-stone-600"><%= isPast ? 'Past' : 'Upcoming' %></span>
+            </div>
+            <div class="text-xs text-stone-500">
+              <%= new Date(m.event_date).toLocaleDateString('en-CA', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) %>
+              &middot; <%= m.location %>
+              &middot; <span class="<%= m.rsvp_count > 0 ? 'text-emerald-400' : '' %>"><%= m.rsvp_count %> RSVP<%= m.rsvp_count !== 1 ? 's' : '' %></span>
+              <% if (m.capacity) { %>&middot; <%= m.capacity %> cap<% } %>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <a href="/admin/events/<%= m.id %>/rsvps" class="text-xs px-3 py-1.5 rounded border border-stone-700 text-stone-400 hover:border-brand-500 hover:text-brand-400 transition">RSVPs</a>
+            <a href="/events/<%= m.slug %>" target="_blank" class="text-xs px-3 py-1.5 rounded border border-stone-700 text-stone-400 hover:border-stone-600 transition">View</a>
+            <form method="POST" action="/admin/events/<%= m.id %>/delete" onsubmit="return confirm('Delete this event?')">
+              <button type="submit" class="text-xs px-3 py-1.5 rounded border border-stone-700 text-stone-600 hover:border-red-500 hover:text-red-400 transition">Delete</button>
+            </form>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+</div>

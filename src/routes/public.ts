@@ -3,10 +3,45 @@ import { getUser } from "../lib/middleware.js";
 import pool from "../lib/db.js";
 
 export async function publicRoutes(app: FastifyInstance) {
-  // Landing page
+  // Landing page — with public feed preview
   app.get("/", async (request, reply) => {
     const user = await getUser(request);
-    return reply.view("index.ejs", { user });
+
+    // Fetch top 3 items per category for the public preview
+    const { rows: previewItems } = await pool.query(
+      `SELECT DISTINCT ON (category) id, title, COALESCE(ai_summary, summary) as summary,
+              url, category, region, expires_at, ai_actionability, total_score
+       FROM (
+         SELECT *, ROW_NUMBER() OVER (PARTITION BY category ORDER BY total_score DESC) as rn
+         FROM collected_items
+         WHERE status IN ('approved', 'feed', 'newsletter')
+           AND (expires_at IS NULL OR expires_at > now())
+       ) ranked
+       WHERE rn <= 3
+       ORDER BY category, total_score DESC
+       LIMIT 18`
+    );
+
+    // Group by category
+    const categoryOrder = ['land', 'grants', 'operators', 'jobs', 'events', 'infrastructure'];
+    const preview: Record<string, typeof previewItems> = {};
+    for (const item of previewItems) {
+      if (!preview[item.category]) preview[item.category] = [];
+      preview[item.category].push(item);
+    }
+    const previewGroups = categoryOrder
+      .filter(s => preview[s]?.length)
+      .map(s => ({ slug: s, items: preview[s] }));
+
+    // Upcoming meetups
+    const { rows: upcomingMeetups } = await pool.query(
+      `SELECT m.*, COUNT(r.id)::int as rsvp_count
+       FROM meetups m LEFT JOIN meetup_rsvps r ON r.meetup_id = m.id
+       WHERE m.is_public = true AND m.event_date > now()
+       GROUP BY m.id ORDER BY m.event_date ASC LIMIT 3`
+    );
+
+    return reply.view("index.ejs", { user, previewGroups, upcomingMeetups });
   });
 
   // One-click unsubscribe (works without login)

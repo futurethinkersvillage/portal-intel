@@ -50,6 +50,7 @@ export async function profileRoutes(app: FastifyInstance) {
       tagline = optionalString(body.tagline, 200);
       description = optionalString(body.description, 1000);
       contactMethod = optionalString(body.contact_method, 200);
+      // matchmaking fields handled below
       websiteUrl = null;
       if (body.website_url && body.website_url.trim()) {
         websiteUrl = requireUrl(body.website_url, "Website URL");
@@ -60,9 +61,12 @@ export async function profileRoutes(app: FastifyInstance) {
       });
     }
 
+    const lookingFor = optionalString((body as any).looking_for, 500);
+    const offering = optionalString((body as any).offering, 500);
+
     await pool.query(
-      `INSERT INTO profiles (user_id, display_name, tagline, description, category, region, website_url, contact_method, visible)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      `INSERT INTO profiles (user_id, display_name, tagline, description, category, region, website_url, contact_method, visible, looking_for, offering)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        ON CONFLICT (user_id) DO UPDATE SET
          display_name = EXCLUDED.display_name,
          tagline = EXCLUDED.tagline,
@@ -72,8 +76,10 @@ export async function profileRoutes(app: FastifyInstance) {
          website_url = EXCLUDED.website_url,
          contact_method = EXCLUDED.contact_method,
          visible = EXCLUDED.visible,
+         looking_for = EXCLUDED.looking_for,
+         offering = EXCLUDED.offering,
          updated_at = now()`,
-      [user.id, displayName, tagline, description, category, region, websiteUrl, contactMethod, body.visible === "on"]
+      [user.id, displayName, tagline, description, category, region, websiteUrl, contactMethod, body.visible === "on", lookingFor, offering]
     );
 
     const { rows } = await pool.query(

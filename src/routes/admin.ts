@@ -348,4 +348,46 @@ export async function adminRoutes(app: FastifyInstance) {
     );
     return reply.redirect("/admin/items");
   });
+
+  // Meetup management
+  app.get("/events", async (request, reply) => {
+    const user = (request as any).user;
+    const { rows: meetups } = await pool.query(
+      `SELECT m.*, COUNT(r.id)::int as rsvp_count
+       FROM meetups m LEFT JOIN meetup_rsvps r ON r.meetup_id = m.id
+       GROUP BY m.id ORDER BY m.event_date DESC`
+    );
+    return reply.view("admin/events.ejs", { user, meetups });
+  });
+
+  app.post("/events", async (request, reply) => {
+    const user = (request as any).user;
+    const body = request.body as any;
+
+    const slug = (body.slug || body.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")).substring(0, 80);
+    await pool.query(
+      `INSERT INTO meetups (slug, title, description, location, address, event_date, capacity, is_public, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [slug, body.title, body.description || null, body.location, body.address || null,
+       body.event_date, body.capacity ? parseInt(body.capacity) : null,
+       body.is_public !== "false", user.id]
+    );
+    return reply.redirect("/admin/events");
+  });
+
+  app.post("/events/:id/delete", async (request, reply) => {
+    const { id } = request.params as { id: string };
+    await pool.query(`DELETE FROM meetups WHERE id = $1`, [id]);
+    return reply.redirect("/admin/events");
+  });
+
+  app.get("/events/:id/rsvps", async (request, reply) => {
+    const user = (request as any).user;
+    const { id } = request.params as { id: string };
+    const { rows: meetup } = await pool.query(`SELECT * FROM meetups WHERE id = $1`, [id]);
+    const { rows: rsvps } = await pool.query(
+      `SELECT * FROM meetup_rsvps WHERE meetup_id = $1 ORDER BY created_at ASC`, [id]
+    );
+    return reply.view("admin/event-rsvps.ejs", { user, meetup: meetup[0], rsvps });
+  });
 }

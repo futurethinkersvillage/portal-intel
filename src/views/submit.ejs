@@ -1,7 +1,7 @@
 
 <div class="max-w-2xl mx-auto">
   <h1 class="text-2xl font-display font-bold mb-2">Submit to Intel</h1>
-  <p class="text-sm text-stone-400 mb-6">Share a project, listing, event, source, or tip. Submissions go through a quick review before appearing on the feed.</p>
+  <p class="text-sm text-stone-400 mb-6">Share a project, listing, event, deal, or tip. All submissions are reviewed before appearing on the feed.</p>
 
   <% if (success) { %>
     <div class="bg-brand-400/10 text-brand-400 text-sm px-4 py-3 rounded-lg mb-6">
@@ -17,11 +17,12 @@
     <div>
       <label class="block text-sm font-medium mb-1">Type</label>
       <select name="type" required class="w-full bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
-        <option value="project">Project — "I'm building X in Y region"</option>
-        <option value="listing">Listing — land, equipment, services for sale</option>
-        <option value="event">Event — workshop, meetup, open house</option>
-        <option value="source">Source — a website or feed we should track</option>
-        <option value="tip">Tip — freeform info or lead</option>
+        <option value="deal">🤝 Deal — off-market land, partnership opportunity, investment deal</option>
+        <option value="project">🏗️ Project — "I'm building X in Y region"</option>
+        <option value="listing">📋 Listing — land, equipment, services for sale</option>
+        <option value="event">📅 Event — workshop, meetup, open house</option>
+        <option value="source">🔗 Source — a website or feed we should track</option>
+        <option value="tip">💡 Tip — freeform info or lead</option>
       </select>
     </div>
 

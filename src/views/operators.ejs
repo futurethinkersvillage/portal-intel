@@ -59,11 +59,22 @@
                 </div>
               </div>
               <% if (p.tagline) { %>
-                <p class="text-xs text-stone-300 mb-2 leading-relaxed"><%= p.tagline %></p>
+                <p class="text-sm text-stone-300 mb-2 leading-relaxed font-medium"><%= p.tagline %></p>
               <% } %>
               <% if (p.description) { %>
-                <p class="text-xs text-stone-500 leading-relaxed line-clamp-3 flex-1"><%= p.description %></p>
+                <p class="text-xs text-stone-500 leading-relaxed line-clamp-3 mb-2"><%= p.description %></p>
               <% } %>
+              <% if (p.looking_for) { %>
+                <div class="text-xs text-brand-300 bg-brand-900/30 border border-brand-800/40 rounded-lg px-2.5 py-1.5 mb-1.5">
+                  <span class="text-brand-500 font-medium">Seeking:</span> <%= p.looking_for %>
+                </div>
+              <% } %>
+              <% if (p.offering) { %>
+                <div class="text-xs text-emerald-300 bg-emerald-900/20 border border-emerald-800/30 rounded-lg px-2.5 py-1.5 mb-2">
+                  <span class="text-emerald-500 font-medium">Offering:</span> <%= p.offering %>
+                </div>
+              <% } %>
+              <div class="flex-1"></div>
               <% if (p.website_url || p.contact_method) { %>
                 <div class="flex items-center gap-3 mt-3 pt-3 border-t border-stone-800">
                   <% if (p.website_url) { %>

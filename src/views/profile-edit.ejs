@@ -60,10 +60,27 @@
         class="w-full bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
     </div>
 
+    <!-- Matchmaking -->
+    <div class="bg-stone-900/50 border border-stone-800 rounded-xl p-5 space-y-4">
+      <div class="text-xs font-semibold uppercase tracking-widest text-stone-500 mb-1">Matchmaking</div>
+      <div>
+        <label class="block text-sm font-medium mb-1">What are you looking for?</label>
+        <textarea name="looking_for" rows="2" placeholder="e.g. Looking for a land partner with 50+ acres in the Thompson Valley, open to work-stay arrangements"
+          class="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 resize-none"><%= profile && profile.looking_for ? profile.looking_for : '' %></textarea>
+        <p class="text-xs text-stone-600 mt-1">What opportunities, partners, or resources are you seeking?</p>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">What are you offering?</label>
+        <textarea name="offering" rows="2" placeholder="e.g. Offering prefab cabin installation services, BC Interior, turnkey from foundation to keys"
+          class="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 resize-none"><%= profile && profile.offering ? profile.offering : '' %></textarea>
+        <p class="text-xs text-stone-600 mt-1">What skills, services, capital, or resources can you bring to a collaboration?</p>
+      </div>
+    </div>
+
     <label class="flex items-center gap-3 cursor-pointer">
       <input type="checkbox" name="visible" <%= !profile || profile.visible ? 'checked' : '' %>
         class="rounded border-stone-600 bg-stone-800 text-brand-500 focus:ring-brand-500">
-      <span class="text-sm">Make profile visible on the Intel Feed</span>
+      <span class="text-sm">Make profile visible in the Operator Directory</span>
     </label>
 
     <button type="submit" class="bg-brand-500 hover:bg-brand-600 text-white font-medium px-6 py-3 rounded-lg transition">

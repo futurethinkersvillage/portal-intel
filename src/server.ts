@@ -17,12 +17,15 @@ import { submitRoutes } from "./routes/submit.js";
 import { profileRoutes } from "./routes/profile.js";
 import { preferencesRoutes } from "./routes/preferences.js";
 import { adminRoutes } from "./routes/admin.js";
+import { eventRoutes } from "./routes/events.js";
+import { grantsRoutes } from "./routes/grants.js";
 import { startRSSWorker } from "./workers/rss-worker.js";
 import { startHTMLWorker } from "./workers/html-worker.js";
 import { startScheduler } from "./workers/scheduler.js";
 import { startScoringLoop } from "./workers/scoring.js";
 import { startDailyAlertLoop } from "./workers/daily-alerts.js";
 import { startEnrichmentLoop } from "./workers/enrichment.js";
+import { startWeeklyDigestLoop } from "./workers/weekly-digest.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -69,6 +72,8 @@ await app.register(submitRoutes, { prefix: "/submit" });
 await app.register(profileRoutes, { prefix: "/profile" });
 await app.register(preferencesRoutes, { prefix: "/preferences" });
 await app.register(adminRoutes, { prefix: "/admin" });
+await app.register(eventRoutes, { prefix: "/events" });
+await app.register(grantsRoutes, { prefix: "/grants" });
 
 // Start
 const port = parseInt(process.env.PORT || "3000");
@@ -88,5 +93,6 @@ app.listen({ port, host }, (err) => {
   startScoringLoop();
   startDailyAlertLoop();
   startEnrichmentLoop();
+  startWeeklyDigestLoop();
   console.log("Background workers started.");
 });

@@ -27,7 +27,7 @@ export async function submitRoutes(app: FastifyInstance) {
     };
 
     try {
-      const SUBMISSION_TYPES = ["project", "listing", "event", "source", "tip"] as const;
+      const SUBMISSION_TYPES = ["project", "listing", "event", "source", "tip", "deal"] as const;
       const CATEGORY_SLUGS = CATEGORIES.map((c) => c.slug);
       const REGION_SLUGS = REGIONS.map((r) => r.slug);
 
