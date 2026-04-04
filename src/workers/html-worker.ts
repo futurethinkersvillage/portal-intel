@@ -81,11 +81,13 @@ async function processHTMLScrape(job: Job<HTMLJobData>) {
 
     // Use Firecrawl scrape with JSON extraction — handles JS rendering
     const result = await client.scrape(url, {
-      formats: ["json"],
-      jsonOptions: {
-        prompt,
-        schema: itemSchema,
-      },
+      formats: [
+        {
+          type: "json",
+          prompt,
+          schema: itemSchema,
+        },
+      ],
       waitFor: 5000,
       onlyMainContent: true,
     });

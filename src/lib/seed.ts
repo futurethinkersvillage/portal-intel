@@ -250,10 +250,14 @@ const coreSources = [
 
 async function seed() {
   for (const source of coreSources) {
+    const { rows } = await pool.query(`SELECT id FROM sources WHERE url = $1 LIMIT 1`, [source.url]);
+    if (rows.length > 0) {
+      console.log(`  exists: ${source.name}`);
+      continue;
+    }
     await pool.query(
       `INSERT INTO sources (name, url, type, categories, region, trust_level)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       ON CONFLICT DO NOTHING`,
+       VALUES ($1, $2, $3, $4, $5, $6)`,
       [source.name, source.url, source.type, source.categories, source.region, source.trust_level]
     );
     console.log(`  seeded: ${source.name}`);
