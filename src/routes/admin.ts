@@ -75,6 +75,18 @@ export async function adminRoutes(app: FastifyInstance) {
     return reply.redirect("/admin/sources");
   });
 
+  app.post("/sources/:id/scrape", async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const { rows } = await pool.query(`SELECT * FROM sources WHERE id = $1`, [id]);
+    if (!rows[0]) return reply.redirect("/admin/sources");
+    const source = rows[0];
+    const { rssQueue, htmlQueue } = await import("../workers/scheduler.js");
+    const jobData = { sourceId: source.id, url: source.url, categories: source.categories, region: source.region };
+    if (source.type === "rss") await rssQueue.add(`rss-manual-${source.id}`, jobData, { removeOnComplete: 10, removeOnFail: 10 });
+    else if (source.type === "html") await htmlQueue.add(`html-manual-${source.id}`, jobData, { removeOnComplete: 10, removeOnFail: 10 });
+    return reply.redirect("/admin/sources");
+  });
+
   app.post("/sources/:id/delete", async (request, reply) => {
     const { id } = request.params as { id: string };
     // Soft-delete by deactivating and marking deleted, or hard-delete if no items reference it

@@ -96,6 +96,11 @@
             <button @click="editing = !editing" class="text-xs px-3 py-1.5 rounded border border-stone-700 text-stone-400 hover:border-brand-500 hover:text-brand-400 transition">
               Edit
             </button>
+            <form method="POST" action="/admin/sources/<%= source.id %>/scrape">
+              <button type="submit" class="text-xs px-3 py-1.5 rounded border border-stone-700 text-stone-400 hover:border-emerald-500 hover:text-emerald-400 transition" title="Queue a scrape now">
+                Scrape Now
+              </button>
+            </form>
             <form method="POST" action="/admin/sources/<%= source.id %>/toggle">
               <button type="submit" class="text-xs px-3 py-1.5 rounded border <%= source.active ? 'border-stone-700 text-stone-400 hover:border-red-500 hover:text-red-400' : 'border-brand-500 text-brand-400 hover:bg-brand-500/10' %> transition">
                 <%= source.active ? 'Disable' : 'Enable' %>
