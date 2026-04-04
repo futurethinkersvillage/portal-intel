@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { requireAuth } from "../lib/middleware.js";
 import { CATEGORIES, REGIONS } from "../lib/categories.js";
+import { requireString, requireEnum, optionalString, requireUrl } from "../lib/validate.js";
 import pool from "../lib/db.js";
 
 export async function profileRoutes(app: FastifyInstance) {
@@ -38,13 +39,24 @@ export async function profileRoutes(app: FastifyInstance) {
       visible?: string;
     };
 
-    if (!body.display_name || !body.category) {
+    let displayName: string, category: string, region: string;
+    let tagline: string | null, description: string | null, websiteUrl: string | null, contactMethod: string | null;
+    try {
+      const CATEGORY_SLUGS = CATEGORIES.map((c) => c.slug);
+      const REGION_SLUGS = REGIONS.map((r) => r.slug);
+      displayName = requireString(body.display_name, "Display name", 100);
+      category = requireEnum(body.category, "Category", CATEGORY_SLUGS as any);
+      region = requireEnum(body.region || "bc", "Region", REGION_SLUGS as any);
+      tagline = optionalString(body.tagline, 200);
+      description = optionalString(body.description, 1000);
+      contactMethod = optionalString(body.contact_method, 200);
+      websiteUrl = null;
+      if (body.website_url && body.website_url.trim()) {
+        websiteUrl = requireUrl(body.website_url, "Website URL");
+      }
+    } catch (err: any) {
       return reply.view("profile-edit.ejs", {
-        user,
-        profile: body,
-        categories: CATEGORIES,
-        regions: REGIONS,
-        success: false,
+        user, profile: body, categories: CATEGORIES, regions: REGIONS, success: false, error: err.message,
       });
     }
 
@@ -61,17 +73,7 @@ export async function profileRoutes(app: FastifyInstance) {
          contact_method = EXCLUDED.contact_method,
          visible = EXCLUDED.visible,
          updated_at = now()`,
-      [
-        user.id,
-        body.display_name,
-        body.tagline || null,
-        body.description || null,
-        body.category,
-        body.region || "bc",
-        body.website_url || null,
-        body.contact_method || null,
-        body.visible === "on",
-      ]
+      [user.id, displayName, tagline, description, category, region, websiteUrl, contactMethod, body.visible === "on"]
     );
 
     const { rows } = await pool.query(

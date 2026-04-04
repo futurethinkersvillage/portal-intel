@@ -5,6 +5,7 @@ import { renderNewsletter } from "../lib/newsletter-renderer.js";
 import { aiSourceSearch } from "../lib/source-search.js";
 import { generateEditorialIntro } from "../lib/newsletter-editorial.js";
 import { getUsageSummary } from "../lib/api-usage.js";
+import { sendBulkEmails } from "../lib/email.js";
 import pool from "../lib/db.js";
 
 export async function adminRoutes(app: FastifyInstance) {
@@ -59,6 +60,31 @@ export async function adminRoutes(app: FastifyInstance) {
   app.post("/sources/:id/toggle", async (request, reply) => {
     const { id } = request.params as { id: string };
     await pool.query(`UPDATE sources SET active = NOT active, updated_at = now() WHERE id = $1`, [id]);
+    return reply.redirect("/admin/sources");
+  });
+
+  app.post("/sources/:id/edit", async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const body = request.body as any;
+    const categories = Array.isArray(body.categories) ? body.categories : body.categories ? [body.categories] : [];
+    await pool.query(
+      `UPDATE sources SET name=$1, url=$2, type=$3, categories=$4, region=$5, trust_level=$6, scrape_frequency=$7, notes=$8, updated_at=now()
+       WHERE id=$9`,
+      [body.name, body.url, body.type, categories, body.region, body.trust_level, body.scrape_frequency || "0 6 * * *", body.notes || null, id]
+    );
+    return reply.redirect("/admin/sources");
+  });
+
+  app.post("/sources/:id/delete", async (request, reply) => {
+    const { id } = request.params as { id: string };
+    // Soft-delete by deactivating and marking deleted, or hard-delete if no items reference it
+    const { rows } = await pool.query(`SELECT COUNT(*) as count FROM collected_items WHERE source_id = $1`, [id]);
+    if (parseInt(rows[0].count) > 0) {
+      // Has items — just disable and mark inactive
+      await pool.query(`UPDATE sources SET active = false, updated_at = now() WHERE id = $1`, [id]);
+    } else {
+      await pool.query(`DELETE FROM sources WHERE id = $1`, [id]);
+    }
     return reply.redirect("/admin/sources");
   });
 
@@ -233,7 +259,46 @@ export async function adminRoutes(app: FastifyInstance) {
       [itemIds]
     );
 
-    // TODO: Render HTML and send via Resend (will be built in newsletter renderer step)
+    // Fetch full item data for rendering
+    const { rows: items } = await pool.query(
+      `SELECT id, title, COALESCE(ai_summary, summary) as summary, url, category, region, expires_at, submitted_by
+       FROM collected_items WHERE id = ANY($1)`,
+      [itemIds]
+    );
+
+    // Generate editorial intro
+    let editorialIntro: string | undefined;
+    try {
+      editorialIntro = await generateEditorialIntro(items) ?? undefined;
+    } catch {
+      // Non-fatal — send without intro
+    }
+
+    const baseUrl = process.env.BASE_URL || "https://portal.place";
+
+    // Get all active subscribers
+    const { rows: subscribers } = await pool.query(
+      `SELECT up.unsubscribe_token, u.email
+       FROM user_profiles up
+       JOIN "user" u ON u.id = up.user_id
+       WHERE up.status = 'active' AND u.email IS NOT NULL`
+    );
+
+    // Render and send
+    const htmlFn = (unsubscribeToken: string) =>
+      renderNewsletter(
+        { issueNumber, subject: body.subject, engagementQuestion: body.engagement_question, editorialIntro, items, baseUrl },
+        unsubscribeToken
+      );
+
+    await sendBulkEmails(subscribers, body.subject, htmlFn);
+
+    // Update newsletter record with html_body and sent_at (use first subscriber's token as sample)
+    const sampleHtml = htmlFn("SAMPLE");
+    await pool.query(
+      `UPDATE newsletters SET html_body = $1, sent_at = now() WHERE issue_number = $2`,
+      [sampleHtml, issueNumber]
+    );
 
     return reply.redirect("/admin/newsletter");
   });
@@ -257,7 +322,8 @@ export async function adminRoutes(app: FastifyInstance) {
     return reply.view("admin/source-search.ejs", { user });
   });
 
-  app.post("/source-search", async (request, reply) => {
+  // Source search hits paid APIs — 20 searches per hour
+  app.post("/source-search", { config: { rateLimit: { max: 20, timeWindow: "1 hour" } } }, async (request, reply) => {
     const user = (request as any).user;
     const { prompt } = request.body as { prompt: string };
 

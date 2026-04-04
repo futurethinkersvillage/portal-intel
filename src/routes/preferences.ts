@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { requireAuth } from "../lib/middleware.js";
 import { CATEGORIES } from "../lib/categories.js";
+import { requireEnum } from "../lib/validate.js";
 import pool from "../lib/db.js";
 
 export async function preferencesRoutes(app: FastifyInstance) {
@@ -33,18 +34,17 @@ export async function preferencesRoutes(app: FastifyInstance) {
       digest_frequency?: string;
     };
 
-    // Normalize to arrays (single checkbox = string, multiple = array)
-    const preferences = Array.isArray(body.preferences)
-      ? body.preferences
-      : body.preferences
-        ? [body.preferences]
-        : [];
+    const validSlugs = CATEGORIES.map((c) => c.slug);
 
-    const alertCategories = Array.isArray(body.alert_categories)
-      ? body.alert_categories
-      : body.alert_categories
-        ? [body.alert_categories]
-        : [];
+    // Normalize to arrays and filter to known slugs
+    const toArray = (v: unknown) =>
+      (Array.isArray(v) ? v : v ? [v] : []).filter((s: any) => validSlugs.includes(s));
+
+    const preferences = toArray(body.preferences);
+    const alertCategories = toArray(body.alert_categories);
+    const digestFrequency = ["weekly", "daily"].includes(body.digest_frequency || "")
+      ? body.digest_frequency!
+      : "weekly";
 
     await pool.query(
       `UPDATE user_profiles SET
@@ -54,7 +54,7 @@ export async function preferencesRoutes(app: FastifyInstance) {
         onboarded = true,
         updated_at = now()
        WHERE user_id = $4`,
-      [preferences, alertCategories, body.digest_frequency || "weekly", user.id]
+      [preferences, alertCategories, digestFrequency, user.id]
     );
 
     // If this was onboarding, redirect to feed

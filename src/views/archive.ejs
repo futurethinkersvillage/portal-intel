@@ -7,12 +7,13 @@
   <% } else { %>
     <div class="space-y-2">
       <% newsletters.forEach(function(nl) { %>
-        <div class="bg-stone-900 border border-stone-800 rounded-lg p-4 flex items-center justify-between">
+        <a href="/archive/<%= nl.issue_number %>" class="bg-stone-900 border border-stone-800 rounded-lg p-4 flex items-center justify-between hover:border-brand-600/50 transition">
           <div>
             <div class="font-medium text-sm">Issue #<%= nl.issue_number %> &mdash; <%= nl.subject %></div>
             <div class="text-xs text-stone-500"><%= new Date(nl.sent_at).toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' }) %></div>
           </div>
-        </div>
+          <span class="text-xs text-stone-600">&rarr;</span>
+        </a>
       <% }) %>
     </div>
   <% } %>

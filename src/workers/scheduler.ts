@@ -1,11 +1,28 @@
 import { Queue } from "bullmq";
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const CronParser = require("cron-parser");
 import pool from "../lib/db.js";
 import redis from "../lib/redis.js";
 
 const rssQueue = new Queue("rss-scraper", { connection: redis });
 const htmlQueue = new Queue("html-scraper", { connection: redis });
 
-// Check which sources need to be scraped and enqueue jobs
+// Returns true if this source is due for a scrape based on its cron schedule
+function isDue(cronExpr: string, lastScrapedAt: Date | null): boolean {
+  try {
+    const interval = CronParser.parseExpression(cronExpr, { utc: true });
+    const prev = interval.prev().toDate();
+    // Due if last scrape was before the most recent scheduled slot
+    if (!lastScrapedAt) return true;
+    return lastScrapedAt < prev;
+  } catch {
+    // Unparseable cron — fall back to always running
+    return true;
+  }
+}
+
+// Check which sources are due and enqueue jobs
 export async function scheduleScrapeJobs() {
   const { rows: sources } = await pool.query(
     `SELECT * FROM sources WHERE active = true`
@@ -13,6 +30,11 @@ export async function scheduleScrapeJobs() {
 
   let enqueued = 0;
   for (const source of sources) {
+    const cron = source.scrape_frequency || "0 6 * * *";
+    const lastScraped = source.last_scraped_at ? new Date(source.last_scraped_at) : null;
+
+    if (!isDue(cron, lastScraped)) continue;
+
     const jobData = {
       sourceId: source.id,
       url: source.url,
@@ -33,24 +55,25 @@ export async function scheduleScrapeJobs() {
       });
       enqueued++;
     }
-    // 'api', 'manual', 'user_submitted' types don't get auto-scraped
+    // 'api', 'manual', 'user_submitted' don't get auto-scraped
   }
 
-  console.log(`[Scheduler] Enqueued ${enqueued} scrape jobs from ${sources.length} active sources`);
+  if (enqueued > 0) {
+    console.log(`[Scheduler] Enqueued ${enqueued} scrape jobs from ${sources.length} active sources`);
+  }
 }
 
-// Run on a repeating interval (every 6 hours)
+// Poll every minute — each source uses its own cron schedule
 export function startScheduler() {
   // Run immediately on startup
   scheduleScrapeJobs().catch(console.error);
 
-  // Then every 6 hours
+  // Check every minute which sources are due
   const interval = setInterval(() => {
     scheduleScrapeJobs().catch(console.error);
-  }, 6 * 60 * 60 * 1000);
+  }, 60 * 1000);
 
   return interval;
 }
 
-// Manual trigger for admin use
 export { rssQueue, htmlQueue };

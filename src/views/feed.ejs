@@ -10,21 +10,33 @@
     </div>
   </div>
 
+  <!-- Search -->
+  <div class="relative mb-5">
+    <input type="text" x-model="search" @input="resetPagination()" placeholder="Search opportunities, grants, events…"
+      class="w-full bg-stone-900 border border-stone-800 rounded-lg px-4 py-2.5 pl-9 text-sm text-stone-200 placeholder-stone-600 focus:outline-none focus:border-brand-600/60 transition">
+    <svg class="absolute left-3 top-2.5 w-4 h-4 text-stone-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+    </svg>
+    <template x-if="search">
+      <button @click="search = ''" class="absolute right-3 top-2.5 text-stone-600 hover:text-stone-400 transition text-xs">&times;</button>
+    </template>
+  </div>
+
   <!-- Filters -->
   <div class="flex flex-wrap gap-2 mb-4">
-    <button @click="activeCategory = ''" :class="activeCategory === '' ? 'bg-brand-500 text-white' : 'bg-stone-800 text-stone-300 hover:bg-stone-700'"
+    <button @click="activeCategory = ''; resetPagination()" :class="activeCategory === '' ? 'bg-brand-500 text-white' : 'bg-stone-800 text-stone-300 hover:bg-stone-700'"
       class="text-sm px-3 py-1.5 rounded-full transition">All</button>
     <% categories.forEach(function(cat) { %>
-      <button @click="activeCategory = '<%= cat.slug %>'" :class="activeCategory === '<%= cat.slug %>' ? 'bg-brand-500 text-white' : 'bg-stone-800 text-stone-300 hover:bg-stone-700'"
+      <button @click="activeCategory = '<%= cat.slug %>'; resetPagination()" :class="activeCategory === '<%= cat.slug %>' ? 'bg-brand-500 text-white' : 'bg-stone-800 text-stone-300 hover:bg-stone-700'"
         class="text-sm px-3 py-1.5 rounded-full transition"><%= cat.icon %> <%= cat.label %></button>
     <% }) %>
   </div>
 
   <div class="flex flex-wrap gap-2 mb-8">
-    <button @click="activeRegion = ''" :class="activeRegion === '' ? 'bg-stone-600 text-white' : 'bg-stone-800 text-stone-400 hover:bg-stone-700'"
+    <button @click="activeRegion = ''; resetPagination()" :class="activeRegion === '' ? 'bg-stone-600 text-white' : 'bg-stone-800 text-stone-400 hover:bg-stone-700'"
       class="text-xs px-3 py-1 rounded-full transition">All Regions</button>
     <% regions.forEach(function(r) { %>
-      <button @click="activeRegion = '<%= r.slug %>'" :class="activeRegion === '<%= r.slug %>' ? 'bg-stone-600 text-white' : 'bg-stone-800 text-stone-400 hover:bg-stone-700'"
+      <button @click="activeRegion = '<%= r.slug %>'; resetPagination()" :class="activeRegion === '<%= r.slug %>' ? 'bg-stone-600 text-white' : 'bg-stone-800 text-stone-400 hover:bg-stone-700'"
         class="text-xs px-3 py-1 rounded-full transition"><%= r.label %></button>
     <% }) %>
   </div>
@@ -142,7 +154,7 @@
   <!-- Flat Items (when a category is selected) -->
   <template x-if="activeCategory !== '' && filteredItems.length > 0">
     <div class="space-y-3">
-      <template x-for="item in filteredItems" :key="item.id">
+      <template x-for="item in visibleItems" :key="item.id">
         <div class="bg-stone-900 border border-stone-800 rounded-lg p-5 hover:border-stone-700 transition">
           <div class="flex items-start justify-between gap-4">
             <div class="flex-1 min-w-0">
@@ -183,10 +195,20 @@
     </div>
   </template>
 
+  <!-- Load More -->
+  <template x-if="filteredItems.length > 0 && visibleCount < filteredItems.length">
+    <div class="mt-8 text-center">
+      <button @click="visibleCount += 50"
+        class="text-sm text-stone-400 hover:text-stone-200 border border-stone-800 hover:border-stone-700 px-6 py-2.5 rounded-lg transition">
+        Load more <span x-text="Math.min(50, filteredItems.length - visibleCount)"></span> of <span x-text="filteredItems.length - visibleCount"></span> remaining
+      </button>
+    </div>
+  </template>
+
   <template x-if="filteredItems.length === 0">
     <div class="text-center py-16">
-      <div class="text-4xl mb-4" x-text="activeCategory ? categoryIcon(activeCategory) : '🔍'"></div>
-      <p class="text-stone-400 mb-2" x-text="activeCategory ? 'No ' + categoryLabel(activeCategory).toLowerCase() + ' items yet.' : 'No items match your current filters.'"></p>
+      <div class="text-4xl mb-4" x-text="search ? '🔍' : activeCategory ? categoryIcon(activeCategory) : '🔍'"></div>
+      <p class="text-stone-400 mb-2" x-text="search ? 'No results for \'' + search + '\'' : activeCategory ? 'No ' + categoryLabel(activeCategory).toLowerCase() + ' items yet.' : 'No items match your current filters.'"></p>
       <p class="text-xs text-stone-600">New items are collected daily from regional sources.</p>
     </div>
   </template>
@@ -225,18 +247,29 @@ function feedApp() {
     savedIds: new Set(<%- savedIds %>),
     activeCategory: '',
     activeRegion: '',
+    search: '',
+    visibleCount: 50,
 
     get filteredItems() {
+      const q = this.search.toLowerCase().trim();
       return this.items.filter(item => {
         if (this.activeCategory && item.category !== this.activeCategory) return false;
         if (this.activeRegion && item.region !== this.activeRegion) return false;
+        if (q) {
+          const haystack = ((item.title || '') + ' ' + (item.summary || '') + ' ' + (item.source_name || '')).toLowerCase();
+          if (!haystack.includes(q)) return false;
+        }
         return true;
       });
     },
 
+    get visibleItems() {
+      return this.filteredItems.slice(0, this.visibleCount);
+    },
+
     get groupedItems() {
       const groups = {};
-      for (const item of this.filteredItems) {
+      for (const item of this.visibleItems) {
         if (!groups[item.category]) groups[item.category] = [];
         groups[item.category].push(item);
       }
@@ -252,6 +285,8 @@ function feedApp() {
         return true;
       });
     },
+
+    resetPagination() { this.visibleCount = 50; },
 
     categoryLabel(slug) { return categoryMap[slug] || slug; },
     categoryIcon(slug) { return iconMap[slug] || '📋'; },

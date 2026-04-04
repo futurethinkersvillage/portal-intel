@@ -71,29 +71,110 @@
   <!-- Sources List -->
   <div class="space-y-3">
     <% sources.forEach(function(source) { %>
-      <div class="bg-stone-900 border border-stone-800 rounded-lg p-5 flex items-center justify-between hover:border-stone-700 transition">
-        <div>
-          <div class="flex items-center gap-2 mb-1">
-            <span class="w-2 h-2 rounded-full <%= source.active ? 'bg-emerald-400' : 'bg-red-400' %>"></span>
-            <span class="font-medium text-sm"><%= source.name %></span>
-            <span class="text-xs px-2 py-0.5 rounded-full <%= source.trust_level === 'core' ? 'bg-brand-500/20 text-brand-400' : source.trust_level === 'probation' ? 'bg-red-500/20 text-red-400' : 'bg-stone-700 text-stone-400' %>"><%= source.trust_level %></span>
-            <span class="text-xs text-stone-600"><%= source.type %></span>
-            <span class="text-xs text-stone-600"><%= source.region.toUpperCase() %></span>
+      <div x-data="{ editing: false }" class="bg-stone-900 border border-stone-800 rounded-lg overflow-hidden hover:border-stone-700 transition">
+
+        <!-- Summary Row -->
+        <div class="p-5 flex items-center justify-between">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="w-2 h-2 rounded-full <%= source.active ? 'bg-emerald-400' : 'bg-red-400' %>"></span>
+              <span class="font-medium text-sm"><%= source.name %></span>
+              <span class="text-xs px-2 py-0.5 rounded-full <%= source.trust_level === 'core' ? 'bg-brand-500/20 text-brand-400' : source.trust_level === 'probation' ? 'bg-red-500/20 text-red-400' : 'bg-stone-700 text-stone-400' %>"><%= source.trust_level %></span>
+              <span class="text-xs text-stone-600"><%= source.type %></span>
+              <span class="text-xs text-stone-600"><%= source.region.toUpperCase() %></span>
+            </div>
+            <div class="text-xs text-stone-500"><%= source.url %></div>
+            <div class="text-xs text-stone-600 mt-1">
+              Yield: <%= (source.yield_score * 100).toFixed(0) %>% &middot;
+              Categories: <%= source.categories.join(', ') %>
+              <% if (source.last_scraped_at) { %>&middot; Last scraped: <%= new Date(source.last_scraped_at).toLocaleDateString('en-CA', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) %><% } %>
+              <% if (source.last_yield != null) { %>&middot; Last yield: <span class="<%= source.last_yield > 0 ? 'text-emerald-400' : 'text-red-400' %>"><%= source.last_yield %> items</span><% } %>
+              <% if (source.consecutive_failures > 0) { %>&middot; <span class="text-red-400"><%= source.consecutive_failures %> failures</span><% } %>
+            </div>
           </div>
-          <div class="text-xs text-stone-500"><%= source.url %></div>
-          <div class="text-xs text-stone-600 mt-1">
-            Yield: <%= (source.yield_score * 100).toFixed(0) %>% &middot;
-            Categories: <%= source.categories.join(', ') %>
-            <% if (source.last_scraped_at) { %>&middot; Last scraped: <%= new Date(source.last_scraped_at).toLocaleDateString('en-CA', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) %><% } %>
-            <% if (source.last_yield != null) { %>&middot; Last yield: <span class="<%= source.last_yield > 0 ? 'text-emerald-400' : 'text-red-400' %>"><%= source.last_yield %> items</span><% } %>
-            <% if (source.consecutive_failures > 0) { %>&middot; <span class="text-red-400"><%= source.consecutive_failures %> failures</span><% } %>
+          <div class="flex items-center gap-2 shrink-0">
+            <button @click="editing = !editing" class="text-xs px-3 py-1.5 rounded border border-stone-700 text-stone-400 hover:border-brand-500 hover:text-brand-400 transition">
+              Edit
+            </button>
+            <form method="POST" action="/admin/sources/<%= source.id %>/toggle">
+              <button type="submit" class="text-xs px-3 py-1.5 rounded border <%= source.active ? 'border-stone-700 text-stone-400 hover:border-red-500 hover:text-red-400' : 'border-brand-500 text-brand-400 hover:bg-brand-500/10' %> transition">
+                <%= source.active ? 'Disable' : 'Enable' %>
+              </button>
+            </form>
+            <form method="POST" action="/admin/sources/<%= source.id %>/delete" onsubmit="return confirm('Delete this source? Items referencing it will be kept but the source will be disabled.')">
+              <button type="submit" class="text-xs px-3 py-1.5 rounded border border-stone-700 text-stone-600 hover:border-red-500 hover:text-red-400 transition">
+                Delete
+              </button>
+            </form>
           </div>
         </div>
-        <form method="POST" action="/admin/sources/<%= source.id %>/toggle">
-          <button type="submit" class="text-xs px-3 py-1.5 rounded border <%= source.active ? 'border-stone-700 text-stone-400 hover:border-red-500 hover:text-red-400' : 'border-brand-500 text-brand-400 hover:bg-brand-500/10' %> transition">
-            <%= source.active ? 'Disable' : 'Enable' %>
-          </button>
-        </form>
+
+        <!-- Inline Edit Form -->
+        <div x-show="editing" x-cloak class="border-t border-stone-800 p-5">
+          <form method="POST" action="/admin/sources/<%= source.id %>/edit" class="space-y-4">
+            <div class="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-medium mb-1">Name</label>
+                <input type="text" name="name" value="<%= source.name %>" required class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm focus:border-brand-500">
+              </div>
+              <div>
+                <label class="block text-xs font-medium mb-1">URL</label>
+                <input type="url" name="url" value="<%= source.url %>" required class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm focus:border-brand-500">
+              </div>
+            </div>
+            <div class="grid sm:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-xs font-medium mb-1">Type</label>
+                <select name="type" class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm">
+                  <% ['rss','html','api','manual'].forEach(function(t) { %>
+                    <option value="<%= t %>" <%= source.type === t ? 'selected' : '' %>><%= t.toUpperCase() %></option>
+                  <% }) %>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-medium mb-1">Region</label>
+                <select name="region" class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm">
+                  <% regions.forEach(function(r) { %>
+                    <option value="<%= r.slug %>" <%= source.region === r.slug ? 'selected' : '' %>><%= r.label %></option>
+                  <% }) %>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-medium mb-1">Trust Level</label>
+                <select name="trust_level" class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm">
+                  <% ['core','candidate','probation'].forEach(function(tl) { %>
+                    <option value="<%= tl %>" <%= source.trust_level === tl ? 'selected' : '' %>><%= tl %></option>
+                  <% }) %>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-medium mb-1">Categories</label>
+              <div class="flex flex-wrap gap-2">
+                <% categories.forEach(function(cat) { %>
+                  <label class="flex items-center gap-1 text-xs">
+                    <input type="checkbox" name="categories" value="<%= cat.slug %>" class="rounded border-stone-600 bg-stone-800 text-brand-500"
+                      <%= source.categories.includes(cat.slug) ? 'checked' : '' %>>
+                    <%= cat.icon %> <%= cat.label %>
+                  </label>
+                <% }) %>
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-medium mb-1">Scrape Frequency (cron)</label>
+              <input type="text" name="scrape_frequency" value="<%= source.scrape_frequency %>" class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-medium mb-1">Notes</label>
+              <textarea name="notes" rows="2" class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm"><%= source.notes || '' %></textarea>
+            </div>
+            <div class="flex gap-2">
+              <button type="submit" class="bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition">Save Changes</button>
+              <button type="button" @click="editing = false" class="text-sm text-stone-400 hover:text-stone-200 px-4 py-2 transition">Cancel</button>
+            </div>
+          </form>
+        </div>
+
       </div>
     <% }) %>
   </div>

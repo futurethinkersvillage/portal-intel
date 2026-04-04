@@ -6,6 +6,9 @@
   <% if (success) { %>
     <div class="bg-brand-400/10 text-brand-400 text-sm px-4 py-3 rounded-lg mb-6">Profile saved.</div>
   <% } %>
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="bg-red-500/10 text-red-400 text-sm px-4 py-3 rounded-lg mb-6"><%= error %></div>
+  <% } %>
 
   <form method="POST" action="/profile/edit" class="space-y-6">
     <div>

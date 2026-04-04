@@ -20,7 +20,7 @@ export async function feedRoutes(app: FastifyInstance) {
        WHERE ci.status IN ('approved', 'newsletter', 'feed')
          AND (ci.expires_at IS NULL OR ci.expires_at > now())
        ORDER BY ci.total_score DESC, ci.collected_at DESC
-       LIMIT 200`
+       LIMIT 500`
     );
     const items = rawItems;
 

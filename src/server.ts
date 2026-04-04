@@ -5,6 +5,7 @@ import fastifyView from "@fastify/view";
 import fastifyFormbody from "@fastify/formbody";
 import fastifyCookie from "@fastify/cookie";
 import fastifyCors from "@fastify/cors";
+import fastifyRateLimit from "@fastify/rate-limit";
 import ejs from "ejs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -31,6 +32,9 @@ const app = Fastify({ logger: true });
 await app.register(fastifyCors, {
   origin: process.env.BASE_URL || "http://localhost:3000",
   credentials: true,
+});
+await app.register(fastifyRateLimit, {
+  global: false, // Apply per-route, not globally
 });
 await app.register(fastifyCookie);
 await app.register(fastifyFormbody);

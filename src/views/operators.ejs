@@ -1,0 +1,85 @@
+
+<div x-data="{ activeCategory: '' }">
+  <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
+    <div>
+      <h1 class="text-2xl font-display font-bold">Operator Directory</h1>
+      <p class="text-sm text-stone-400 mt-1">Builders, makers, and operators across BC &amp; Alberta</p>
+    </div>
+    <% if (user) { %>
+      <a href="/profile/edit" class="text-sm text-brand-400 hover:text-brand-300 transition">+ Add Your Profile</a>
+    <% } else { %>
+      <a href="/" class="text-sm text-stone-500 hover:text-stone-300 transition">Sign in to list your project</a>
+    <% } %>
+  </div>
+
+  <% if (profiles.length === 0) { %>
+    <div class="text-center py-16">
+      <div class="text-4xl mb-4">🔧</div>
+      <p class="text-stone-400 mb-2">No operator profiles yet.</p>
+      <% if (user) { %>
+        <a href="/profile/edit" class="text-sm text-brand-400 hover:text-brand-300">Be the first to add yours &rarr;</a>
+      <% } %>
+    </div>
+  <% } else { %>
+
+    <%
+      // Group by category
+      var grouped = {};
+      profiles.forEach(function(p) {
+        if (!grouped[p.category]) grouped[p.category] = [];
+        grouped[p.category].push(p);
+      });
+      var catOrder = ['land','grants','operators','jobs','events','infrastructure'];
+      var catLabels = { land:'Land & Property', grants:'Grants & Funding', operators:'Operators & Trades', jobs:'Jobs & Work', events:'Events & Education', infrastructure:'Infrastructure & Building' };
+      var catIcons  = { land:'🏔️', grants:'💰', operators:'🔧', jobs:'💼', events:'📅', infrastructure:'🏗️' };
+    %>
+
+    <% catOrder.forEach(function(slug) { %>
+      <% if (!grouped[slug]) return; %>
+      <div class="mb-10">
+        <h2 class="text-sm font-semibold tracking-widest uppercase text-stone-500 mb-4 flex items-center gap-2">
+          <span><%= catIcons[slug] %></span>
+          <span><%= catLabels[slug] %></span>
+          <span class="text-stone-700 font-normal">(<%= grouped[slug].length %>)</span>
+        </h2>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <% grouped[slug].forEach(function(p) { %>
+            <div class="bg-stone-900 border border-stone-800 rounded-lg p-5 hover:border-stone-700 transition flex flex-col">
+              <div class="flex items-center gap-3 mb-3">
+                <% if (p.user_image) { %>
+                  <img src="<%= p.user_image %>" alt="" class="w-9 h-9 rounded-full object-cover flex-shrink-0">
+                <% } else { %>
+                  <div class="w-9 h-9 rounded-full bg-brand-800 flex items-center justify-center text-brand-400 font-semibold text-sm flex-shrink-0">
+                    <%= p.display_name.charAt(0).toUpperCase() %>
+                  </div>
+                <% } %>
+                <div class="min-w-0">
+                  <div class="font-medium text-sm truncate"><%= p.display_name %></div>
+                  <div class="text-xs text-stone-500"><%= p.region.toUpperCase() %></div>
+                </div>
+              </div>
+              <% if (p.tagline) { %>
+                <p class="text-xs text-stone-300 mb-2 leading-relaxed"><%= p.tagline %></p>
+              <% } %>
+              <% if (p.description) { %>
+                <p class="text-xs text-stone-500 leading-relaxed line-clamp-3 flex-1"><%= p.description %></p>
+              <% } %>
+              <% if (p.website_url || p.contact_method) { %>
+                <div class="flex items-center gap-3 mt-3 pt-3 border-t border-stone-800">
+                  <% if (p.website_url) { %>
+                    <a href="<%= p.website_url %>" target="_blank" rel="noopener noreferrer"
+                      class="text-xs text-accent-400 hover:text-accent-300 font-medium transition">Website &rarr;</a>
+                  <% } %>
+                  <% if (p.contact_method) { %>
+                    <span class="text-xs text-stone-500 truncate"><%= p.contact_method %></span>
+                  <% } %>
+                </div>
+              <% } %>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    <% }) %>
+
+  <% } %>
+</div>
