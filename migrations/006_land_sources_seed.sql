@@ -1,3 +1,12 @@
+-- Add unique constraint on sources.url if not exists
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_indexes WHERE tablename = 'sources' AND indexname = 'sources_url_unique'
+  ) THEN
+    ALTER TABLE sources ADD CONSTRAINT sources_url_unique UNIQUE (url);
+  END IF;
+END $$;
+
 -- Seed rural land listing sources for BC & Alberta
 INSERT INTO sources (name, url, type, categories, region, trust_level, scrape_frequency, notes)
 VALUES
