@@ -1,7 +1,7 @@
--- Deduplicate sources: keep lowest id per url, delete rest
+-- Deduplicate sources: keep oldest per url (by created_at), delete rest
 DELETE FROM sources
 WHERE id NOT IN (
-  SELECT MIN(id) FROM sources GROUP BY url
+  SELECT DISTINCT ON (url) id FROM sources ORDER BY url, created_at ASC
 );
 
 -- Reset consecutive_failures on all sources (Firecrawl format bug was the cause)
