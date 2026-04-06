@@ -10,7 +10,7 @@ export async function submitRoutes(app: FastifyInstance) {
   // Submission form
   app.get("/", async (request, reply) => {
     const user = (request as any).user;
-    return reply.view("submit.ejs", { user, categories: CATEGORIES, regions: REGIONS, success: false, error: null });
+    return reply.view("submit.ejs", { user, success: false, error: null });
   });
 
   // Handle submission — 10 per hour per user
@@ -50,15 +50,13 @@ export async function submitRoutes(app: FastifyInstance) {
       );
     } catch (err: any) {
       return reply.view("submit.ejs", {
-        user, categories: CATEGORIES, regions: REGIONS, success: false,
+        user, success: false,
         error: err.message || "Submission failed.",
       });
     }
 
     return reply.view("submit.ejs", {
       user,
-      categories: CATEGORIES,
-      regions: REGIONS,
       success: true,
       error: null,
     });

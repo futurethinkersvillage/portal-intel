@@ -63,9 +63,9 @@
   </template>
 
   <!-- Profiles Section -->
-  <template x-if="profiles.length > 0 && (activeCategory === '' || activeCategory === 'operators')">
+  <template x-if="profiles.length > 0 && (activeCategory === '' || activeCategory === 'community')">
     <div class="mb-10">
-      <h2 class="text-sm font-semibold tracking-widest uppercase text-stone-500 mb-3">🔧 Operator Profiles</h2>
+      <h2 class="text-sm font-semibold tracking-widest uppercase text-stone-500 mb-3">🤝 Community Profiles</h2>
       <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
         <template x-for="profile in filteredProfiles" :key="profile.id">
           <div class="bg-stone-900 border border-stone-800 rounded-lg p-5 hover:border-brand-600/50 transition">
@@ -154,29 +154,8 @@
 
 <script>
 function feedApp() {
-  const categoryMap = {
-    <% categories.forEach(function(cat, i) { %>'<%- cat.slug %>': '<%- cat.label %>'<%= i < categories.length - 1 ? ',' : '' %><% }) %>
-  };
-  const iconMap = {
-    <% categories.forEach(function(cat, i) { %>'<%- cat.slug %>': '<%- cat.icon %>'<%= i < categories.length - 1 ? ',' : '' %><% }) %>
-  };
-  const badgeColors = {
-    land:           'bg-emerald-500/10 text-emerald-400',
-    grants:         'bg-amber-500/10 text-amber-400',
-    operators:      'bg-sky-500/10 text-sky-400',
-    jobs:           'bg-violet-500/10 text-violet-400',
-    events:         'bg-rose-500/10 text-rose-400',
-    infrastructure: 'bg-orange-500/10 text-orange-400',
-  };
-  const textColors = {
-    land:           'text-emerald-400',
-    grants:         'text-amber-400',
-    operators:      'text-sky-400',
-    jobs:           'text-violet-400',
-    events:         'text-rose-400',
-    infrastructure: 'text-orange-400',
-  };
-  const categoryOrder = ['land', 'grants', 'operators', 'jobs', 'events', 'infrastructure'];
+  const catData = <%- categoryDataJSON %>;
+  const categoryOrder = <%- categoryOrderJSON %>;
 
   return {
     items: <%- items %>,
@@ -218,7 +197,7 @@ function feedApp() {
 
     get filteredProfiles() {
       return this.profiles.filter(p => {
-        if (this.activeCategory && this.activeCategory !== 'operators' && p.category !== this.activeCategory) return false;
+        if (this.activeCategory && this.activeCategory !== 'community' && p.category !== this.activeCategory) return false;
         if (this.activeRegion && p.region !== this.activeRegion) return false;
         return true;
       });
@@ -226,10 +205,10 @@ function feedApp() {
 
     resetPagination() { this.visibleCount = 50; },
 
-    categoryLabel(slug) { return categoryMap[slug] || slug; },
-    categoryIcon(slug) { return iconMap[slug] || '📋'; },
-    categoryBadgeClass(slug) { return badgeColors[slug] || 'bg-stone-800 text-stone-400'; },
-    categoryTextColor(slug) { return textColors[slug] || 'text-stone-500'; },
+    categoryLabel(slug) { return catData[slug]?.label || slug; },
+    categoryIcon(slug) { return catData[slug]?.icon || '📋'; },
+    categoryBadgeClass(slug) { return catData[slug]?.badge || 'bg-stone-800 text-stone-400'; },
+    categoryTextColor(slug) { return catData[slug]?.text || 'text-stone-500'; },
 
     scoreColor(score) {
       if (score >= 0.7) return 'bg-emerald-400';

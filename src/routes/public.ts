@@ -23,7 +23,8 @@ export async function publicRoutes(app: FastifyInstance) {
     );
 
     // Group by category
-    const categoryOrder = ['land', 'grants', 'operators', 'jobs', 'events', 'infrastructure'];
+    const { CATEGORY_ORDER } = await import("../lib/categories.js");
+    const categoryOrder = CATEGORY_ORDER;
     const preview: Record<string, typeof previewItems> = {};
     for (const item of previewItems) {
       if (!preview[item.category]) preview[item.category] = [];
@@ -56,8 +57,8 @@ export async function publicRoutes(app: FastifyInstance) {
     return reply.view("unsubscribe.ejs", { success: (rowCount ?? 0) > 0 });
   });
 
-  // Operator profiles directory (public)
-  app.get("/operators", async (request, reply) => {
+  // Community directory (formerly Operators)
+  app.get("/community", async (request, reply) => {
     const user = await getUser(request);
 
     const { rows: profiles } = await pool.query(
@@ -68,7 +69,18 @@ export async function publicRoutes(app: FastifyInstance) {
        ORDER BY p.category, p.created_at DESC`
     );
 
-    return reply.view("operators.ejs", { user, profiles });
+    return reply.view("community.ejs", { user, profiles });
+  });
+
+  // Redirect old /operators URL
+  app.get("/operators", async (request, reply) => {
+    return reply.redirect("/community");
+  });
+
+  // Calls placeholder
+  app.get("/calls", async (request, reply) => {
+    const user = await getUser(request);
+    return reply.view("calls.ejs", { user });
   });
 
   // Newsletter archive (requires auth)

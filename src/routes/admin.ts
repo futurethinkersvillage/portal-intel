@@ -41,7 +41,7 @@ export async function adminRoutes(app: FastifyInstance) {
     const { rows: sources } = await pool.query(
       `SELECT * FROM sources ORDER BY trust_level, name`
     );
-    return reply.view("admin/sources.ejs", { user, sources, categories: CATEGORIES, regions: REGIONS });
+    return reply.view("admin/sources.ejs", { user, sources });
   });
 
   app.post("/sources", async (request, reply) => {
@@ -178,7 +178,6 @@ export async function adminRoutes(app: FastifyInstance) {
       user,
       items,
       nextIssue,
-      categories: CATEGORIES,
     });
   });
 
@@ -319,13 +318,14 @@ export async function adminRoutes(app: FastifyInstance) {
   app.get("/items", async (request, reply) => {
     const user = (request as any).user;
     const { rows: items } = await pool.query(
-      `SELECT ci.*, s.name as source_name
+      `SELECT ci.*, COALESCE(ci.ai_summary, ci.summary) as summary,
+              s.name as source_name
        FROM collected_items ci
        LEFT JOIN sources s ON ci.source_id = s.id
-       ORDER BY ci.collected_at DESC
-       LIMIT 100`
+       ORDER BY CASE ci.admin_vote WHEN 0 THEN 0 WHEN 1 THEN 1 ELSE 2 END, ci.collected_at DESC
+       LIMIT 200`
     );
-    return reply.view("admin/items.ejs", { user, items, categories: CATEGORIES });
+    return reply.view("admin/items.ejs", { user, items });
   });
 
   // AI Source Search
@@ -357,6 +357,145 @@ export async function adminRoutes(app: FastifyInstance) {
     await pool.query(
       `UPDATE collected_items SET status = $1 WHERE id = $2`,
       [status, id]
+    );
+    return reply.redirect("/admin/items");
+  });
+
+  // Admin feedback: vote on an item (+1 upvote, -1 downvote)
+  app.post("/items/:id/vote", async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const { vote, comment } = request.body as { vote: string; comment?: string };
+    const voteVal = parseInt(vote);
+    if (voteVal !== 1 && voteVal !== -1 && voteVal !== 0) return reply.redirect("/admin/items");
+
+    // Require comment for non-zero votes
+    if (voteVal !== 0 && (!comment || !comment.trim())) {
+      return reply.redirect("/admin/items");
+    }
+
+    // Set the vote and comment
+    await pool.query(
+      `UPDATE collected_items SET admin_vote = $1, admin_comment = $2 WHERE id = $3`,
+      [voteVal, comment?.trim() || null, id]
+    );
+
+    // Downvote = archive immediately
+    if (voteVal === -1) {
+      await pool.query(
+        `UPDATE collected_items SET status = 'archived' WHERE id = $1 AND status NOT IN ('archived', 'expired')`,
+        [id]
+      );
+    }
+    // Upvote = promote to approved if pending/feed
+    if (voteVal === 1) {
+      await pool.query(
+        `UPDATE collected_items SET status = 'approved' WHERE id = $1 AND status IN ('pending', 'feed')`,
+        [id]
+      );
+    }
+
+    // Propagate feedback to source yield_score
+    const { rows } = await pool.query(
+      `SELECT source_id FROM collected_items WHERE id = $1 AND source_id IS NOT NULL`, [id]
+    );
+    if (rows[0]?.source_id) {
+      // Recalculate source yield from admin votes on its items
+      const { rows: stats } = await pool.query(
+        `SELECT
+           COUNT(*) FILTER (WHERE admin_vote = 1) as upvotes,
+           COUNT(*) FILTER (WHERE admin_vote = -1) as downvotes,
+           COUNT(*) as total
+         FROM collected_items WHERE source_id = $1 AND admin_vote != 0`,
+        [rows[0].source_id]
+      );
+      const { upvotes, downvotes, total } = stats[0];
+      if (parseInt(total) > 0) {
+        // yield_score = ratio of upvotes to total votes, blended with current score
+        const voteRatio = parseInt(upvotes) / (parseInt(upvotes) + parseInt(downvotes));
+        // Blend: 60% vote-derived, 40% existing (so a few votes don't completely override)
+        const { rows: src } = await pool.query(`SELECT yield_score FROM sources WHERE id = $1`, [rows[0].source_id]);
+        const currentYield = src[0]?.yield_score ?? 0.5;
+        const blendedYield = Math.round((voteRatio * 0.6 + currentYield * 0.4) * 100) / 100;
+        await pool.query(
+          `UPDATE sources SET yield_score = $1, updated_at = now() WHERE id = $2`,
+          [blendedYield, rows[0].source_id]
+        );
+      }
+    }
+
+    return reply.redirect("/admin/items");
+  });
+
+  // Admin feedback: add note to an item
+  app.post("/items/:id/note", async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const { note } = request.body as { note: string };
+    await pool.query(
+      `UPDATE collected_items SET admin_note = $1 WHERE id = $2`,
+      [note?.trim() || null, id]
+    );
+    return reply.redirect("/admin/items");
+  });
+
+  // Admin feedback: rate a source (+1 good, -1 bad, 0 neutral)
+  app.post("/sources/:id/rate", async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const { rating } = request.body as { rating: string };
+    const ratingVal = parseInt(rating);
+    if (ratingVal !== 1 && ratingVal !== -1 && ratingVal !== 0) return reply.redirect("/admin/sources");
+
+    await pool.query(
+      `UPDATE sources SET admin_rating = $1, updated_at = now() WHERE id = $2`,
+      [ratingVal, id]
+    );
+
+    // If downvoted, reduce yield_score; if upvoted, boost it
+    if (ratingVal === -1) {
+      await pool.query(
+        `UPDATE sources SET yield_score = GREATEST(0, yield_score - 0.2), updated_at = now() WHERE id = $1`,
+        [id]
+      );
+    } else if (ratingVal === 1) {
+      await pool.query(
+        `UPDATE sources SET yield_score = LEAST(1, yield_score + 0.15), updated_at = now() WHERE id = $1`,
+        [id]
+      );
+    }
+
+    return reply.redirect("/admin/sources");
+  });
+
+  // Downvoted items list
+  app.get("/downvoted", async (request, reply) => {
+    const user = (request as any).user;
+    const { rows: items } = await pool.query(
+      `SELECT ci.*, COALESCE(ci.ai_summary, ci.summary) as summary,
+              s.name as source_name
+       FROM collected_items ci
+       LEFT JOIN sources s ON ci.source_id = s.id
+       WHERE ci.admin_vote = -1
+       ORDER BY ci.collected_at DESC
+       LIMIT 200`
+    );
+    return reply.view("admin/downvoted.ejs", { user, items });
+  });
+
+  // Restore a downvoted item
+  app.post("/items/:id/restore", async (request, reply) => {
+    const { id } = request.params as { id: string };
+    await pool.query(
+      `UPDATE collected_items SET admin_vote = 0, admin_comment = NULL, status = 'pending' WHERE id = $1`,
+      [id]
+    );
+    return reply.redirect("/admin/downvoted");
+  });
+
+  // Pin/unpin an item
+  app.post("/items/:id/pin", async (request, reply) => {
+    const { id } = request.params as { id: string };
+    await pool.query(
+      `UPDATE collected_items SET pinned_at = CASE WHEN pinned_at IS NULL THEN now() ELSE NULL END WHERE id = $1`,
+      [id]
     );
     return reply.redirect("/admin/items");
   });

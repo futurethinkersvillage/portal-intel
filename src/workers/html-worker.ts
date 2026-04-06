@@ -41,7 +41,13 @@ function buildPrompt(categories: string[], region: string): string {
     .map((slug) => CATEGORIES.find((c) => c.slug === slug)?.label || slug)
     .join(", ");
 
-  return `Extract all distinct opportunities, listings, programs, events, or items from this page that are relevant to: ${catNames}. This is for a regional intelligence platform covering British Columbia and Alberta, Canada. Focus on actionable items — things people can apply to, attend, buy, or act on. For each item extract: title, a brief description, the URL/link, any date or deadline, location if mentioned, and price if mentioned. Ignore navigation links, headers, footers, and ads.`;
+  return `Extract all distinct opportunities, listings, programs, events, or items from this page that are relevant to: ${catNames}. This is for a regional intelligence platform serving people actively building resilient, off-grid, and rural communities in British Columbia and Alberta, Canada.
+
+Focus on actionable items — things people can apply to, attend, buy, or act on. For each item extract: title, a brief description, the URL/link, any date or deadline, location if mentioned, and price if mentioned.
+
+EXCLUDE: ESG/DEI-specific incentives, nursing/clinical health job postings, aspirational content without concrete details. Focus on items relevant to builders, investors, and operators with real experience in resilience infrastructure.
+
+Ignore navigation links, headers, footers, and ads.`;
 }
 
 const itemSchema = {

@@ -1,6 +1,5 @@
 import { FastifyInstance } from "fastify";
 import { requireAuth } from "../lib/middleware.js";
-import { CATEGORIES, REGIONS } from "../lib/categories.js";
 import pool from "../lib/db.js";
 
 export async function feedRoutes(app: FastifyInstance) {
@@ -19,7 +18,8 @@ export async function feedRoutes(app: FastifyInstance) {
        LEFT JOIN sources s ON ci.source_id = s.id
        WHERE ci.status IN ('approved', 'newsletter', 'feed')
          AND (ci.expires_at IS NULL OR ci.expires_at > now())
-       ORDER BY ci.total_score DESC, ci.collected_at DESC
+       ORDER BY CASE WHEN ci.pinned_at IS NOT NULL THEN 0 ELSE 1 END,
+              ci.total_score DESC, ci.collected_at DESC
        LIMIT 500`
     );
     const items = rawItems;
@@ -52,8 +52,6 @@ export async function feedRoutes(app: FastifyInstance) {
       profiles: JSON.stringify(profiles),
       closingSoon: JSON.stringify(closingSoon),
       savedIds: JSON.stringify([...savedIds]),
-      categories: CATEGORIES,
-      regions: REGIONS,
     });
   });
 
@@ -93,6 +91,6 @@ export async function feedRoutes(app: FastifyInstance) {
       [user.id]
     );
 
-    return reply.view("watchlist.ejs", { user, items, categories: CATEGORIES });
+    return reply.view("watchlist.ejs", { user, items });
   });
 }

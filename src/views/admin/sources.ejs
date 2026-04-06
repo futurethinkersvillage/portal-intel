@@ -74,7 +74,7 @@
       <div x-data="{ editing: false }" class="bg-stone-900 border border-stone-800 rounded-lg overflow-hidden hover:border-stone-700 transition">
 
         <!-- Summary Row -->
-        <div class="p-5 flex items-center justify-between">
+        <div class="p-5 flex items-center justify-between <%= source.admin_rating === 1 ? 'border-l-2 border-l-emerald-500' : source.admin_rating === -1 ? 'border-l-2 border-l-red-500' : '' %>">
           <div>
             <div class="flex items-center gap-2 mb-1">
               <span class="w-2 h-2 rounded-full <%= source.active ? 'bg-emerald-400' : 'bg-red-400' %>"></span>
@@ -82,17 +82,47 @@
               <span class="text-xs px-2 py-0.5 rounded-full <%= source.trust_level === 'core' ? 'bg-brand-500/20 text-brand-400' : source.trust_level === 'probation' ? 'bg-red-500/20 text-red-400' : 'bg-stone-700 text-stone-400' %>"><%= source.trust_level %></span>
               <span class="text-xs text-stone-600"><%= source.type %></span>
               <span class="text-xs text-stone-600"><%= source.region.toUpperCase() %></span>
+              <% if (source.admin_rating === 1) { %><span class="text-xs text-emerald-400 font-medium">Liked</span><% } %>
+              <% if (source.admin_rating === -1) { %><span class="text-xs text-red-400 font-medium">Disliked</span><% } %>
             </div>
             <div class="text-xs text-stone-500"><%= source.url %></div>
             <div class="text-xs text-stone-600 mt-1">
-              Yield: <%= (source.yield_score * 100).toFixed(0) %>% &middot;
+              Yield: <span class="<%= source.yield_score >= 0.7 ? 'text-emerald-400' : source.yield_score >= 0.4 ? 'text-amber-400' : 'text-red-400' %>"><%= (source.yield_score * 100).toFixed(0) %>%</span> &middot;
               Categories: <%= source.categories.join(', ') %>
               <% if (source.last_scraped_at) { %>&middot; Last scraped: <%= new Date(source.last_scraped_at).toLocaleDateString('en-CA', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) %><% } %>
               <% if (source.last_yield != null) { %>&middot; Last yield: <span class="<%= source.last_yield > 0 ? 'text-emerald-400' : 'text-red-400' %>"><%= source.last_yield %> items</span><% } %>
               <% if (source.consecutive_failures > 0) { %>&middot; <span class="text-red-400"><%= source.consecutive_failures %> failures</span><% } %>
             </div>
+            <% if (source.notes) { %>
+              <div class="text-xs text-brand-300 mt-1.5 bg-brand-900/30 border border-brand-800/40 rounded px-2.5 py-1">
+                <%= source.notes %>
+              </div>
+            <% } %>
           </div>
           <div class="flex items-center gap-2 shrink-0">
+            <!-- Rating buttons -->
+            <div class="flex items-center gap-0.5 mr-1">
+              <form method="POST" action="/admin/sources/<%= source.id %>/rate" class="inline">
+                <input type="hidden" name="rating" value="1">
+                <button type="submit" class="p-1.5 rounded-lg transition <%= source.admin_rating === 1 ? 'bg-emerald-500/20 text-emerald-400' : 'text-stone-600 hover:text-emerald-400 hover:bg-emerald-500/10' %>" title="Good source \u2014 produces valuable content">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14z M4 15h0"/></svg>
+                </button>
+              </form>
+              <form method="POST" action="/admin/sources/<%= source.id %>/rate" class="inline">
+                <input type="hidden" name="rating" value="-1">
+                <button type="submit" class="p-1.5 rounded-lg transition <%= source.admin_rating === -1 ? 'bg-red-500/20 text-red-400' : 'text-stone-600 hover:text-red-400 hover:bg-red-500/10' %>" title="Bad source \u2014 low value content">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 15v4a3 3 0 003 3l4-9V2H5.72a2 2 0 00-2 1.7l-1.38 9a2 2 0 002 2.3H10z M20 2h0"/></svg>
+                </button>
+              </form>
+              <% if (source.admin_rating !== 0) { %>
+              <form method="POST" action="/admin/sources/<%= source.id %>/rate" class="inline">
+                <input type="hidden" name="rating" value="0">
+                <button type="submit" class="p-1 rounded-lg text-stone-700 hover:text-stone-400 transition" title="Clear rating">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+              </form>
+              <% } %>
+            </div>
             <button @click="editing = !editing" class="text-xs px-3 py-1.5 rounded border border-stone-700 text-stone-400 hover:border-brand-500 hover:text-brand-400 transition">
               Edit
             </button>

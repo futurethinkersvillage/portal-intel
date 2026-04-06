@@ -1,10 +1,11 @@
 import pool from "../lib/db.js";
 
 const WEIGHTS = {
-  recency: 0.25,
-  actionability: 0.35,
-  uniqueness: 0.20,
-  sourceQuality: 0.20,
+  recency: 0.20,
+  actionability: 0.30,
+  uniqueness: 0.15,
+  sourceQuality: 0.15,
+  adminFeedback: 0.20,
 };
 
 const ACTION_KEYWORDS = [
@@ -70,8 +71,17 @@ export async function scoreItems() {
      LIMIT 100`
   );
 
+  // Build a lookup of source admin_ratings for feedback propagation
+  const { rows: ratedSources } = await pool.query(
+    `SELECT id, admin_rating FROM sources WHERE admin_rating != 0`
+  );
+  const sourceRatings = new Map(ratedSources.map((s: any) => [s.id, s.admin_rating]));
+
   let scored = 0;
   for (const item of items) {
+    // Skip items that have been manually voted on — admin decision is final
+    if (item.admin_vote !== 0) continue;
+
     const recency = scoreRecency(new Date(item.collected_at));
     // Use AI score if available, otherwise fall back to keyword scoring
     const actionability = item.ai_score != null
@@ -80,11 +90,17 @@ export async function scoreItems() {
     const uniqueness = await scoreUniqueness(item.title, item.id);
     const sourceQuality = item.source_yield ?? 0.5;
 
+    // Admin feedback signal: derived from source rating + similar item votes
+    // Source rating: +1 = 0.8 baseline, -1 = 0.2 baseline, 0 = 0.5
+    const srcRating = sourceRatings.get(item.source_id) ?? 0;
+    const adminSignal = srcRating === 1 ? 0.8 : srcRating === -1 ? 0.2 : 0.5;
+
     let totalScore =
       recency * WEIGHTS.recency +
       actionability * WEIGHTS.actionability +
       uniqueness * WEIGHTS.uniqueness +
-      sourceQuality * WEIGHTS.sourceQuality;
+      sourceQuality * WEIGHTS.sourceQuality +
+      adminSignal * WEIGHTS.adminFeedback;
 
     // Urgency boost for items expiring within 7 days
     if (item.expires_at) {

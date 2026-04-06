@@ -1,5 +1,5 @@
 
-<div class="max-w-2xl mx-auto">
+<div class="max-w-2xl mx-auto" x-data="{ selectedCategory: '', selectedType: '' }">
   <h1 class="text-2xl font-display font-bold mb-2">Submit to Intel</h1>
   <p class="text-sm text-stone-400 mb-6">Share a project, listing, event, deal, or tip. All submissions are reviewed before appearing on the feed.</p>
 
@@ -9,21 +9,33 @@
     </div>
   <% } %>
 
-  <% if (error) { %>
+  <% if (typeof error !== 'undefined' && error) { %>
     <div class="bg-red-400/10 text-red-400 text-sm px-4 py-3 rounded-lg mb-6"><%= error %></div>
   <% } %>
 
   <form method="POST" action="/submit" class="space-y-6">
+    <!-- Type Selection Grid -->
     <div>
-      <label class="block text-sm font-medium mb-1">Type</label>
-      <select name="type" required class="w-full bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
-        <option value="deal">🤝 Deal — off-market land, partnership opportunity, investment deal</option>
-        <option value="project">🏗️ Project — "I'm building X in Y region"</option>
-        <option value="listing">📋 Listing — land, equipment, services for sale</option>
-        <option value="event">📅 Event — workshop, meetup, open house</option>
-        <option value="source">🔗 Source — a website or feed we should track</option>
-        <option value="tip">💡 Tip — freeform info or lead</option>
-      </select>
+      <label class="block text-sm font-medium mb-2">What are you sharing?</label>
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <% [
+          { value: 'deal', icon: '🤝', label: 'Deal', desc: 'Partnership or investment' },
+          { value: 'project', icon: '🏗️', label: 'Project', desc: 'Something you\'re building' },
+          { value: 'listing', icon: '📋', label: 'Listing', desc: 'For sale or wanted' },
+          { value: 'event', icon: '📅', label: 'Event', desc: 'Workshop or meetup' },
+          { value: 'source', icon: '🔗', label: 'Source', desc: 'Website to track' },
+          { value: 'tip', icon: '💡', label: 'Tip', desc: 'Info or lead' },
+        ].forEach(function(t) { %>
+          <label class="cursor-pointer">
+            <input type="radio" name="type" value="<%= t.value %>" class="hidden peer" x-model="selectedType" required>
+            <div class="p-4 rounded-lg border text-center transition peer-checked:border-brand-500 peer-checked:bg-brand-500/10 border-stone-800 hover:border-stone-700">
+              <div class="text-2xl mb-1"><%= t.icon %></div>
+              <div class="text-sm font-medium"><%= t.label %></div>
+              <div class="text-xs text-stone-500 mt-0.5"><%= t.desc %></div>
+            </div>
+          </label>
+        <% }) %>
+      </div>
     </div>
 
     <div>
@@ -44,22 +56,34 @@
         class="w-full bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
     </div>
 
-    <div class="grid sm:grid-cols-2 gap-4">
-      <div>
-        <label class="block text-sm font-medium mb-1">Category</label>
-        <select name="category" required class="w-full bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
-          <% categories.forEach(function(cat) { %>
-            <option value="<%= cat.slug %>"><%= cat.label %></option>
-          <% }) %>
-        </select>
+    <!-- Category Selection Grid -->
+    <div>
+      <label class="block text-sm font-medium mb-2">Category</label>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <% categories.forEach(function(cat) { %>
+          <label class="cursor-pointer">
+            <input type="radio" name="category" value="<%= cat.slug %>" class="hidden peer" x-model="selectedCategory" required>
+            <div class="p-3 rounded-lg border text-center transition peer-checked:border-brand-500 peer-checked:bg-brand-500/10 border-stone-800 hover:border-stone-700">
+              <div class="text-xl mb-0.5"><%= cat.icon %></div>
+              <div class="text-xs font-medium"><%= cat.label %></div>
+            </div>
+          </label>
+        <% }) %>
       </div>
-      <div>
-        <label class="block text-sm font-medium mb-1">Region</label>
-        <select name="region" class="w-full bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
-          <% regions.forEach(function(r) { %>
-            <option value="<%= r.slug %>"><%= r.label %></option>
-          <% }) %>
-        </select>
+    </div>
+
+    <!-- Region Selection -->
+    <div>
+      <label class="block text-sm font-medium mb-2">Region</label>
+      <div class="flex gap-3">
+        <% regions.forEach(function(r, i) { %>
+          <label class="cursor-pointer">
+            <input type="radio" name="region" value="<%= r.slug %>" class="hidden peer" <%= i === 0 ? 'checked' : '' %>>
+            <div class="px-4 py-2 rounded-lg border text-center text-sm transition peer-checked:border-brand-500 peer-checked:bg-brand-500/10 border-stone-800 hover:border-stone-700">
+              <%= r.label %>
+            </div>
+          </label>
+        <% }) %>
       </div>
     </div>
 
@@ -70,7 +94,7 @@
       <p class="text-xs text-stone-500 mt-1">For grants, events, or listings with a deadline.</p>
     </div>
 
-    <button type="submit" class="bg-brand-500 hover:bg-brand-600 text-white font-medium px-6 py-3 rounded-lg transition">
+    <button type="submit" class="bg-brand-500 hover:bg-brand-600 text-white font-medium px-6 py-3 rounded-lg transition w-full">
       Submit for Review
     </button>
   </form>

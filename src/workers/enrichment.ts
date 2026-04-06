@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import pool from "../lib/db.js";
 import { CATEGORIES } from "../lib/categories.js";
 import { trackUsage } from "../lib/api-usage.js";
+import { getDownvoteFeedbackContext } from "../lib/feedback-context.js";
 
 const categoryList = CATEGORIES.map((c) => `${c.slug}: ${c.label}`).join(", ");
 
@@ -47,6 +48,16 @@ export async function enrichItems() {
     )
     .join("\n\n");
 
+  // Get admin feedback context for learning
+  let feedbackContext = "";
+  try {
+    feedbackContext = await getDownvoteFeedbackContext();
+  } catch {
+    // Non-fatal
+  }
+
+  const categorySlugs = CATEGORIES.map((c) => c.slug).join(", ");
+
   try {
     const resp = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
@@ -54,18 +65,27 @@ export async function enrichItems() {
       messages: [
         {
           role: "user",
-          content: `You are an intelligence analyst for a regional platform covering British Columbia and Alberta, Canada. Analyze these items and provide enrichment data.
+          content: `You are an intelligence analyst for a regional platform serving people who are actively building resilient, off-grid, and rural communities in British Columbia and Alberta, Canada. These are builders, investors, and operators with skin in the game — not dreamers or aspirational people.
 
 Categories: ${categoryList}
 
+CONTENT FILTERING RULES (strict):
+- EXCLUDE: ESG/DEI-related incentives or programs
+- EXCLUDE: Nursing positions, clinical health jobs, hospital/medical job postings
+- EXCLUDE: Aspirational "dreamer" content with no concrete details, no experience, no track record
+- EXCLUDE: Generic government press releases with no actionable content
+- FOCUS ON: Concrete, actionable items for people actively investing in resilience infrastructure
+- For health/wellness: include holistic wellness only, NOT clinical/nursing/medical
+- If an item should be excluded based on these rules, set its score to 0.0
+${feedbackContext}
 Items to analyze:
 ${itemDescriptions}
 
 For each item (by number), provide:
-1. "summary" — A concise 1-2 sentence actionable summary. Focus on what someone can DO with this information. If the original summary is good, improve it slightly.
-2. "actionability" — Brief note: what action can someone take? (e.g. "Apply by June 15", "Register online", "Visit listing", "Informational only")
-3. "score" — Actionability score 0.0-1.0 (1.0 = immediate action possible with clear deadline, 0.5 = useful but no urgency, 0.1 = informational/not actionable)
-4. "best_category" — The single best category slug from: land, grants, operators, jobs, events, infrastructure
+1. "summary" — A concise 1-2 sentence actionable summary written as a compelling headline. Focus on what someone can DO with this information.
+2. "actionability" — Brief note: what action can someone take? (e.g. "Apply by June 15", "Register online", "View listing", "Informational only")
+3. "score" — Actionability score 0.0-1.0 (1.0 = immediate action possible with clear deadline, 0.5 = useful but no urgency, 0.1 = informational/not actionable, 0.0 = should be excluded)
+4. "best_category" — The single best category slug from: ${categorySlugs}
 5. "expires" — ISO date string if you can infer a deadline/expiry, or null
 
 Respond in JSON only:
@@ -101,6 +121,16 @@ Respond in JSON only:
     for (const e of enriched) {
       const item = items[e.index - 1];
       if (!item) continue;
+
+      // If score is 0.0, auto-archive (filtered out by content rules)
+      if (typeof e.score === "number" && e.score === 0) {
+        await pool.query(
+          `UPDATE collected_items SET ai_score = 0, status = 'archived', enriched_at = now() WHERE id = $1`,
+          [item.id]
+        );
+        updated++;
+        continue;
+      }
 
       // Update the item with AI enrichment
       await pool.query(

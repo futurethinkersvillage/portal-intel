@@ -19,8 +19,6 @@ export async function profileRoutes(app: FastifyInstance) {
     return reply.view("profile-edit.ejs", {
       user,
       profile: rows[0] || null,
-      categories: CATEGORIES,
-      regions: REGIONS,
       success: false,
     });
   });
@@ -57,7 +55,7 @@ export async function profileRoutes(app: FastifyInstance) {
       }
     } catch (err: any) {
       return reply.view("profile-edit.ejs", {
-        user, profile: body, categories: CATEGORIES, regions: REGIONS, success: false, error: err.message,
+        user, profile: body, success: false, error: err.message,
       });
     }
 
@@ -90,8 +88,6 @@ export async function profileRoutes(app: FastifyInstance) {
     return reply.view("profile-edit.ejs", {
       user,
       profile: rows[0],
-      categories: CATEGORIES,
-      regions: REGIONS,
       success: true,
     });
   });

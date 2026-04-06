@@ -9,14 +9,13 @@
     </div>
   <% } else { %>
     <div class="space-y-3">
-      <% const catColors = { land: 'bg-emerald-500/10 text-emerald-400', grants: 'bg-amber-500/10 text-amber-400', operators: 'bg-sky-500/10 text-sky-400', jobs: 'bg-violet-500/10 text-violet-400', events: 'bg-rose-500/10 text-rose-400', infrastructure: 'bg-orange-500/10 text-orange-400' }; %>
       <% submissions.forEach(function(sub) { %>
         <div class="bg-stone-900 border border-stone-800 rounded-lg p-5 <%= sub.status === 'pending' ? 'border-l-2 border-l-amber-400' : '' %> hover:border-stone-700 transition">
           <div class="flex items-start justify-between gap-4">
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 mb-1.5">
                 <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-stone-800 text-stone-400"><%= sub.type %></span>
-                <span class="text-xs font-medium px-2 py-0.5 rounded-full <%= catColors[sub.category] || 'bg-stone-800 text-stone-400' %>"><%= sub.category %></span>
+                <span class="text-xs font-medium px-2 py-0.5 rounded-full <%= categoryData[sub.category]?.badge || 'bg-stone-800 text-stone-400' %>"><%= sub.category %></span>
                 <span class="text-xs text-stone-600"><%= sub.region.toUpperCase() %></span>
                 <span class="text-xs font-medium <%= sub.status === 'pending' ? 'text-amber-400' : sub.status === 'approved' ? 'text-brand-400' : 'text-red-400' %>"><%= sub.status %></span>
               </div>

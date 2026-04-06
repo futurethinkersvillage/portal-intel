@@ -2,8 +2,8 @@
 <div x-data="{ activeCategory: '' }">
   <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
     <div>
-      <h1 class="text-2xl font-display font-bold">Operator Directory</h1>
-      <p class="text-sm text-stone-400 mt-1">Builders, makers, and operators across BC &amp; Alberta</p>
+      <h1 class="text-2xl font-display font-bold">Community Directory</h1>
+      <p class="text-sm text-stone-400 mt-1">Builders, makers, and operators networking across BC &amp; Alberta</p>
     </div>
     <% if (user) { %>
       <a href="/profile/edit" class="text-sm text-brand-400 hover:text-brand-300 transition">+ Add Your Profile</a>
@@ -14,8 +14,8 @@
 
   <% if (profiles.length === 0) { %>
     <div class="text-center py-16">
-      <div class="text-4xl mb-4">🔧</div>
-      <p class="text-stone-400 mb-2">No operator profiles yet.</p>
+      <div class="text-4xl mb-4">🤝</div>
+      <p class="text-stone-400 mb-2">No community profiles yet.</p>
       <% if (user) { %>
         <a href="/profile/edit" class="text-sm text-brand-400 hover:text-brand-300">Be the first to add yours &rarr;</a>
       <% } %>

@@ -11,6 +11,9 @@
           <span class="text-xs text-amber-400 font-medium">⏳ <span x-text="formatDate(item.expires_at)"></span></span>
         </template>
         <span class="w-1.5 h-1.5 rounded-full shrink-0" :class="scoreColor(item.total_score)"></span>
+        <template x-if="item.pinned_at">
+          <span class="text-xs text-amber-400 font-medium">📌</span>
+        </template>
         <template x-if="item.save_count > 0">
           <span class="text-xs text-stone-600 ml-auto"><span x-text="item.save_count"></span> watching</span>
         </template>

@@ -10,6 +10,7 @@ import ejs from "ejs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { auth } from "./lib/auth.js";
+import { CATEGORIES, CATEGORY_CLIENT_DATA, CATEGORY_ORDER, REGIONS } from "./lib/categories.js";
 import { toNodeHandler } from "better-auth/node";
 import { publicRoutes } from "./routes/public.js";
 import { feedRoutes } from "./routes/feed.js";
@@ -53,6 +54,12 @@ await app.register(fastifyView, {
     siteName: "Portal.Place Intel",
     user: null,
     title: "",
+    categories: CATEGORIES,
+    regions: REGIONS,
+    categoryData: CATEGORY_CLIENT_DATA,
+    categoryDataJSON: JSON.stringify(CATEGORY_CLIENT_DATA),
+    categoryOrder: CATEGORY_ORDER,
+    categoryOrderJSON: JSON.stringify(CATEGORY_ORDER),
   },
 });
 

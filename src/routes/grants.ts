@@ -41,6 +41,6 @@ export async function grantsRoutes(app: FastifyInstance) {
 
     const months = Object.entries(grouped).map(([label, items]) => ({ label, items }));
 
-    return reply.view("grants.ejs", { user, months, noDeadline, regions: REGIONS, activeRegion: region });
+    return reply.view("grants.ejs", { user, months, noDeadline, activeRegion: region });
   });
 }

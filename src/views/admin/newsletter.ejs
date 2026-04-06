@@ -21,7 +21,6 @@
       <p class="text-xs text-stone-400 mb-4">Items are ranked by score. Check the ones to include in the newsletter.</p>
 
       <div class="space-y-2">
-        <% const catColors = { land: 'bg-emerald-500/10 text-emerald-400', grants: 'bg-amber-500/10 text-amber-400', operators: 'bg-sky-500/10 text-sky-400', jobs: 'bg-violet-500/10 text-violet-400', events: 'bg-rose-500/10 text-rose-400', infrastructure: 'bg-orange-500/10 text-orange-400' }; %>
         <% items.forEach(function(item, i) { %>
           <label class="flex items-start gap-3 bg-stone-900 border border-stone-800 rounded-lg p-4 cursor-pointer hover:border-stone-700 transition">
             <input type="checkbox" name="item_ids" value="<%= item.id %>"
@@ -30,7 +29,7 @@
               class="mt-1 rounded border-stone-600 bg-stone-800 text-brand-500 focus:ring-brand-500">
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2">
-                <span class="text-xs font-medium px-2 py-0.5 rounded-full <%= catColors[item.category] || 'bg-stone-800 text-stone-400' %>"><%= categories.find(c => c.slug === item.category)?.icon || '' %> <%= categories.find(c => c.slug === item.category)?.label || item.category %></span>
+                <span class="text-xs font-medium px-2 py-0.5 rounded-full <%= categoryData[item.category]?.badge || 'bg-stone-800 text-stone-400' %>"><%= categoryData[item.category]?.icon || '' %> <%= categoryData[item.category]?.label || item.category %></span>
                 <span class="text-xs text-stone-600"><%= item.region.toUpperCase() %></span>
                 <span class="text-xs text-stone-600">Score: <%= item.total_score.toFixed(2) %></span>
               </div>

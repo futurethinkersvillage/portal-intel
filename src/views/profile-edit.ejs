@@ -1,6 +1,6 @@
 
 <div class="max-w-2xl mx-auto">
-  <h1 class="text-2xl font-display font-bold mb-2">Your Operator Profile</h1>
+  <h1 class="text-2xl font-display font-bold mb-2">Your Community Profile</h1>
   <p class="text-sm text-stone-400 mb-6">Tell the community what you're working on. Your profile appears on the Intel Feed when visible.</p>
 
   <% if (success) { %>
@@ -80,7 +80,7 @@
     <label class="flex items-center gap-3 cursor-pointer">
       <input type="checkbox" name="visible" <%= !profile || profile.visible ? 'checked' : '' %>
         class="rounded border-stone-600 bg-stone-800 text-brand-500 focus:ring-brand-500">
-      <span class="text-sm">Make profile visible in the Operator Directory</span>
+      <span class="text-sm">Make profile visible in the Community Directory</span>
     </label>
 
     <button type="submit" class="bg-brand-500 hover:bg-brand-600 text-white font-medium px-6 py-3 rounded-lg transition">

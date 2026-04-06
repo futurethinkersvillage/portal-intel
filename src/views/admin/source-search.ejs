@@ -56,8 +56,7 @@
                 <div class="text-xs text-stone-500 break-all"><%= source.url %></div>
                 <div class="flex flex-wrap gap-1 mt-2">
                   <% source.categories.forEach(function(cat) { %>
-                    <% const catColors = { land: 'bg-emerald-500/10 text-emerald-400', grants: 'bg-amber-500/10 text-amber-400', operators: 'bg-sky-500/10 text-sky-400', jobs: 'bg-violet-500/10 text-violet-400', events: 'bg-rose-500/10 text-rose-400', infrastructure: 'bg-orange-500/10 text-orange-400' }; %>
-                    <span class="text-xs px-2 py-0.5 rounded-full <%= catColors[cat] || 'bg-stone-700 text-stone-400' %>"><%= cat %></span>
+                    <span class="text-xs px-2 py-0.5 rounded-full <%= categoryData[cat]?.badge || 'bg-stone-700 text-stone-400' %>"><%= cat %></span>
                   <% }) %>
                 </div>
               </div>

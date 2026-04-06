@@ -1,17 +1,13 @@
 import pool from "../lib/db.js";
 import { sendBulkEmails } from "../lib/email.js";
 import { trackUsage } from "../lib/api-usage.js";
+import { CATEGORIES } from "../lib/categories.js";
 
 const BASE_URL = process.env.BASE_URL || "https://portal.place";
 
-const CATEGORY_LABELS: Record<string, string> = {
-  land: "Rural Land & Property",
-  grants: "Grants & Funding",
-  operators: "Operators & Trades",
-  jobs: "Jobs & Work",
-  events: "Events & Education",
-  infrastructure: "Infrastructure & Building",
-};
+const CATEGORY_LABELS: Record<string, string> = Object.fromEntries(
+  CATEGORIES.map(c => [c.slug, c.label])
+);
 
 function renderDigest(
   topDeals: any[],

@@ -19,7 +19,6 @@ export async function preferencesRoutes(app: FastifyInstance) {
     return reply.view("preferences.ejs", {
       user,
       prefs: rows[0] || { preferences: [], alert_categories: [], digest_frequency: "weekly" },
-      categories: CATEGORIES,
       success: false,
       isOnboarding: !user.onboarded,
     });
@@ -66,7 +65,6 @@ export async function preferencesRoutes(app: FastifyInstance) {
     return reply.view("preferences.ejs", {
       user: { ...user, onboarded: true },
       prefs,
-      categories: CATEGORIES,
       success: true,
       isOnboarding: false,
     });
