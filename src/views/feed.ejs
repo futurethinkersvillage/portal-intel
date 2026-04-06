@@ -1,61 +1,72 @@
 
 <div x-data="feedApp()" x-cloak>
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
     <div>
       <h1 class="text-2xl font-display font-bold">Intel Feed</h1>
-      <p class="text-sm text-stone-400 mt-1"><span x-text="filteredItems.length"></span> opportunities across BC &amp; Alberta</p>
+      <p class="text-sm text-stone-500 mt-1"><span x-text="filteredItems.length"></span> opportunities across BC &amp; Alberta</p>
     </div>
-    <div class="flex items-center gap-2">
-      <a href="/submit" class="bg-accent-500 hover:bg-accent-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition">+ Submit Intel</a>
-    </div>
+    <a href="/submit" class="inline-flex items-center gap-2 bg-accent-500 hover:bg-accent-600 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition-colors active:scale-[0.97]">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Submit Intel
+    </a>
   </div>
 
   <!-- Search -->
   <div class="relative mb-5">
-    <input type="text" x-model="search" @input="resetPagination()" placeholder="Search opportunities, grants, events…"
-      class="w-full bg-stone-900 border border-stone-800 rounded-lg px-4 py-2.5 pl-9 text-sm text-stone-200 placeholder-stone-600 focus:outline-none focus:border-brand-600/60 transition">
-    <svg class="absolute left-3 top-2.5 w-4 h-4 text-stone-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <input type="text" x-model="search" @input="resetPagination()" placeholder="Search opportunities, grants, events..."
+      class="w-full bg-stone-900/60 border border-stone-800/60 rounded-xl px-4 py-3 pl-10 text-sm text-stone-200 placeholder-stone-600 focus:outline-none focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/20 transition-all">
+    <svg class="absolute left-3.5 top-3.5 w-4 h-4 text-stone-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
     </svg>
     <template x-if="search">
-      <button @click="search = ''" class="absolute right-3 top-2.5 text-stone-600 hover:text-stone-400 transition text-xs">&times;</button>
+      <button @click="search = ''" class="absolute right-3 top-3 p-1 rounded-md text-stone-600 hover:text-stone-300 hover:bg-stone-800 transition-colors" aria-label="Clear search">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
     </template>
   </div>
 
-  <!-- Filters -->
-  <div class="flex flex-wrap gap-2 mb-4">
-    <button @click="activeCategory = ''; resetPagination()" :class="activeCategory === '' ? 'bg-brand-500 text-white' : 'bg-stone-800 text-stone-300 hover:bg-stone-700'"
-      class="text-sm px-3 py-1.5 rounded-full transition">All</button>
+  <!-- Category Filters -->
+  <div class="flex flex-wrap gap-1.5 mb-3">
+    <button @click="activeCategory = ''; resetPagination()" :class="activeCategory === '' ? 'bg-brand-500 text-white shadow-sm' : 'bg-stone-800/60 text-stone-400 hover:bg-stone-800 hover:text-stone-200'"
+      class="text-sm px-3.5 py-2 rounded-lg transition-all font-medium">All</button>
     <% categories.forEach(function(cat) { %>
-      <button @click="activeCategory = '<%= cat.slug %>'; resetPagination()" :class="activeCategory === '<%= cat.slug %>' ? 'bg-brand-500 text-white' : 'bg-stone-800 text-stone-300 hover:bg-stone-700'"
-        class="text-sm px-3 py-1.5 rounded-full transition"><%= cat.icon %> <%= cat.label %></button>
+      <button @click="activeCategory = '<%= cat.slug %>'; resetPagination()" :class="activeCategory === '<%= cat.slug %>' ? 'bg-brand-500 text-white shadow-sm' : 'bg-stone-800/60 text-stone-400 hover:bg-stone-800 hover:text-stone-200'"
+        class="text-sm px-3.5 py-2 rounded-lg transition-all font-medium"><%= cat.icon %> <%= cat.label %></button>
     <% }) %>
   </div>
 
-  <div class="flex flex-wrap gap-2 mb-8">
-    <button @click="activeRegion = ''; resetPagination()" :class="activeRegion === '' ? 'bg-stone-600 text-white' : 'bg-stone-800 text-stone-400 hover:bg-stone-700'"
-      class="text-xs px-3 py-1 rounded-full transition">All Regions</button>
+  <!-- Region Filters -->
+  <div class="flex flex-wrap gap-1.5 mb-8">
+    <button @click="activeRegion = ''; resetPagination()" :class="activeRegion === '' ? 'bg-stone-700 text-white' : 'bg-stone-800/40 text-stone-500 hover:bg-stone-800/60 hover:text-stone-300'"
+      class="text-xs px-3 py-1.5 rounded-lg transition-all font-medium">All Regions</button>
     <% regions.forEach(function(r) { %>
-      <button @click="activeRegion = '<%= r.slug %>'; resetPagination()" :class="activeRegion === '<%= r.slug %>' ? 'bg-stone-600 text-white' : 'bg-stone-800 text-stone-400 hover:bg-stone-700'"
-        class="text-xs px-3 py-1 rounded-full transition"><%= r.label %></button>
+      <button @click="activeRegion = '<%= r.slug %>'; resetPagination()" :class="activeRegion === '<%= r.slug %>' ? 'bg-stone-700 text-white' : 'bg-stone-800/40 text-stone-500 hover:bg-stone-800/60 hover:text-stone-300'"
+        class="text-xs px-3 py-1.5 rounded-lg transition-all font-medium"><%= r.label %></button>
     <% }) %>
   </div>
 
   <!-- Closing Soon -->
   <template x-if="closingSoon.length > 0 && activeCategory === ''">
     <div class="mb-10">
-      <h2 class="text-sm font-semibold tracking-widest uppercase text-amber-400 mb-3 flex items-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> Closing Soon
+      <h2 class="text-sm font-semibold tracking-widest uppercase text-amber-400 mb-4 flex items-center gap-2">
+        <svg class="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Closing Soon
       </h2>
       <div class="grid gap-3">
         <template x-for="item in closingSoon" :key="item.id">
-          <div class="bg-amber-500/5 border border-amber-500/20 rounded-lg p-5 flex items-start justify-between gap-4">
-            <div>
+          <div class="bg-amber-500/5 border border-amber-500/15 rounded-xl p-5 flex items-start justify-between gap-4">
+            <div class="flex-1 min-w-0">
               <div class="font-medium text-sm" x-text="item.title"></div>
-              <div class="text-xs text-stone-400 mt-1.5 leading-relaxed" x-text="item.summary"></div>
-              <div class="text-xs text-amber-400 mt-2 font-medium">Closes <span x-text="formatDate(item.expires_at)"></span></div>
+              <div class="text-xs text-stone-400 mt-1.5 leading-relaxed line-clamp-2" x-text="item.summary"></div>
+              <div class="text-xs text-amber-400 mt-2 font-medium flex items-center gap-1">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Closes <span x-text="formatDate(item.expires_at)"></span>
+              </div>
             </div>
-            <a :href="item.url" target="_blank" class="text-xs text-accent-400 hover:text-accent-300 shrink-0 font-medium">View &rarr;</a>
+            <a :href="item.url" target="_blank" class="text-xs bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 px-3.5 py-2 rounded-lg transition-colors font-medium whitespace-nowrap inline-flex items-center gap-1.5">
+              View
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+            </a>
           </div>
         </template>
       </div>
@@ -65,7 +76,10 @@
   <!-- Profiles Section -->
   <template x-if="profiles.length > 0 && (activeCategory === '' || activeCategory === 'community')">
     <div class="mb-10">
-      <h2 class="text-sm font-semibold tracking-widest uppercase text-stone-500 mb-3">🤝 Community Profiles</h2>
+      <h2 class="text-sm font-semibold tracking-widest uppercase text-stone-500 mb-4 flex items-center gap-2">
+        <svg class="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Community Profiles
+      </h2>
       <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
         <template x-for="profile in filteredProfiles" :key="profile.id">
           <div class="bg-stone-900 border border-stone-800 rounded-lg p-5 hover:border-brand-600/50 transition">
@@ -144,9 +158,11 @@
   </template>
 
   <template x-if="filteredItems.length === 0">
-    <div class="text-center py-16">
-      <div class="text-4xl mb-4" x-text="search ? '🔍' : activeCategory ? categoryIcon(activeCategory) : '🔍'"></div>
-      <p class="text-stone-400 mb-2" x-text="search ? 'No results for \'' + search + '\'' : activeCategory ? 'No ' + categoryLabel(activeCategory).toLowerCase() + ' items yet.' : 'No items match your current filters.'"></p>
+    <div class="text-center py-20">
+      <div class="w-16 h-16 rounded-2xl bg-stone-800/50 flex items-center justify-center mx-auto mb-5">
+        <svg class="w-7 h-7 text-stone-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/></svg>
+      </div>
+      <p class="text-stone-400 mb-2 text-sm" x-text="search ? 'No results for \'' + search + '\'' : activeCategory ? 'No ' + categoryLabel(activeCategory).toLowerCase() + ' items yet.' : 'No items match your current filters.'"></p>
       <p class="text-xs text-stone-600">New items are collected daily from regional sources.</p>
     </div>
   </template>
