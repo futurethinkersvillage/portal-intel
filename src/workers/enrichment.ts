@@ -110,10 +110,22 @@ Respond in JSON only:
     const text = (resp.content[0] as any).text;
     let enriched: any[] = [];
     try {
-      const parsed = JSON.parse(text);
+      // Strip markdown code fences if Claude wrapped the JSON
+      let cleaned = text.trim();
+      if (cleaned.startsWith("```")) {
+        cleaned = cleaned.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "");
+      }
+      // Find first { and last } to handle any preamble/suffix
+      const firstBrace = cleaned.indexOf("{");
+      const lastBrace = cleaned.lastIndexOf("}");
+      if (firstBrace >= 0 && lastBrace > firstBrace) {
+        cleaned = cleaned.substring(firstBrace, lastBrace + 1);
+      }
+      const parsed = JSON.parse(cleaned);
       enriched = parsed.items || [];
-    } catch {
-      console.error("[Enrichment] Failed to parse AI response");
+    } catch (err: any) {
+      console.error("[Enrichment] Failed to parse AI response:", err?.message);
+      console.error("[Enrichment] Raw response (first 500 chars):", text?.substring(0, 500));
       return 0;
     }
 
