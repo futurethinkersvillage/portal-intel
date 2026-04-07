@@ -14,6 +14,7 @@ export async function adminRoutes(app: FastifyInstance) {
   // Admin dashboard
   app.get("/", async (request, reply) => {
     const user = (request as any).user;
+    const query = request.query as { scraped?: string };
 
     const [itemCount, subCount, pendingSubs, sourceCount, usage] = await Promise.all([
       pool.query(`SELECT COUNT(*) as count FROM collected_items WHERE status != 'archived'`),
@@ -32,6 +33,7 @@ export async function adminRoutes(app: FastifyInstance) {
         sources: sourceCount.rows[0].count,
       },
       usage,
+      scrapedCount: query.scraped ? parseInt(query.scraped) : null,
     });
   });
 
@@ -85,6 +87,40 @@ export async function adminRoutes(app: FastifyInstance) {
     if (source.type === "rss") await rssQueue.add(`rss-manual-${source.id}`, jobData, { removeOnComplete: 10, removeOnFail: 10 });
     else if (source.type === "html") await htmlQueue.add(`html-manual-${source.id}`, jobData, { removeOnComplete: 10, removeOnFail: 10 });
     return reply.redirect("/admin/sources");
+  });
+
+  // Scrape all active sources at once
+  app.post("/scrape-all", async (request, reply) => {
+    const { rows: sources } = await pool.query(
+      `SELECT * FROM sources WHERE active = true AND type IN ('rss', 'html')`
+    );
+    const { rssQueue, htmlQueue } = await import("../workers/scheduler.js");
+
+    let rss = 0, html = 0;
+    for (const source of sources) {
+      const jobData = {
+        sourceId: source.id,
+        url: source.url,
+        categories: source.categories,
+        region: source.region,
+      };
+      if (source.type === "rss") {
+        await rssQueue.add(`rss-manual-${source.id}-${Date.now()}`, jobData, {
+          removeOnComplete: 10,
+          removeOnFail: 10,
+        });
+        rss++;
+      } else if (source.type === "html") {
+        await htmlQueue.add(`html-manual-${source.id}-${Date.now()}`, jobData, {
+          removeOnComplete: 10,
+          removeOnFail: 10,
+        });
+        html++;
+      }
+    }
+
+    console.log(`[Manual Scrape] Queued ${rss} RSS + ${html} HTML jobs from ${sources.length} sources`);
+    return reply.redirect("/admin?scraped=" + (rss + html));
   });
 
   app.post("/sources/:id/delete", async (request, reply) => {

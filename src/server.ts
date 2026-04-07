@@ -23,7 +23,7 @@ import { grantsRoutes } from "./routes/grants.js";
 import { discussionRoutes } from "./routes/discussions.js";
 import { startRSSWorker } from "./workers/rss-worker.js";
 import { startHTMLWorker } from "./workers/html-worker.js";
-import { startScheduler } from "./workers/scheduler.js";
+// scheduler import removed — manual scraping only via admin button
 import { startScoringLoop } from "./workers/scoring.js";
 import { startDailyAlertLoop } from "./workers/daily-alerts.js";
 import { startEnrichmentLoop } from "./workers/enrichment.js";
@@ -98,10 +98,10 @@ app.listen({ port, host }, (err) => {
   // Start background workers
   startRSSWorker();
   startHTMLWorker();
-  startScheduler();
+  // startScheduler() — DISABLED: scrapes are manual via admin button only
   startScoringLoop();
   startDailyAlertLoop();
   startEnrichmentLoop();
   startWeeklyDigestLoop();
-  console.log("Background workers started.");
+  console.log("Background workers started (scheduler disabled — manual scraping only).");
 });
