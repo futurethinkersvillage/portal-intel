@@ -14,25 +14,25 @@
     <div>
       <label class="block text-sm font-medium mb-1">Business / Project Name</label>
       <input type="text" name="display_name" required value="<%= profile ? profile.display_name : '' %>" placeholder="e.g. Clearwater Prefab Co."
-        class="w-full bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
+        class="w-full bg-stone-900/60 border border-stone-700/60 rounded-xl px-3.5 py-2.5 text-sm focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30 focus:outline-none transition-colors">
     </div>
 
     <div>
       <label class="block text-sm font-medium mb-1">Tagline</label>
       <input type="text" name="tagline" value="<%= profile ? profile.tagline || '' : '' %>" placeholder="One-liner: Building prefab cabins in Kamloops"
-        class="w-full bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
+        class="w-full bg-stone-900/60 border border-stone-700/60 rounded-xl px-3.5 py-2.5 text-sm focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30 focus:outline-none transition-colors">
     </div>
 
     <div>
       <label class="block text-sm font-medium mb-1">Description</label>
       <textarea name="description" rows="4" placeholder="What you do, where, and what you're looking for."
-        class="w-full bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500"><%= profile ? profile.description || '' : '' %></textarea>
+        class="w-full bg-stone-900/60 border border-stone-700/60 rounded-xl px-3.5 py-2.5 text-sm focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30 focus:outline-none transition-colors"><%= profile ? profile.description || '' : '' %></textarea>
     </div>
 
     <div class="grid sm:grid-cols-2 gap-4">
       <div>
         <label class="block text-sm font-medium mb-1">Primary Category</label>
-        <select name="category" required class="w-full bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
+        <select name="category" required class="w-full bg-stone-900/60 border border-stone-700/60 rounded-xl px-3.5 py-2.5 text-sm focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30 focus:outline-none transition-colors">
           <% categories.forEach(function(cat) { %>
             <option value="<%= cat.slug %>" <%= profile && profile.category === cat.slug ? 'selected' : '' %>><%= cat.label %></option>
           <% }) %>
@@ -40,7 +40,7 @@
       </div>
       <div>
         <label class="block text-sm font-medium mb-1">Region</label>
-        <select name="region" class="w-full bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
+        <select name="region" class="w-full bg-stone-900/60 border border-stone-700/60 rounded-xl px-3.5 py-2.5 text-sm focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30 focus:outline-none transition-colors">
           <% regions.forEach(function(r) { %>
             <option value="<%= r.slug %>" <%= profile && profile.region === r.slug ? 'selected' : '' %>><%= r.label %></option>
           <% }) %>
@@ -51,13 +51,13 @@
     <div>
       <label class="block text-sm font-medium mb-1">Website (optional)</label>
       <input type="url" name="website_url" value="<%= profile ? profile.website_url || '' : '' %>" placeholder="https://..."
-        class="w-full bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
+        class="w-full bg-stone-900/60 border border-stone-700/60 rounded-xl px-3.5 py-2.5 text-sm focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30 focus:outline-none transition-colors">
     </div>
 
     <div>
       <label class="block text-sm font-medium mb-1">Contact Method</label>
       <input type="text" name="contact_method" value="<%= profile ? profile.contact_method || '' : '' %>" placeholder="Email, phone, or 'via website'"
-        class="w-full bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
+        class="w-full bg-stone-900/60 border border-stone-700/60 rounded-xl px-3.5 py-2.5 text-sm focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30 focus:outline-none transition-colors">
     </div>
 
     <!-- Matchmaking -->
@@ -66,13 +66,13 @@
       <div>
         <label class="block text-sm font-medium mb-1">What are you looking for?</label>
         <textarea name="looking_for" rows="2" placeholder="e.g. Looking for a land partner with 50+ acres in the Thompson Valley, open to work-stay arrangements"
-          class="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 resize-none"><%= profile && profile.looking_for ? profile.looking_for : '' %></textarea>
+          class="w-full bg-stone-800/60 border border-stone-700/60 rounded-xl px-3.5 py-2.5 text-sm focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30 focus:outline-none transition-colors resize-none"><%= profile && profile.looking_for ? profile.looking_for : '' %></textarea>
         <p class="text-xs text-stone-600 mt-1">What opportunities, partners, or resources are you seeking?</p>
       </div>
       <div>
         <label class="block text-sm font-medium mb-1">What are you offering?</label>
         <textarea name="offering" rows="2" placeholder="e.g. Offering prefab cabin installation services, BC Interior, turnkey from foundation to keys"
-          class="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 resize-none"><%= profile && profile.offering ? profile.offering : '' %></textarea>
+          class="w-full bg-stone-800/60 border border-stone-700/60 rounded-xl px-3.5 py-2.5 text-sm focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30 focus:outline-none transition-colors resize-none"><%= profile && profile.offering ? profile.offering : '' %></textarea>
         <p class="text-xs text-stone-600 mt-1">What skills, services, capital, or resources can you bring to a collaboration?</p>
       </div>
     </div>
@@ -83,7 +83,7 @@
       <span class="text-sm">Make profile visible in the Community Directory</span>
     </label>
 
-    <button type="submit" class="bg-brand-500 hover:bg-brand-600 text-white font-medium px-6 py-3 rounded-lg transition">
+    <button type="submit" class="bg-brand-500 hover:bg-brand-600 text-white font-medium px-6 py-3.5 rounded-xl transition-colors active:scale-[0.98] shadow-lg shadow-brand-500/20 hover:shadow-brand-500/30">
       Save Profile
     </button>
   </form>

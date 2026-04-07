@@ -5,17 +5,20 @@
   </div>
 
   <!-- Add Source Form -->
-  <details class="bg-stone-900 border border-stone-800 rounded-lg mb-6">
-    <summary class="px-4 py-3 cursor-pointer text-sm font-medium hover:text-brand-400 transition">+ Add New Source</summary>
+  <details class="bg-stone-900/60 border border-stone-800/60 rounded-2xl mb-6 overflow-hidden">
+    <summary class="px-5 py-4 cursor-pointer text-sm font-medium hover:text-brand-400 transition-colors flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Add New Source
+    </summary>
     <form method="POST" action="/admin/sources" class="p-4 pt-0 space-y-4">
       <div class="grid sm:grid-cols-2 gap-4">
         <div>
           <label class="block text-xs font-medium mb-1">Name</label>
-          <input type="text" name="name" required class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
+          <input type="text" name="name" required class="w-full bg-stone-800/60 border border-stone-700/60 rounded-lg px-3 py-2 text-sm focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30 transition-colors">
         </div>
         <div>
           <label class="block text-xs font-medium mb-1">URL</label>
-          <input type="url" name="url" required class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
+          <input type="url" name="url" required class="w-full bg-stone-800/60 border border-stone-700/60 rounded-lg px-3 py-2 text-sm focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30 transition-colors">
         </div>
       </div>
       <div class="grid sm:grid-cols-3 gap-4">
@@ -64,14 +67,14 @@
         <label class="block text-xs font-medium mb-1">Notes</label>
         <textarea name="notes" rows="2" class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm"></textarea>
       </div>
-      <button type="submit" class="bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition">Add Source</button>
+      <button type="submit" class="bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors active:scale-[0.97]">Add Source</button>
     </form>
   </details>
 
   <!-- Sources List -->
   <div class="space-y-3">
     <% sources.forEach(function(source) { %>
-      <div x-data="{ editing: false }" class="bg-stone-900 border border-stone-800 rounded-lg overflow-hidden hover:border-stone-700 transition">
+      <div x-data="{ editing: false }" class="bg-stone-900/60 border border-stone-800/60 rounded-2xl overflow-hidden hover:border-stone-700/60 transition-colors">
 
         <!-- Summary Row -->
         <div class="p-5 flex items-center justify-between <%= source.admin_rating === 1 ? 'border-l-2 border-l-emerald-500' : source.admin_rating === -1 ? 'border-l-2 border-l-red-500' : '' %>">
@@ -123,11 +126,11 @@
               </form>
               <% } %>
             </div>
-            <button @click="editing = !editing" class="text-xs px-3 py-1.5 rounded border border-stone-700 text-stone-400 hover:border-brand-500 hover:text-brand-400 transition">
+            <button @click="editing = !editing" class="text-xs px-3 py-1.5 rounded-lg border border-stone-700/60 text-stone-400 hover:border-brand-500 hover:text-brand-400 transition">
               Edit
             </button>
             <form method="POST" action="/admin/sources/<%= source.id %>/scrape">
-              <button type="submit" class="text-xs px-3 py-1.5 rounded border border-stone-700 text-stone-400 hover:border-emerald-500 hover:text-emerald-400 transition" title="Queue a scrape now">
+              <button type="submit" class="text-xs px-3 py-1.5 rounded-lg border border-stone-700/60 text-stone-400 hover:border-emerald-500 hover:text-emerald-400 transition" title="Queue a scrape now">
                 Scrape Now
               </button>
             </form>
@@ -137,7 +140,7 @@
               </button>
             </form>
             <form method="POST" action="/admin/sources/<%= source.id %>/delete" onsubmit="return confirm('Delete this source? Items referencing it will be kept but the source will be disabled.')">
-              <button type="submit" class="text-xs px-3 py-1.5 rounded border border-stone-700 text-stone-600 hover:border-red-500 hover:text-red-400 transition">
+              <button type="submit" class="text-xs px-3 py-1.5 rounded-lg border border-stone-700/60 text-stone-600 hover:border-red-500 hover:text-red-400 transition">
                 Delete
               </button>
             </form>
@@ -150,11 +153,11 @@
             <div class="grid sm:grid-cols-2 gap-4">
               <div>
                 <label class="block text-xs font-medium mb-1">Name</label>
-                <input type="text" name="name" value="<%= source.name %>" required class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm focus:border-brand-500">
+                <input type="text" name="name" value="<%= source.name %>" required class="w-full bg-stone-800/60 border border-stone-700/60 rounded-lg px-3 py-2 text-sm focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30 transition-colors">
               </div>
               <div>
                 <label class="block text-xs font-medium mb-1">URL</label>
-                <input type="url" name="url" value="<%= source.url %>" required class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm focus:border-brand-500">
+                <input type="url" name="url" value="<%= source.url %>" required class="w-full bg-stone-800/60 border border-stone-700/60 rounded-lg px-3 py-2 text-sm focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30 transition-colors">
               </div>
             </div>
             <div class="grid sm:grid-cols-3 gap-4">

@@ -7,12 +7,12 @@
       <div>
         <label class="block text-sm font-medium mb-1">Subject Line</label>
         <input type="text" name="subject" required placeholder="Portal.Place Intel #<%= nextIssue %> — ..."
-          class="w-full bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
+          class="w-full bg-stone-900/60 border border-stone-700/60 rounded-lg px-3 py-2.5 text-sm focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30 transition-colors">
       </div>
       <div>
         <label class="block text-sm font-medium mb-1">Engagement Question</label>
         <input type="text" name="engagement_question" placeholder="Know a BC grant program we're missing?"
-          class="w-full bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500">
+          class="w-full bg-stone-900/60 border border-stone-700/60 rounded-lg px-3 py-2.5 text-sm focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30 transition-colors">
       </div>
     </div>
 
@@ -22,7 +22,7 @@
 
       <div class="space-y-2">
         <% items.forEach(function(item, i) { %>
-          <label class="flex items-start gap-3 bg-stone-900 border border-stone-800 rounded-lg p-4 cursor-pointer hover:border-stone-700 transition">
+          <label class="flex items-start gap-3 bg-stone-900/60 border border-stone-800/60 rounded-xl p-4 cursor-pointer hover:border-stone-700/60 transition-colors">
             <input type="checkbox" name="item_ids" value="<%= item.id %>"
               @change="updateCount()"
               <%= i < 15 ? 'checked' : '' %>
@@ -44,10 +44,10 @@
     </div>
 
     <div class="flex gap-3">
-      <button type="submit" formaction="/admin/newsletter/preview" class="bg-stone-700 hover:bg-stone-600 text-white font-medium px-6 py-3 rounded-lg transition">
+      <button type="submit" formaction="/admin/newsletter/preview" class="bg-stone-700 hover:bg-stone-600 text-white font-medium px-6 py-3 rounded-xl transition-colors active:scale-[0.98]">
         Preview Newsletter
       </button>
-      <button type="submit" formaction="/admin/newsletter/send" class="bg-accent-500 hover:bg-accent-600 text-white font-medium px-6 py-3 rounded-lg transition">
+      <button type="submit" formaction="/admin/newsletter/send" class="bg-accent-500 hover:bg-accent-600 text-white font-medium px-6 py-3 rounded-xl transition-colors active:scale-[0.98]">
         Create &amp; Send #<%= nextIssue %>
       </button>
     </div>

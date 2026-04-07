@@ -1,46 +1,56 @@
 
 <div class="max-w-4xl mx-auto">
-  <div class="flex items-end justify-between mb-8">
+  <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
     <div>
-      <h1 class="text-2xl font-display font-bold">Meetups & Events</h1>
-      <p class="text-sm text-stone-400 mt-1">In-person gatherings across BC & Alberta</p>
+      <h1 class="text-2xl font-display font-bold">Meetups &amp; Events</h1>
+      <p class="text-sm text-stone-500 mt-1">In-person gatherings across BC &amp; Alberta</p>
     </div>
     <% if (user && user.role === 'admin') { %>
-      <a href="/admin/events" class="text-xs text-accent-400 hover:text-accent-300 border border-accent-500/30 px-3 py-1.5 rounded-lg transition">+ Manage Events</a>
+      <a href="/admin/events" class="inline-flex items-center gap-2 text-xs text-accent-400 hover:text-accent-300 border border-accent-500/30 hover:border-accent-500/50 px-3 py-2 rounded-lg transition-colors w-fit">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+        Manage Events
+      </a>
     <% } %>
   </div>
 
   <% if (meetups.length === 0) { %>
     <div class="text-center py-20">
-      <div class="text-5xl mb-4">📅</div>
-      <p class="text-stone-400 mb-2">No upcoming events yet.</p>
-      <p class="text-xs text-stone-600">Check back soon — meetups in Clearwater, Kamloops, and Vancouver are being planned.</p>
+      <div class="w-16 h-16 rounded-2xl bg-rose-500/10 flex items-center justify-center mx-auto mb-5">
+        <svg class="w-7 h-7 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+      </div>
+      <p class="text-stone-400 mb-2 text-sm">No upcoming events yet.</p>
+      <p class="text-xs text-stone-600">Check back soon &mdash; meetups in Clearwater, Kamloops, and Vancouver are being planned.</p>
     </div>
   <% } else { %>
-    <div class="space-y-5">
+    <div class="space-y-4">
       <% meetups.forEach(function(m) {
         var isPast = new Date(m.event_date) < new Date();
         var isSoon = !isPast && (new Date(m.event_date) - new Date()) < 7 * 24 * 3600 * 1000;
       %>
-        <a href="/events/<%= m.slug %>" class="block bg-stone-900 border <%= isSoon ? 'border-rose-500/30' : 'border-stone-800' %> rounded-xl p-6 hover:border-stone-600 transition">
+        <a href="/events/<%= m.slug %>" class="block bg-stone-900/60 border <%= isSoon ? 'border-rose-500/30' : 'border-stone-800/60' %> rounded-2xl p-6 hover:border-rose-500/40 hover:bg-stone-900/80 transition-all group">
           <div class="flex items-start justify-between gap-6">
-            <div class="flex-1">
-              <!-- Date badge -->
-              <div class="flex items-center gap-3 mb-3">
-                <div class="bg-rose-500/10 border border-rose-500/20 rounded-lg px-3 py-1.5 text-center shrink-0">
-                  <div class="text-rose-400 text-xs font-semibold uppercase"><%= new Date(m.event_date).toLocaleDateString('en-CA', { month: 'short' }) %></div>
-                  <div class="text-white font-bold text-xl leading-none"><%= new Date(m.event_date).getDate() %></div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-4 mb-3">
+                <div class="bg-rose-500/10 border border-rose-500/20 rounded-xl px-3 py-2 text-center shrink-0">
+                  <div class="text-rose-400 text-[10px] font-semibold uppercase tracking-widest"><%= new Date(m.event_date).toLocaleDateString('en-CA', { month: 'short' }) %></div>
+                  <div class="text-white font-bold text-2xl leading-none mt-0.5"><%= new Date(m.event_date).getDate() %></div>
                 </div>
-                <div>
-                  <div class="font-semibold text-base"><%= m.title %></div>
-                  <div class="text-sm text-stone-400 mt-0.5"><%= m.location %></div>
+                <div class="min-w-0">
+                  <div class="font-semibold text-base group-hover:text-stone-50 transition-colors truncate"><%= m.title %></div>
+                  <div class="text-sm text-stone-500 mt-0.5 flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    <%= m.location %>
+                  </div>
                 </div>
               </div>
               <% if (m.description) { %>
                 <p class="text-sm text-stone-400 leading-relaxed mb-3 line-clamp-2"><%= m.description %></p>
               <% } %>
               <div class="flex items-center gap-4 text-xs text-stone-600">
-                <span><%= new Date(m.event_date).toLocaleTimeString('en-CA', { hour: 'numeric', minute: '2-digit' }) %></span>
+                <span class="flex items-center gap-1">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  <%= new Date(m.event_date).toLocaleTimeString('en-CA', { hour: 'numeric', minute: '2-digit' }) %>
+                </span>
                 <% if (m.rsvp_count > 0) { %>
                   <span class="text-stone-500"><%= m.rsvp_count %> attending</span>
                 <% } %>
@@ -50,7 +60,10 @@
               </div>
             </div>
             <div class="shrink-0 pt-1">
-              <span class="text-xs bg-brand-500 text-white px-3 py-1.5 rounded-lg font-medium">RSVP →</span>
+              <span class="inline-flex items-center gap-1.5 text-xs bg-brand-500 group-hover:bg-brand-600 text-white px-3.5 py-2 rounded-lg font-medium transition-colors">
+                RSVP
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+              </span>
             </div>
           </div>
         </a>

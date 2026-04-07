@@ -1,76 +1,107 @@
 
 <div class="max-w-2xl mx-auto">
-  <a href="/events" class="text-xs text-stone-500 hover:text-stone-300 transition mb-6 inline-block">&larr; All Events</a>
+  <a href="/events" class="text-xs text-stone-500 hover:text-stone-300 transition-colors mb-6 inline-flex items-center gap-1.5">
+    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+    All Events
+  </a>
 
   <!-- Event Header -->
-  <div class="bg-stone-900 border border-stone-800 rounded-xl p-8 mb-6">
-    <div class="flex items-start gap-6">
-      <div class="bg-rose-500/10 border border-rose-500/20 rounded-xl p-4 text-center shrink-0 min-w-[60px]">
-        <div class="text-rose-400 text-xs font-semibold uppercase"><%= new Date(meetup.event_date).toLocaleDateString('en-CA', { month: 'short' }) %></div>
+  <div class="bg-stone-900/60 border border-stone-800/60 rounded-2xl p-6 sm:p-8 mb-6">
+    <div class="flex items-start gap-5">
+      <div class="bg-rose-500/10 border border-rose-500/20 rounded-2xl px-4 py-3 text-center shrink-0 min-w-[68px]">
+        <div class="text-rose-400 text-[10px] font-semibold uppercase tracking-widest"><%= new Date(meetup.event_date).toLocaleDateString('en-CA', { month: 'short' }) %></div>
         <div class="text-white font-bold text-2xl leading-none mt-1"><%= new Date(meetup.event_date).getDate() %></div>
       </div>
-      <div>
-        <h1 class="text-xl font-display font-bold mb-2"><%= meetup.title %></h1>
-        <div class="flex flex-wrap items-center gap-3 text-sm text-stone-400 mb-3">
-          <span>📍 <%= meetup.location %></span>
-          <span>🕐 <%= new Date(meetup.event_date).toLocaleTimeString('en-CA', { hour: 'numeric', minute: '2-digit' }) %></span>
-          <% if (meetup.rsvp_count > 0) { %><span><%= meetup.rsvp_count %> attending</span><% } %>
-          <% if (meetup.capacity) { %><span><%= meetup.capacity - meetup.rsvp_count > 0 ? (meetup.capacity - meetup.rsvp_count) + ' spots left' : '⚠️ Full' %></span><% } %>
+      <div class="flex-1 min-w-0">
+        <h1 class="text-xl sm:text-2xl font-display font-bold mb-3 leading-tight"><%= meetup.title %></h1>
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-stone-400 mb-2">
+          <span class="flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            <%= meetup.location %>
+          </span>
+          <span class="flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <%= new Date(meetup.event_date).toLocaleTimeString('en-CA', { hour: 'numeric', minute: '2-digit' }) %>
+          </span>
+          <% if (meetup.rsvp_count > 0) { %>
+            <span class="flex items-center gap-1.5">
+              <svg class="w-4 h-4 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              <%= meetup.rsvp_count %> attending
+            </span>
+          <% } %>
+          <% if (meetup.capacity) { %>
+            <span class="<%= meetup.capacity - meetup.rsvp_count <= 0 ? 'text-amber-400 font-medium' : '' %>"><%= meetup.capacity - meetup.rsvp_count > 0 ? (meetup.capacity - meetup.rsvp_count) + ' spots left' : 'Full' %></span>
+          <% } %>
         </div>
         <% if (meetup.address) { %>
-          <div class="text-xs text-stone-600 mb-3"><%= meetup.address %></div>
+          <div class="text-xs text-stone-600"><%= meetup.address %></div>
         <% } %>
       </div>
     </div>
     <% if (meetup.description) { %>
-      <div class="mt-6 pt-6 border-t border-stone-800">
+      <div class="mt-6 pt-6 border-t border-stone-800/60">
         <p class="text-stone-300 leading-relaxed"><%= meetup.description %></p>
       </div>
     <% } %>
   </div>
 
   <!-- RSVP Section -->
-  <div class="bg-stone-900 border border-brand-800/40 rounded-xl p-8">
-    <% if (success) { %>
-      <div class="text-center py-4">
-        <div class="text-4xl mb-3">🎉</div>
-        <h2 class="font-semibold text-lg mb-2">You're in!</h2>
-        <p class="text-stone-400 text-sm">You're on the list for <strong class="text-stone-200"><%= meetup.title %></strong>. We'll send a reminder closer to the date.</p>
-        <a href="/events" class="inline-block mt-4 text-xs text-brand-400 hover:text-brand-300">← Browse other events</a>
-      </div>
-    <% } else if (alreadyRsvp) { %>
-      <div class="text-center py-4">
-        <div class="text-4xl mb-3">✅</div>
-        <p class="text-stone-400 text-sm">You're already registered for this event.</p>
-      </div>
-    <% } else { %>
-      <h2 class="font-semibold text-base mb-5">Reserve Your Spot</h2>
-      <% if (error) { %>
-        <div class="bg-red-500/10 text-red-400 text-sm px-4 py-3 rounded-lg mb-4"><%= error %></div>
+  <div class="bg-stone-900/60 border border-brand-800/30 rounded-2xl p-6 sm:p-8 relative overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-br from-brand-500/5 via-transparent to-transparent pointer-events-none"></div>
+    <div class="relative">
+      <% if (success) { %>
+        <div class="text-center py-4">
+          <div class="w-16 h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+          </div>
+          <h2 class="font-semibold text-lg mb-2">You're in!</h2>
+          <p class="text-stone-400 text-sm leading-relaxed max-w-md mx-auto">You're on the list for <strong class="text-stone-200"><%= meetup.title %></strong>. We'll send a reminder closer to the date.</p>
+          <a href="/events" class="inline-flex items-center gap-1 mt-5 text-xs text-brand-400 hover:text-brand-300 transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+            Browse other events
+          </a>
+        </div>
+      <% } else if (alreadyRsvp) { %>
+        <div class="text-center py-4">
+          <div class="w-16 h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <p class="text-stone-300 font-medium mb-1">You're already registered</p>
+          <p class="text-stone-500 text-sm">See you there.</p>
+        </div>
+      <% } else { %>
+        <h2 class="font-semibold text-base mb-5">Reserve Your Spot</h2>
+        <% if (error) { %>
+          <div class="bg-red-500/10 border border-red-500/20 text-red-400 text-sm px-4 py-3 rounded-xl mb-4 flex items-center gap-2">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            <%= error %>
+          </div>
+        <% } %>
+        <form method="POST" action="/events/<%= meetup.slug %>/rsvp" class="space-y-4">
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-medium mb-1.5 text-stone-400">Your Name</label>
+              <input type="text" name="name" required placeholder="Mike Gilliland"
+                class="w-full bg-stone-800/60 border border-stone-700/60 rounded-xl px-3.5 py-2.5 text-sm focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30 focus:outline-none transition-colors">
+            </div>
+            <div>
+              <label class="block text-xs font-medium mb-1.5 text-stone-400">Email</label>
+              <input type="email" name="email" required placeholder="mike@example.com"
+                class="w-full bg-stone-800/60 border border-stone-700/60 rounded-xl px-3.5 py-2.5 text-sm focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30 focus:outline-none transition-colors">
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-medium mb-1.5 text-stone-400">What brings you? <span class="text-stone-600">(optional)</span></label>
+            <textarea name="note" rows="2" placeholder="e.g. Looking for land near Clearwater, building a homestead..."
+              class="w-full bg-stone-800/60 border border-stone-700/60 rounded-xl px-3.5 py-2.5 text-sm focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30 focus:outline-none transition-colors resize-none"></textarea>
+          </div>
+          <button type="submit" class="w-full inline-flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-600 text-white font-semibold py-3.5 rounded-xl transition-colors active:scale-[0.98] shadow-lg shadow-brand-500/20 hover:shadow-brand-500/30">
+            Reserve My Spot
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+          </button>
+          <p class="text-xs text-stone-600 text-center">No spam. We'll only contact you about this event.</p>
+        </form>
       <% } %>
-      <form method="POST" action="/events/<%= meetup.slug %>/rsvp" class="space-y-4">
-        <div class="grid sm:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-medium mb-1.5 text-stone-400">Your Name</label>
-            <input type="text" name="name" required placeholder="Mike Gilliland"
-              class="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none transition">
-          </div>
-          <div>
-            <label class="block text-xs font-medium mb-1.5 text-stone-400">Email</label>
-            <input type="email" name="email" required placeholder="mike@example.com"
-              class="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none transition">
-          </div>
-        </div>
-        <div>
-          <label class="block text-xs font-medium mb-1.5 text-stone-400">What brings you? <span class="text-stone-600">(optional)</span></label>
-          <textarea name="note" rows="2" placeholder="e.g. Looking for land near Clearwater, building a homestead..."
-            class="w-full bg-stone-800 border border-stone-700 rounded-lg px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none transition resize-none"></textarea>
-        </div>
-        <button type="submit" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-semibold py-3 rounded-xl transition">
-          Reserve My Spot →
-        </button>
-        <p class="text-xs text-stone-600 text-center">No spam. We'll only contact you about this event.</p>
-      </form>
-    <% } %>
+    </div>
   </div>
 </div>

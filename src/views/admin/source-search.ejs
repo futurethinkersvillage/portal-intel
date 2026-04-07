@@ -3,9 +3,12 @@
   <div class="flex items-center justify-between mb-6">
     <div>
       <h1 class="text-2xl font-display font-bold">AI Source Search</h1>
-      <p class="text-sm text-stone-400 mt-1">Use AI to discover new data sources for the Intel Feed</p>
+      <p class="text-sm text-stone-500 mt-1">Use AI to discover new data sources for the Intel Feed</p>
     </div>
-    <a href="/admin" class="text-sm text-stone-400 hover:text-stone-100 transition">&larr; Dashboard</a>
+    <a href="/admin" class="text-sm text-stone-500 hover:text-stone-200 transition-colors flex items-center gap-1.5">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+      Dashboard
+    </a>
   </div>
 
   <form method="POST" action="/admin/source-search" class="mb-8">
@@ -13,8 +16,8 @@
       <input type="text" name="prompt" required
         placeholder="e.g. BC grant programs for rural businesses, Alberta agricultural land listings, Okanagan events..."
         value="<%= typeof prompt !== 'undefined' ? prompt : '' %>"
-        class="flex-1 bg-stone-900 border border-stone-700 rounded-lg px-4 py-3 text-sm focus:border-accent-500 focus:ring-1 focus:ring-accent-500">
-      <button type="submit" class="bg-accent-500 hover:bg-accent-600 text-white font-medium px-6 py-3 rounded-lg transition shrink-0">
+        class="flex-1 bg-stone-900/60 border border-stone-700/60 rounded-xl px-4 py-3 text-sm focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/30 transition-colors">
+      <button type="submit" class="bg-accent-500 hover:bg-accent-600 text-white font-medium px-6 py-3 rounded-xl transition-colors active:scale-[0.98] shrink-0">
         Search with AI
       </button>
     </div>
@@ -40,7 +43,7 @@
       <h2 class="text-lg font-semibold mb-4">Found <%= results.sources.length %> potential sources</h2>
       <div class="space-y-3">
         <% results.sources.forEach(function(source, i) { %>
-          <div class="bg-stone-900 border border-stone-800 rounded-lg p-5 hover:border-stone-700 transition">
+          <div class="bg-stone-900/60 border border-stone-800/60 rounded-2xl p-5 hover:border-stone-700/60 transition-colors">
             <div class="flex items-start justify-between gap-4">
               <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2 mb-1.5">
@@ -69,7 +72,7 @@
                 <% source.categories.forEach(function(cat) { %>
                   <input type="hidden" name="categories" value="<%= cat %>">
                 <% }) %>
-                <button type="submit" class="text-xs bg-brand-600 hover:bg-brand-500 text-white px-3 py-1.5 rounded transition font-medium">
+                <button type="submit" class="text-xs bg-brand-600 hover:bg-brand-500 text-white px-3.5 py-2 rounded-lg transition-colors font-medium active:scale-[0.97]">
                   + Add Source
                 </button>
               </form>

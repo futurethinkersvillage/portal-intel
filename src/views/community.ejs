@@ -41,7 +41,7 @@
         </h2>
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <% grouped[slug].forEach(function(p) { %>
-            <div class="bg-stone-900 border border-stone-800 rounded-lg p-5 hover:border-stone-700 transition flex flex-col">
+            <div class="bg-stone-900/60 border border-stone-800/60 rounded-2xl p-5 hover:border-stone-700/60 transition-colors flex flex-col">
               <div class="flex items-center gap-3 mb-3">
                 <% if (p.user_image) { %>
                   <img src="<%= p.user_image %>" alt="" class="w-9 h-9 rounded-full object-cover flex-shrink-0">

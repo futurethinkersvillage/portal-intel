@@ -7,12 +7,12 @@
   <% } else { %>
     <div class="space-y-2">
       <% newsletters.forEach(function(nl) { %>
-        <a href="/archive/<%= nl.issue_number %>" class="bg-stone-900 border border-stone-800 rounded-lg p-4 flex items-center justify-between hover:border-brand-600/50 transition">
-          <div>
-            <div class="font-medium text-sm">Issue #<%= nl.issue_number %> &mdash; <%= nl.subject %></div>
-            <div class="text-xs text-stone-500"><%= new Date(nl.sent_at).toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' }) %></div>
+        <a href="/archive/<%= nl.issue_number %>" class="bg-stone-900/60 border border-stone-800/60 rounded-2xl p-5 flex items-center justify-between hover:border-brand-600/40 hover:bg-stone-900/80 transition-all group">
+          <div class="min-w-0">
+            <div class="font-medium text-sm group-hover:text-stone-50 transition-colors truncate">Issue #<%= nl.issue_number %> &mdash; <%= nl.subject %></div>
+            <div class="text-xs text-stone-500 mt-1"><%= new Date(nl.sent_at).toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' }) %></div>
           </div>
-          <span class="text-xs text-stone-600">&rarr;</span>
+          <svg class="w-4 h-4 text-stone-600 group-hover:text-brand-400 group-hover:translate-x-0.5 transition-all shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
         </a>
       <% }) %>
     </div>

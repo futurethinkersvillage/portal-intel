@@ -6,46 +6,49 @@
   </div>
 
   <!-- Create Event Form -->
-  <details class="bg-stone-900 border border-stone-800 rounded-lg mb-6">
-    <summary class="px-4 py-3 cursor-pointer text-sm font-medium hover:text-brand-400 transition">+ Create New Event</summary>
+  <details class="bg-stone-900/60 border border-stone-800/60 rounded-2xl mb-6 overflow-hidden">
+    <summary class="px-5 py-4 cursor-pointer text-sm font-medium hover:text-brand-400 transition-colors flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      Create New Event
+    </summary>
     <form method="POST" action="/admin/events" class="p-4 pt-0 space-y-4">
       <div class="grid sm:grid-cols-2 gap-4">
         <div>
           <label class="block text-xs font-medium mb-1">Title</label>
-          <input type="text" name="title" required placeholder="Clearwater Resilience Meetup" class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none">
+          <input type="text" name="title" required placeholder="Clearwater Resilience Meetup" class="w-full bg-stone-800/60 border border-stone-700/60 rounded-lg px-3 py-2.5 text-sm focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30 focus:outline-none transition-colors">
         </div>
         <div>
           <label class="block text-xs font-medium mb-1">Slug (URL)</label>
-          <input type="text" name="slug" placeholder="clearwater-meetup-april (auto-generated if blank)" class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none">
+          <input type="text" name="slug" placeholder="clearwater-meetup-april (auto-generated if blank)" class="w-full bg-stone-800/60 border border-stone-700/60 rounded-lg px-3 py-2.5 text-sm focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30 focus:outline-none transition-colors">
         </div>
       </div>
       <div class="grid sm:grid-cols-3 gap-4">
         <div>
           <label class="block text-xs font-medium mb-1">Date & Time</label>
-          <input type="datetime-local" name="event_date" required class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none">
+          <input type="datetime-local" name="event_date" required class="w-full bg-stone-800/60 border border-stone-700/60 rounded-lg px-3 py-2.5 text-sm focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30 focus:outline-none transition-colors">
         </div>
         <div>
           <label class="block text-xs font-medium mb-1">Location (City)</label>
-          <input type="text" name="location" required placeholder="Clearwater, BC" class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none">
+          <input type="text" name="location" required placeholder="Clearwater, BC" class="w-full bg-stone-800/60 border border-stone-700/60 rounded-lg px-3 py-2.5 text-sm focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30 focus:outline-none transition-colors">
         </div>
         <div>
           <label class="block text-xs font-medium mb-1">Capacity (optional)</label>
-          <input type="number" name="capacity" placeholder="30" class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none">
+          <input type="number" name="capacity" placeholder="30" class="w-full bg-stone-800/60 border border-stone-700/60 rounded-lg px-3 py-2.5 text-sm focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30 focus:outline-none transition-colors">
         </div>
       </div>
       <div>
         <label class="block text-xs font-medium mb-1">Full Address</label>
-        <input type="text" name="address" placeholder="1234 Wells Gray Rd, Clearwater, BC" class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none">
+        <input type="text" name="address" placeholder="1234 Wells Gray Rd, Clearwater, BC" class="w-full bg-stone-800/60 border border-stone-700/60 rounded-lg px-3 py-2.5 text-sm focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30 focus:outline-none transition-colors">
       </div>
       <div>
         <label class="block text-xs font-medium mb-1">Description</label>
-        <textarea name="description" rows="3" class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none" placeholder="An evening for investors, operators, and landowners building resilience infrastructure in the Thompson region..."></textarea>
+        <textarea name="description" rows="3" class="w-full bg-stone-800/60 border border-stone-700/60 rounded-lg px-3 py-2.5 text-sm focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30 focus:outline-none transition-colors" placeholder="An evening for investors, operators, and landowners building resilience infrastructure in the Thompson region..."></textarea>
       </div>
       <div class="flex items-center gap-2">
         <input type="checkbox" name="is_public" value="true" checked id="is_public" class="rounded border-stone-600 bg-stone-800 text-brand-500">
         <label for="is_public" class="text-xs">Publicly listed</label>
       </div>
-      <button type="submit" class="bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition">Create Event</button>
+      <button type="submit" class="bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors active:scale-[0.97]">Create Event</button>
     </form>
   </details>
 
@@ -57,7 +60,7 @@
       <% meetups.forEach(function(m) {
         var isPast = new Date(m.event_date) < new Date();
       %>
-        <div class="bg-stone-900 border border-stone-800 rounded-lg p-5 flex items-center justify-between">
+        <div class="bg-stone-900/60 border border-stone-800/60 rounded-2xl p-5 flex items-center justify-between hover:border-stone-700/60 transition-colors">
           <div>
             <div class="flex items-center gap-2 mb-1">
               <span class="w-2 h-2 rounded-full <%= isPast ? 'bg-stone-600' : 'bg-rose-400' %>"></span>
@@ -72,10 +75,10 @@
             </div>
           </div>
           <div class="flex items-center gap-2">
-            <a href="/admin/events/<%= m.id %>/rsvps" class="text-xs px-3 py-1.5 rounded border border-stone-700 text-stone-400 hover:border-brand-500 hover:text-brand-400 transition">RSVPs</a>
-            <a href="/events/<%= m.slug %>" target="_blank" class="text-xs px-3 py-1.5 rounded border border-stone-700 text-stone-400 hover:border-stone-600 transition">View</a>
+            <a href="/admin/events/<%= m.id %>/rsvps" class="text-xs px-3 py-1.5 rounded-lg border border-stone-700/60 text-stone-400 hover:border-brand-500/40 hover:text-brand-400 transition-colors">RSVPs</a>
+            <a href="/events/<%= m.slug %>" target="_blank" class="text-xs px-3 py-1.5 rounded-lg border border-stone-700/60 text-stone-400 hover:border-stone-600 hover:text-stone-300 transition-colors">View</a>
             <form method="POST" action="/admin/events/<%= m.id %>/delete" onsubmit="return confirm('Delete this event?')">
-              <button type="submit" class="text-xs px-3 py-1.5 rounded border border-stone-700 text-stone-600 hover:border-red-500 hover:text-red-400 transition">Delete</button>
+              <button type="submit" class="text-xs px-3 py-1.5 rounded-lg border border-stone-700/60 text-stone-500 hover:border-red-500/40 hover:text-red-400 transition-colors">Delete</button>
             </form>
           </div>
         </div>

@@ -2,25 +2,30 @@
 <div x-data="{ view: 'calendar' }">
   <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
     <div>
-      <h1 class="text-2xl font-display font-bold text-amber-400">💰 Grant Deadlines</h1>
-      <p class="text-sm text-stone-400 mt-1">BC & Alberta grants sorted by deadline — act before they close</p>
+      <h1 class="text-2xl font-display font-bold text-amber-400 flex items-center gap-2.5">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Grant Deadlines
+      </h1>
+      <p class="text-sm text-stone-500 mt-1">BC &amp; Alberta grants sorted by deadline &mdash; act before they close</p>
     </div>
     <div class="flex items-center gap-3">
       <!-- Region filter -->
       <div class="flex gap-1">
-        <a href="/grants" class="text-xs px-2.5 py-1.5 rounded border <%= !activeRegion ? 'border-amber-500/50 text-amber-400' : 'border-stone-700 text-stone-400 hover:border-stone-600' %> transition">All</a>
+        <a href="/grants" class="text-xs px-3 py-1.5 rounded-lg border <%= !activeRegion ? 'border-amber-500/50 text-amber-400' : 'border-stone-700 text-stone-400 hover:border-stone-600' %> transition">All</a>
         <% regions.forEach(function(r) { %>
-          <a href="/grants?region=<%= r.slug %>" class="text-xs px-2.5 py-1.5 rounded border <%= activeRegion === r.slug ? 'border-amber-500/50 text-amber-400' : 'border-stone-700 text-stone-400 hover:border-stone-600' %> transition"><%= r.label %></a>
+          <a href="/grants?region=<%= r.slug %>" class="text-xs px-3 py-1.5 rounded-lg border <%= activeRegion === r.slug ? 'border-amber-500/50 text-amber-400' : 'border-stone-700 text-stone-400 hover:border-stone-600' %> transition"><%= r.label %></a>
         <% }) %>
       </div>
     </div>
   </div>
 
   <% if (months.length === 0 && noDeadline.length === 0) { %>
-    <div class="text-center py-16">
-      <div class="text-4xl mb-4">💰</div>
-      <p class="text-stone-400">No grants in the feed yet.</p>
-      <% if (!user) { %><a href="/" class="text-sm text-brand-400 mt-2 inline-block">Sign in to access the full feed →</a><% } %>
+    <div class="text-center py-20">
+      <div class="w-16 h-16 rounded-2xl bg-amber-500/10 flex items-center justify-center mx-auto mb-5">
+        <svg class="w-7 h-7 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <p class="text-stone-400 text-sm">No grants in the feed yet.</p>
+      <% if (!user) { %><a href="/" class="text-sm text-brand-400 mt-2 inline-block hover:text-brand-300 transition-colors">Sign in to access the full feed &rarr;</a><% } %>
     </div>
   <% } else { %>
 
@@ -37,7 +42,7 @@
             var daysLeft = item.expires_at ? Math.ceil((new Date(item.expires_at) - new Date()) / 86400000) : null;
             var urgency = daysLeft !== null && daysLeft <= 3 ? 'border-red-500/40' : daysLeft !== null && daysLeft <= 7 ? 'border-amber-500/30' : 'border-stone-800';
           %>
-            <div class="bg-stone-900 border <%= urgency %> rounded-xl p-5 hover:border-stone-700 transition">
+            <div class="bg-stone-900/60 border <%= urgency %> rounded-2xl p-5 hover:border-stone-700/60 transition-colors">
               <div class="flex items-start gap-4">
                 <div class="flex-1 min-w-0">
                   <div class="flex flex-wrap items-center gap-2 mb-2">
@@ -81,7 +86,7 @@
         <h2 class="text-sm font-semibold tracking-widest uppercase text-stone-500 mb-4">Open / No Set Deadline</h2>
         <div class="space-y-3">
           <% noDeadline.forEach(function(item) { %>
-            <div class="bg-stone-900 border border-stone-800 rounded-xl p-5 hover:border-stone-700 transition">
+            <div class="bg-stone-900/60 border border-stone-800/60 rounded-2xl p-5 hover:border-stone-700/60 transition-colors">
               <div class="flex items-start gap-4">
                 <div class="flex-1">
                   <% if (item.url) { %>
