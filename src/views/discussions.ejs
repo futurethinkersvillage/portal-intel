@@ -1,0 +1,79 @@
+
+<div class="max-w-3xl mx-auto">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+    <div>
+      <h1 class="text-2xl font-display font-bold flex items-center gap-2.5">
+        <svg class="w-6 h-6 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+        Discussions
+      </h1>
+      <p class="text-sm text-stone-500 mt-1">Community threads for questions, ideas, and resource-sharing</p>
+    </div>
+    <a href="/discussions/new" class="inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition-colors active:scale-[0.97] w-fit">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      New Thread
+    </a>
+  </div>
+
+  <% if (discussions.length === 0) { %>
+    <div class="text-center py-20">
+      <div class="w-16 h-16 rounded-2xl bg-brand-500/10 flex items-center justify-center mx-auto mb-5">
+        <svg class="w-7 h-7 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+      </div>
+      <p class="text-stone-400 text-sm mb-2">No discussions yet.</p>
+      <p class="text-xs text-stone-600 mb-5">Start the first thread &mdash; ask a question, share a project, or seek advice.</p>
+      <a href="/discussions/new" class="inline-flex items-center gap-2 text-sm text-brand-400 hover:text-brand-300 transition-colors">
+        Start a discussion
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+      </a>
+    </div>
+  <% } else { %>
+    <div class="space-y-3">
+      <% discussions.forEach(function(d) { %>
+        <a href="/discussions/<%= d.id %>" class="block bg-stone-900/60 border border-stone-800/60 rounded-2xl p-5 hover:border-brand-600/40 hover:bg-stone-900/80 transition-all group">
+          <div class="flex items-start gap-4">
+            <% if (d.author_image) { %>
+              <img src="<%= d.author_image %>" alt="" class="w-10 h-10 rounded-full ring-1 ring-stone-800 shrink-0">
+            <% } else { %>
+              <div class="w-10 h-10 rounded-full bg-brand-800 flex items-center justify-center text-brand-300 text-sm font-semibold ring-1 ring-stone-800 shrink-0"><%= (d.author_name || '?').charAt(0).toUpperCase() %></div>
+            <% } %>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1.5 flex-wrap">
+                <% if (d.pinned) { %>
+                  <span class="text-xs text-amber-400 font-medium flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M5 5a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 21V5z"/></svg>
+                    Pinned
+                  </span>
+                <% } %>
+                <% if (d.category && categoryData[d.category]) { %>
+                  <span class="text-xs font-medium px-2 py-0.5 rounded-md <%= categoryData[d.category].badge %>"><%= categoryData[d.category].icon %> <%= categoryData[d.category].label %></span>
+                <% } %>
+                <% if (d.locked) { %>
+                  <span class="text-xs text-stone-600 flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    Locked
+                  </span>
+                <% } %>
+              </div>
+              <h2 class="font-semibold text-base text-stone-100 group-hover:text-stone-50 transition-colors mb-1.5 leading-snug"><%= d.title %></h2>
+              <% if (d.body) { %>
+                <p class="text-sm text-stone-400 leading-relaxed line-clamp-2 mb-2"><%= d.body %></p>
+              <% } %>
+              <div class="flex items-center gap-3 text-xs text-stone-600">
+                <span><%= d.author_name || 'Unknown' %></span>
+                <span class="w-1 h-1 rounded-full bg-stone-700"></span>
+                <span><%= new Date(d.created_at).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' }) %></span>
+                <% if (d.comment_count > 0) { %>
+                  <span class="w-1 h-1 rounded-full bg-stone-700"></span>
+                  <span class="flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                    <%= d.comment_count %> <%= d.comment_count == 1 ? 'reply' : 'replies' %>
+                  </span>
+                <% } %>
+              </div>
+            </div>
+          </div>
+        </a>
+      <% }) %>
+    </div>
+  <% } %>
+</div>

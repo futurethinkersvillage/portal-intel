@@ -500,6 +500,65 @@ export async function adminRoutes(app: FastifyInstance) {
     return reply.redirect("/admin/items");
   });
 
+  // Comment moderation
+  app.get("/comments", async (request, reply) => {
+    const user = (request as any).user;
+    const { rows: flagged } = await pool.query(
+      `SELECT c.*, u.name as author_name, u.email as author_email,
+              CASE c.target_type
+                WHEN 'item' THEN (SELECT title FROM collected_items WHERE id = c.target_id)
+                WHEN 'discussion' THEN (SELECT title FROM discussions WHERE id = c.target_id)
+                WHEN 'meetup' THEN (SELECT title FROM meetups WHERE id = c.target_id)
+              END as target_title
+       FROM comments c
+       LEFT JOIN "user" u ON c.author_id = u.id
+       WHERE c.status IN ('flagged', 'hidden')
+       ORDER BY c.status DESC, c.created_at DESC
+       LIMIT 100`
+    );
+    const { rows: recent } = await pool.query(
+      `SELECT c.*, u.name as author_name,
+              CASE c.target_type
+                WHEN 'item' THEN (SELECT title FROM collected_items WHERE id = c.target_id)
+                WHEN 'discussion' THEN (SELECT title FROM discussions WHERE id = c.target_id)
+                WHEN 'meetup' THEN (SELECT title FROM meetups WHERE id = c.target_id)
+              END as target_title
+       FROM comments c
+       LEFT JOIN "user" u ON c.author_id = u.id
+       WHERE c.status = 'visible'
+       ORDER BY c.created_at DESC
+       LIMIT 50`
+    );
+    return reply.view("admin/comments.ejs", { user, flagged, recent });
+  });
+
+  app.post("/comments/:id/hide", async (request, reply) => {
+    const user = (request as any).user;
+    const { id } = request.params as { id: string };
+    await pool.query(
+      `UPDATE comments SET status = 'hidden', hidden_by = $1, hidden_at = now() WHERE id = $2`,
+      [user.id, id]
+    );
+    return reply.send({ hidden: true });
+  });
+
+  app.post("/comments/:id/restore", async (request, reply) => {
+    const { id } = request.params as { id: string };
+    await pool.query(
+      `UPDATE comments SET status = 'visible', hidden_by = NULL, hidden_at = NULL,
+                          flag_reason = NULL, flagged_by = NULL
+       WHERE id = $1`,
+      [id]
+    );
+    return reply.redirect("/admin/comments");
+  });
+
+  app.post("/comments/:id/delete", async (request, reply) => {
+    const { id } = request.params as { id: string };
+    await pool.query(`DELETE FROM comments WHERE id = $1`, [id]);
+    return reply.redirect("/admin/comments");
+  });
+
   // Meetup management
   app.get("/events", async (request, reply) => {
     const user = (request as any).user;

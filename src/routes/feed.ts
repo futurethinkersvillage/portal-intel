@@ -93,4 +93,98 @@ export async function feedRoutes(app: FastifyInstance) {
 
     return reply.view("watchlist.ejs", { user, items });
   });
+
+  // Item detail page with comments
+  app.get("/:itemId", async (request, reply) => {
+    const user = (request as any).user;
+    const { itemId } = request.params as { itemId: string };
+
+    // Validate UUID format to avoid SQL errors on routes like /watchlist
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(itemId)) {
+      return reply.code(404).send("Not found");
+    }
+
+    const { rows: itemRows } = await pool.query(
+      `SELECT ci.*, COALESCE(ci.ai_summary, ci.summary) as summary,
+              s.name as source_name
+       FROM collected_items ci
+       LEFT JOIN sources s ON ci.source_id = s.id
+       WHERE ci.id = $1`,
+      [itemId]
+    );
+
+    if (!itemRows[0]) return reply.code(404).send("Not found");
+
+    // Fetch comments with author info
+    const { rows: comments } = await pool.query(
+      `SELECT c.id, c.target_type, c.target_id, c.parent_id, c.author_id, c.body,
+              c.status, c.created_at, c.edited_at,
+              u.name as author_name, u.image as author_image
+       FROM comments c
+       LEFT JOIN "user" u ON c.author_id = u.id
+       WHERE c.target_type = 'item' AND c.target_id = $1
+         AND (c.status != 'hidden' OR $2 = 'admin')
+       ORDER BY c.created_at ASC`,
+      [itemId, user.role]
+    );
+
+    // Check if saved
+    const { rows: savedRows } = await pool.query(
+      `SELECT 1 FROM saved_items WHERE user_id = $1 AND item_id = $2 LIMIT 1`,
+      [user.id, itemId]
+    );
+
+    return reply.view("item-detail.ejs", {
+      user,
+      item: itemRows[0],
+      comments,
+      isSaved: savedRows.length > 0,
+    });
+  });
+
+  // Post a comment on an item
+  app.post("/:itemId/comments", async (request, reply) => {
+    const user = (request as any).user;
+    const { itemId } = request.params as { itemId: string };
+    const { body, parent_id } = request.body as { body: string; parent_id?: string };
+
+    if (!body || !body.trim()) {
+      return reply.code(400).send({ error: "Comment body required" });
+    }
+
+    // Verify item exists
+    const { rows: itemCheck } = await pool.query(
+      `SELECT 1 FROM collected_items WHERE id = $1 LIMIT 1`,
+      [itemId]
+    );
+    if (!itemCheck[0]) return reply.code(404).send({ error: "Item not found" });
+
+    // Insert comment
+    const { rows } = await pool.query(
+      `INSERT INTO comments (target_type, target_id, parent_id, author_id, body)
+       VALUES ('item', $1, $2, $3, $4)
+       RETURNING id, target_type, target_id, parent_id, author_id, body, status, created_at`,
+      [itemId, parent_id || null, user.id, body.trim().substring(0, 5000)]
+    );
+
+    return reply.send({
+      ...rows[0],
+      author_name: user.name,
+      author_image: user.image,
+    });
+  });
+
+  // Flag a comment
+  app.post("/:itemId/comments/:commentId/flag", async (request, reply) => {
+    const user = (request as any).user;
+    const { commentId } = request.params as { commentId: string };
+
+    await pool.query(
+      `UPDATE comments SET status = 'flagged', flagged_by = $1
+       WHERE id = $2 AND status != 'hidden'`,
+      [user.id, commentId]
+    );
+
+    return reply.send({ flagged: true });
+  });
 }

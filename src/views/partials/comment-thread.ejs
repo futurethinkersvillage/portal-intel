@@ -1,0 +1,226 @@
+<!--
+  Reusable comment thread component.
+  Required locals: targetType ('item'|'meetup'|'discussion'), targetId, comments (JSON-serializable array), user, postUrl, flagUrlPattern (e.g. '/feed/:id/comments/:cid/flag')
+-->
+<div x-data="commentApp(<%- JSON.stringify(comments) %>, '<%= postUrl %>', <%= user ? "'" + user.role + "'" : 'null' %>)" class="space-y-5">
+  <div class="flex items-center justify-between">
+    <h3 class="text-sm font-semibold tracking-widest uppercase text-stone-500 flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+      Discussion
+      <span class="text-stone-700 font-normal" x-text="'(' + comments.length + ')'"></span>
+    </h3>
+  </div>
+
+  <% if (user) { %>
+    <!-- New comment form -->
+    <form @submit.prevent="submitComment()" class="bg-stone-900/60 border border-stone-800/60 rounded-2xl p-4">
+      <textarea x-model="newComment" rows="3" placeholder="Share your thoughts, questions, or experience..."
+        class="w-full bg-stone-800/40 border border-stone-700/60 rounded-xl px-3.5 py-2.5 text-sm text-stone-200 placeholder-stone-600 focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30 focus:outline-none transition-colors resize-none"></textarea>
+      <div class="flex items-center justify-between mt-3">
+        <p class="text-xs text-stone-600">Be constructive. Add value.</p>
+        <button type="submit" :disabled="!newComment.trim() || submitting"
+          class="text-xs bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-lg font-medium transition-colors active:scale-[0.97] disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center gap-1.5">
+          <span x-show="!submitting">Post Comment</span>
+          <span x-show="submitting" x-cloak>Posting...</span>
+        </button>
+      </div>
+    </form>
+  <% } else { %>
+    <div class="bg-stone-900/60 border border-stone-800/60 rounded-2xl p-5 text-center">
+      <p class="text-sm text-stone-400 mb-3">Sign in to join the discussion.</p>
+      <a href="/api/auth/sign-in/social?provider=google&callbackURL=<%= typeof callbackUrl !== 'undefined' ? callbackUrl : '/feed' %>"
+        class="inline-flex items-center gap-2 text-xs bg-white text-stone-900 font-semibold px-4 py-2 rounded-lg hover:bg-stone-100 transition-colors">
+        Sign in with Google
+      </a>
+    </div>
+  <% } %>
+
+  <!-- Threaded comments -->
+  <template x-if="threadedComments.length === 0">
+    <div class="text-center py-10 text-stone-600 text-sm">
+      <svg class="w-10 h-10 mx-auto mb-3 text-stone-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+      No comments yet. Start the conversation.
+    </div>
+  </template>
+
+  <div class="space-y-4">
+    <template x-for="comment in threadedComments" :key="comment.id">
+      <div class="bg-stone-900/40 border border-stone-800/40 rounded-2xl p-5">
+        <!-- Top-level comment -->
+        <div class="flex items-start gap-3">
+          <template x-if="comment.author_image">
+            <img :src="comment.author_image" class="w-8 h-8 rounded-full ring-1 ring-stone-800 shrink-0" alt="">
+          </template>
+          <template x-if="!comment.author_image">
+            <div class="w-8 h-8 rounded-full bg-brand-800 flex items-center justify-center text-brand-300 text-xs font-semibold ring-1 ring-stone-800 shrink-0" x-text="(comment.author_name || '?').charAt(0).toUpperCase()"></div>
+          </template>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-sm font-medium text-stone-200" x-text="comment.author_name || 'Anonymous'"></span>
+              <span class="text-xs text-stone-600" x-text="timeAgo(comment.created_at)"></span>
+              <template x-if="comment.status === 'flagged'">
+                <span class="text-xs text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded">flagged</span>
+              </template>
+            </div>
+            <p class="text-sm text-stone-300 leading-relaxed whitespace-pre-line" x-text="comment.body"></p>
+            <div class="flex items-center gap-3 mt-2">
+              <% if (user) { %>
+                <button @click="openReply(comment.id)" class="text-xs text-stone-500 hover:text-brand-400 transition-colors">Reply</button>
+                <button @click="flagComment(comment.id)" class="text-xs text-stone-600 hover:text-amber-400 transition-colors">Flag</button>
+                <% if (user.role === 'admin') { %>
+                  <button @click="hideComment(comment.id)" class="text-xs text-stone-600 hover:text-red-400 transition-colors">Hide</button>
+                <% } %>
+              <% } %>
+            </div>
+
+            <!-- Reply form -->
+            <div x-show="replyingTo === comment.id" x-cloak x-transition class="mt-3">
+              <textarea x-model="replyBody" :id="'reply-' + comment.id" rows="2" placeholder="Reply..."
+                class="w-full bg-stone-800/40 border border-stone-700/60 rounded-xl px-3 py-2 text-sm text-stone-200 placeholder-stone-600 focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30 focus:outline-none transition-colors resize-none"></textarea>
+              <div class="flex items-center gap-2 mt-2">
+                <button @click="submitReply(comment.id)" :disabled="!replyBody.trim() || submitting"
+                  class="text-xs bg-brand-500 hover:bg-brand-600 text-white px-3 py-1.5 rounded-lg font-medium transition-colors active:scale-[0.97] disabled:opacity-40 disabled:cursor-not-allowed">Post Reply</button>
+                <button @click="replyingTo = null; replyBody = ''" class="text-xs text-stone-500 hover:text-stone-300 transition-colors">Cancel</button>
+              </div>
+            </div>
+
+            <!-- Replies -->
+            <template x-if="comment.replies && comment.replies.length > 0">
+              <div class="mt-4 ml-1 border-l-2 border-stone-800/60 pl-4 space-y-3">
+                <template x-for="reply in comment.replies" :key="reply.id">
+                  <div class="flex items-start gap-2.5">
+                    <template x-if="reply.author_image">
+                      <img :src="reply.author_image" class="w-6 h-6 rounded-full ring-1 ring-stone-800 shrink-0" alt="">
+                    </template>
+                    <template x-if="!reply.author_image">
+                      <div class="w-6 h-6 rounded-full bg-brand-800 flex items-center justify-center text-brand-300 text-[10px] font-semibold ring-1 ring-stone-800 shrink-0" x-text="(reply.author_name || '?').charAt(0).toUpperCase()"></div>
+                    </template>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2 mb-0.5">
+                        <span class="text-xs font-medium text-stone-200" x-text="reply.author_name || 'Anonymous'"></span>
+                        <span class="text-[11px] text-stone-600" x-text="timeAgo(reply.created_at)"></span>
+                      </div>
+                      <p class="text-xs text-stone-300 leading-relaxed whitespace-pre-line" x-text="reply.body"></p>
+                      <% if (user) { %>
+                        <div class="flex items-center gap-3 mt-1.5">
+                          <button @click="flagComment(reply.id)" class="text-[11px] text-stone-600 hover:text-amber-400 transition-colors">Flag</button>
+                          <% if (user.role === 'admin') { %>
+                            <button @click="hideComment(reply.id)" class="text-[11px] text-stone-600 hover:text-red-400 transition-colors">Hide</button>
+                          <% } %>
+                        </div>
+                      <% } %>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+    </template>
+  </div>
+</div>
+
+<script>
+function commentApp(initialComments, postUrl, userRole) {
+  return {
+    comments: initialComments || [],
+    replyingTo: null,
+    replyBody: '',
+    newComment: '',
+    submitting: false,
+
+    get threadedComments() {
+      const visible = this.comments.filter(c => c.status !== 'hidden' || userRole === 'admin');
+      const topLevel = visible.filter(c => !c.parent_id);
+      return topLevel
+        .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+        .map(c => ({
+          ...c,
+          replies: visible
+            .filter(r => r.parent_id === c.id)
+            .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+        }));
+    },
+
+    openReply(commentId) {
+      this.replyingTo = this.replyingTo === commentId ? null : commentId;
+      this.replyBody = '';
+      this.$nextTick(() => {
+        const el = document.getElementById('reply-' + commentId);
+        if (el) el.focus();
+      });
+    },
+
+    async submitComment() {
+      if (!this.newComment.trim() || this.submitting) return;
+      this.submitting = true;
+      try {
+        const res = await fetch(postUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ body: this.newComment })
+        });
+        if (res.ok) {
+          const comment = await res.json();
+          this.comments.push(comment);
+          this.newComment = '';
+        }
+      } catch (e) {
+        console.error('Failed to post comment', e);
+      } finally {
+        this.submitting = false;
+      }
+    },
+
+    async submitReply(parentId) {
+      if (!this.replyBody.trim() || this.submitting) return;
+      this.submitting = true;
+      try {
+        const res = await fetch(postUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ body: this.replyBody, parent_id: parentId })
+        });
+        if (res.ok) {
+          const comment = await res.json();
+          this.comments.push(comment);
+          this.replyBody = '';
+          this.replyingTo = null;
+        }
+      } catch (e) {
+        console.error('Failed to post reply', e);
+      } finally {
+        this.submitting = false;
+      }
+    },
+
+    async flagComment(commentId) {
+      if (!confirm('Flag this comment for moderator review?')) return;
+      try {
+        await fetch(postUrl + '/' + commentId + '/flag', { method: 'POST' });
+        const c = this.comments.find(c => c.id === commentId);
+        if (c) c.status = 'flagged';
+      } catch (e) { console.error(e); }
+    },
+
+    async hideComment(commentId) {
+      if (!confirm('Hide this comment?')) return;
+      try {
+        await fetch('/admin/comments/' + commentId + '/hide', { method: 'POST' });
+        const c = this.comments.find(c => c.id === commentId);
+        if (c) c.status = 'hidden';
+      } catch (e) { console.error(e); }
+    },
+
+    timeAgo(dateStr) {
+      const seconds = Math.floor((Date.now() - new Date(dateStr)) / 1000);
+      if (seconds < 60) return 'just now';
+      if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago';
+      if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
+      if (seconds < 2592000) return Math.floor(seconds / 86400) + 'd ago';
+      return Math.floor(seconds / 2592000) + 'mo ago';
+    }
+  };
+}
+</script>

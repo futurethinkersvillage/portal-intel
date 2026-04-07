@@ -20,6 +20,7 @@ import { preferencesRoutes } from "./routes/preferences.js";
 import { adminRoutes } from "./routes/admin.js";
 import { eventRoutes } from "./routes/events.js";
 import { grantsRoutes } from "./routes/grants.js";
+import { discussionRoutes } from "./routes/discussions.js";
 import { startRSSWorker } from "./workers/rss-worker.js";
 import { startHTMLWorker } from "./workers/html-worker.js";
 import { startScheduler } from "./workers/scheduler.js";
@@ -81,6 +82,7 @@ await app.register(preferencesRoutes, { prefix: "/preferences" });
 await app.register(adminRoutes, { prefix: "/admin" });
 await app.register(eventRoutes, { prefix: "/events" });
 await app.register(grantsRoutes, { prefix: "/grants" });
+await app.register(discussionRoutes, { prefix: "/discussions" });
 
 // Start
 const port = parseInt(process.env.PORT || "3000");
