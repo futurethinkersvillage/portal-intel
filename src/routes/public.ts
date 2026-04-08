@@ -69,6 +69,21 @@ export async function publicRoutes(app: FastifyInstance) {
     return reply.view("waitlist-thanks.ejs", { user, email: displayEmail });
   });
 
+  // Temporary debug: query waitlist via secret token
+  app.get("/debug/waitlist", async (request, reply) => {
+    const query = request.query as { token?: string };
+    if (query.token !== "portal-intel-debug-2026") {
+      return reply.code(404).send("Not found");
+    }
+    const { rows: waitlist } = await pool.query(
+      `SELECT email, name, source, created_at FROM waitlist ORDER BY created_at DESC`
+    );
+    const { rows: stats } = await pool.query(
+      `SELECT COUNT(*)::int as total FROM waitlist`
+    );
+    return reply.send({ total: stats[0].total, entries: waitlist });
+  });
+
   // One-click unsubscribe (works without login)
   app.get("/unsubscribe/:token", async (request, reply) => {
     const { token } = request.params as { token: string };
