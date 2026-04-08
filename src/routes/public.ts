@@ -69,16 +69,6 @@ export async function publicRoutes(app: FastifyInstance) {
     return reply.view("waitlist-thanks.ejs", { user, email: displayEmail });
   });
 
-  // One-shot cleanup: delete the test waitlist row (will be removed next deploy)
-  app.post("/debug/cleanup", async (request, reply) => {
-    const body = request.body as { token?: string };
-    if (body.token !== "portal-intel-debug-2026") return reply.code(404).send("Not found");
-    const { rowCount } = await pool.query(
-      `DELETE FROM waitlist WHERE email = 'verify-test@example.com'`
-    );
-    return reply.send({ deleted: rowCount });
-  });
-
   // One-click unsubscribe (works without login)
   app.get("/unsubscribe/:token", async (request, reply) => {
     const { token } = request.params as { token: string };
