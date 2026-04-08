@@ -1,0 +1,41 @@
+
+<div class="max-w-2xl mx-auto text-center pt-16 sm:pt-24 pb-16">
+  <div class="w-20 h-20 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-6">
+    <svg class="w-10 h-10 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 13l4 4L19 7"/></svg>
+  </div>
+
+  <h1 class="text-3xl sm:text-4xl font-display font-bold mb-4 leading-tight">You're on the list</h1>
+
+  <p class="text-base text-stone-400 max-w-lg mx-auto leading-relaxed mb-8">
+    Thanks for joining the Portal Intel waitlist. We're putting the finishing touches on the dashboard and will let you know as soon as it's ready.
+  </p>
+
+  <% if (typeof email !== 'undefined' && email) { %>
+    <div class="bg-stone-900/60 border border-stone-800/60 rounded-2xl px-5 py-4 max-w-md mx-auto mb-8 inline-flex items-center gap-3">
+      <svg class="w-4 h-4 text-stone-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+      <span class="text-sm text-stone-300 truncate"><%= email %></span>
+    </div>
+  <% } %>
+
+  <div class="bg-stone-900/40 border border-stone-800/40 rounded-2xl p-6 max-w-lg mx-auto mb-8 text-left">
+    <div class="text-xs font-semibold tracking-widest uppercase text-stone-500 mb-3">What happens next</div>
+    <ul class="space-y-3 text-sm text-stone-400">
+      <li class="flex items-start gap-3">
+        <span class="w-5 h-5 rounded-full bg-brand-500/20 text-brand-400 flex items-center justify-center text-[11px] font-semibold shrink-0 mt-0.5">1</span>
+        <span>We're collecting feedback from early subscribers about what intelligence matters most.</span>
+      </li>
+      <li class="flex items-start gap-3">
+        <span class="w-5 h-5 rounded-full bg-brand-500/20 text-brand-400 flex items-center justify-center text-[11px] font-semibold shrink-0 mt-0.5">2</span>
+        <span>You'll receive an email when the dashboard launches with a link to set up your preferences.</span>
+      </li>
+      <li class="flex items-start gap-3">
+        <span class="w-5 h-5 rounded-full bg-brand-500/20 text-brand-400 flex items-center justify-center text-[11px] font-semibold shrink-0 mt-0.5">3</span>
+        <span>The first weekly Intel Brief follows shortly after.</span>
+      </li>
+    </ul>
+  </div>
+
+  <p class="text-xs text-stone-600">
+    A <a href="https://portal.place" class="text-brand-400 hover:text-brand-300 transition-colors">Portal.Place</a> product &middot; BC &amp; Alberta Regional Intelligence
+  </p>
+</div>

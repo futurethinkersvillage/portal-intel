@@ -59,10 +59,10 @@
   <nav x-data="{ mobileOpen: false }" class="border-b border-stone-800/80 bg-stone-950/80 backdrop-blur-md sticky top-0 z-50">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
       <div class="flex items-center gap-8">
-        <a href="/feed" class="font-semibold text-brand-400 tracking-tight text-base">Portal.Place Intel</a>
+        <a href="<%= user.role === 'admin' ? '/feed' : '/' %>" class="font-semibold text-brand-400 tracking-tight text-base">Portal.Place Intel</a>
         <div class="hidden md:flex items-center gap-1 text-sm">
           <%
-            var navItems = [
+            var navItems = user.role === 'admin' ? [
               { href: '/feed', label: 'Feed' },
               { href: '/discussions', label: 'Discuss' },
               { href: '/events', label: 'Events' },
@@ -70,8 +70,7 @@
               { href: '/submit', label: 'Submit' },
               { href: '/feed/watchlist', label: 'Watchlist' },
               { href: '/profile/edit', label: 'Profile' },
-            ];
-            var currentPath = typeof currentUrl !== 'undefined' ? currentUrl : '';
+            ] : [];
           %>
           <% navItems.forEach(function(item) { %>
             <a href="<%= item.href %>" class="px-3 py-1.5 rounded-lg text-stone-400 hover:text-stone-100 hover:bg-stone-800/60 transition-colors"><%= item.label %></a>

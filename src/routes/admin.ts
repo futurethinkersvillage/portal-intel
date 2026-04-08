@@ -536,6 +536,46 @@ export async function adminRoutes(app: FastifyInstance) {
     return reply.redirect("/admin/items");
   });
 
+  // Waitlist management
+  app.get("/waitlist", async (request, reply) => {
+    const user = (request as any).user;
+    const { rows: waitlist } = await pool.query(
+      `SELECT id, email, name, source, user_id, referrer, notified, notified_at, created_at
+       FROM waitlist
+       ORDER BY created_at DESC
+       LIMIT 500`
+    );
+    const { rows: stats } = await pool.query(
+      `SELECT
+         COUNT(*)::int as total,
+         COUNT(*) FILTER (WHERE source = 'google')::int as google_count,
+         COUNT(*) FILTER (WHERE source = 'email')::int as email_count,
+         COUNT(*) FILTER (WHERE created_at > now() - interval '24 hours')::int as last_24h,
+         COUNT(*) FILTER (WHERE created_at > now() - interval '7 days')::int as last_7d
+       FROM waitlist`
+    );
+    return reply.view("admin/waitlist.ejs", { user, waitlist, stats: stats[0] });
+  });
+
+  // CSV export of waitlist
+  app.get("/waitlist.csv", async (request, reply) => {
+    const { rows: waitlist } = await pool.query(
+      `SELECT email, name, source, created_at FROM waitlist ORDER BY created_at DESC`
+    );
+    const csvRows = ["email,name,source,signed_up_at"];
+    for (const w of waitlist) {
+      const escape = (s: any) => {
+        if (s === null || s === undefined) return "";
+        const str = String(s).replace(/"/g, '""');
+        return /[",\n]/.test(str) ? `"${str}"` : str;
+      };
+      csvRows.push(`${escape(w.email)},${escape(w.name)},${escape(w.source)},${new Date(w.created_at).toISOString()}`);
+    }
+    reply.header("Content-Type", "text/csv; charset=utf-8");
+    reply.header("Content-Disposition", `attachment; filename="portal-intel-waitlist-${new Date().toISOString().split("T")[0]}.csv"`);
+    return reply.send(csvRows.join("\n"));
+  });
+
   // User management
   app.get("/users", async (request, reply) => {
     const user = (request as any).user;

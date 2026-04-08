@@ -71,6 +71,11 @@ export async function requireAuth(request: FastifyRequest, reply: FastifyReply) 
     reply.redirect("/");
     return;
   }
+  // Waitlist mode: only admins can access authenticated routes
+  if (process.env.WAITLIST_MODE === "true" && user.role !== "admin") {
+    reply.redirect("/waitlist/thanks");
+    return;
+  }
   (request as any).user = user;
 }
 

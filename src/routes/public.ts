@@ -3,46 +3,68 @@ import { getUser } from "../lib/middleware.js";
 import pool from "../lib/db.js";
 
 export async function publicRoutes(app: FastifyInstance) {
-  // Landing page — with public feed preview
+  // Landing page — waitlist signup form (admins get redirected to /feed via inline script)
   app.get("/", async (request, reply) => {
     const user = await getUser(request);
+    return reply.view("index.ejs", { user, success: false, error: null });
+  });
 
-    // Fetch top 3 items per category for the public preview
-    const { rows: previewItems } = await pool.query(
-      `SELECT DISTINCT ON (category) id, title, COALESCE(ai_summary, summary) as summary,
-              url, category, region, expires_at, ai_actionability, total_score
-       FROM (
-         SELECT *, ROW_NUMBER() OVER (PARTITION BY category ORDER BY total_score DESC) as rn
-         FROM collected_items
-         WHERE status IN ('approved', 'feed', 'newsletter')
-           AND (expires_at IS NULL OR expires_at > now())
-       ) ranked
-       WHERE rn <= 3
-       ORDER BY category, total_score DESC
-       LIMIT 18`
-    );
+  // Waitlist signup (email form)
+  app.post("/waitlist", { config: { rateLimit: { max: 10, timeWindow: "1 hour" } } }, async (request, reply) => {
+    const body = request.body as { email?: string; name?: string; website?: string };
 
-    // Group by category
-    const { CATEGORY_ORDER } = await import("../lib/categories.js");
-    const categoryOrder = CATEGORY_ORDER;
-    const preview: Record<string, typeof previewItems> = {};
-    for (const item of previewItems) {
-      if (!preview[item.category]) preview[item.category] = [];
-      preview[item.category].push(item);
+    // Honeypot — bots fill the hidden "website" field
+    if (body.website && body.website.trim().length > 0) {
+      return reply.view("index.ejs", { user: null, success: true, error: null });
     }
-    const previewGroups = categoryOrder
-      .filter(s => preview[s]?.length)
-      .map(s => ({ slug: s, items: preview[s] }));
 
-    // Upcoming meetups
-    const { rows: upcomingMeetups } = await pool.query(
-      `SELECT m.*, COUNT(r.id)::int as rsvp_count
-       FROM meetups m LEFT JOIN meetup_rsvps r ON r.meetup_id = m.id
-       WHERE m.is_public = true AND m.event_date > now()
-       GROUP BY m.id ORDER BY m.event_date ASC LIMIT 3`
-    );
+    const email = (body.email || "").trim().toLowerCase();
+    const name = (body.name || "").trim() || null;
 
-    return reply.view("index.ejs", { user, previewGroups, upcomingMeetups });
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return reply.view("index.ejs", { user: null, success: false, error: "Please enter a valid email address." });
+    }
+
+    try {
+      await pool.query(
+        `INSERT INTO waitlist (email, name, source, referrer)
+         VALUES ($1, $2, 'email', $3)
+         ON CONFLICT (email) DO UPDATE SET name = COALESCE(EXCLUDED.name, waitlist.name)`,
+        [email, name, (request.headers["referer"] as string) || null]
+      );
+    } catch (err: any) {
+      console.error("[Waitlist] Insert failed:", err.message);
+      return reply.view("index.ejs", { user: null, success: false, error: "Something went wrong. Please try again." });
+    }
+
+    return reply.redirect("/waitlist/thanks?email=" + encodeURIComponent(email));
+  });
+
+  // Thank-you page (handles both form signups and Google OAuth callbacks)
+  app.get("/waitlist/thanks", async (request, reply) => {
+    const query = request.query as { email?: string };
+    const user = await getUser(request);
+
+    // If a Google user just landed here, add them to the waitlist
+    let displayEmail = query.email;
+    if (user && user.email) {
+      displayEmail = user.email;
+      try {
+        await pool.query(
+          `INSERT INTO waitlist (email, name, source, user_id)
+           VALUES ($1, $2, 'google', $3)
+           ON CONFLICT (email) DO UPDATE SET
+             name = COALESCE(EXCLUDED.name, waitlist.name),
+             user_id = COALESCE(EXCLUDED.user_id, waitlist.user_id),
+             source = CASE WHEN waitlist.source = 'email' THEN 'google' ELSE waitlist.source END`,
+          [user.email.toLowerCase(), user.name || null, user.id]
+        );
+      } catch (err: any) {
+        console.error("[Waitlist] Google sync failed:", err.message);
+      }
+    }
+
+    return reply.view("waitlist-thanks.ejs", { user, email: displayEmail });
   });
 
   // One-click unsubscribe (works without login)
@@ -57,10 +79,14 @@ export async function publicRoutes(app: FastifyInstance) {
     return reply.view("unsubscribe.ejs", { success: (rowCount ?? 0) > 0 });
   });
 
-  // Community directory (formerly Operators)
+  // In waitlist mode, gate the community/calls/archive pages to admins only
+  const isWaitlistMode = () => process.env.WAITLIST_MODE === "true";
+
   app.get("/community", async (request, reply) => {
     const user = await getUser(request);
-
+    if (isWaitlistMode() && (!user || user.role !== "admin")) {
+      return reply.redirect(user ? "/waitlist/thanks" : "/");
+    }
     const { rows: profiles } = await pool.query(
       `SELECT p.*, u.name as user_name, u.image as user_image
        FROM profiles p
@@ -68,49 +94,42 @@ export async function publicRoutes(app: FastifyInstance) {
        WHERE p.visible = true
        ORDER BY p.category, p.created_at DESC`
     );
-
     return reply.view("community.ejs", { user, profiles });
   });
 
-  // Redirect old /operators URL
-  app.get("/operators", async (request, reply) => {
-    return reply.redirect("/community");
-  });
+  app.get("/operators", async (_request, reply) => reply.redirect("/community"));
 
-  // Calls placeholder
   app.get("/calls", async (request, reply) => {
     const user = await getUser(request);
+    if (isWaitlistMode() && (!user || user.role !== "admin")) {
+      return reply.redirect(user ? "/waitlist/thanks" : "/");
+    }
     return reply.view("calls.ejs", { user });
   });
 
-  // Newsletter archive (requires auth)
   app.get("/archive", async (request, reply) => {
     const user = await getUser(request);
     if (!user) return reply.redirect("/");
+    if (isWaitlistMode() && user.role !== "admin") return reply.redirect("/waitlist/thanks");
 
     const { rows: newsletters } = await pool.query(
       `SELECT id, issue_number, subject, sent_at FROM newsletters
        WHERE sent_at IS NOT NULL ORDER BY issue_number DESC`
     );
-
     return reply.view("archive.ejs", { user, newsletters });
   });
 
-  // View individual newsletter issue
   app.get("/archive/:issueNumber", async (request, reply) => {
     const user = await getUser(request);
     if (!user) return reply.redirect("/");
+    if (isWaitlistMode() && user.role !== "admin") return reply.redirect("/waitlist/thanks");
 
     const { issueNumber } = request.params as { issueNumber: string };
     const { rows } = await pool.query(
       `SELECT * FROM newsletters WHERE issue_number = $1`,
       [parseInt(issueNumber, 10)]
     );
-
     if (!rows[0]) return reply.code(404).send("Not found");
-
-    // Serve the stored HTML directly as an email-style page
-    const nl = rows[0];
-    return reply.view("newsletter-view.ejs", { user, nl });
+    return reply.view("newsletter-view.ejs", { user, nl: rows[0] });
   });
 }
