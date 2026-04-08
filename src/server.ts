@@ -2,7 +2,7 @@ import "dotenv/config";
 import Fastify from "fastify";
 import fastifyStatic from "@fastify/static";
 import fastifyView from "@fastify/view";
-import fastifyFormbody from "@fastify/formbody";
+// fastifyFormbody removed — replaced by custom content-type parser below
 import fastifyCookie from "@fastify/cookie";
 import fastifyCors from "@fastify/cors";
 import fastifyRateLimit from "@fastify/rate-limit";
@@ -42,7 +42,43 @@ await app.register(fastifyRateLimit, {
   global: false, // Apply per-route, not globally
 });
 await app.register(fastifyCookie);
-await app.register(fastifyFormbody);
+
+// Better Auth needs the raw body — register a passthrough content-type parser
+// that runs ONLY for /api/auth/* before fastify-formbody touches anything.
+app.addContentTypeParser(
+  ["application/json", "application/x-www-form-urlencoded"],
+  { parseAs: "buffer" },
+  (request, body, done) => {
+    if (request.url?.startsWith("/api/auth/")) {
+      // Skip parsing — Better Auth reads the raw body itself
+      done(null, body);
+    } else {
+      // Default JSON parse for everything else
+      try {
+        const text = body.toString("utf8");
+        if (request.headers["content-type"]?.includes("application/json")) {
+          done(null, text ? JSON.parse(text) : {});
+        } else {
+          // Form-encoded fallback (manual parse since we're skipping fastify-formbody for auth)
+          const params = new URLSearchParams(text);
+          const obj: Record<string, any> = {};
+          for (const [k, v] of params) {
+            if (k in obj) {
+              if (Array.isArray(obj[k])) obj[k].push(v);
+              else obj[k] = [obj[k], v];
+            } else {
+              obj[k] = v;
+            }
+          }
+          done(null, obj);
+        }
+      } catch (err: any) {
+        done(err, undefined);
+      }
+    }
+  }
+);
+
 await app.register(fastifyStatic, {
   root: path.join(__dirname, "../public"),
   prefix: "/public/",
@@ -64,13 +100,25 @@ await app.register(fastifyView, {
   },
 });
 
-// Better Auth catch-all handler
+// Better Auth catch-all handler.
+// reply.hijack() tells Fastify we'll write to the raw response ourselves;
+// Better Auth's toNodeHandler reads the raw body and writes the response.
 const authHandler = toNodeHandler(auth);
-app.all("/api/auth/*", async (request, reply) => {
-  // Forward to Better Auth
-  const req = request.raw;
-  const res = reply.raw;
-  authHandler(req, res);
+app.route({
+  method: ["GET", "POST"],
+  url: "/api/auth/*",
+  async handler(request, reply) {
+    reply.hijack();
+    try {
+      await authHandler(request.raw, reply.raw);
+    } catch (err) {
+      app.log.error({ err }, "Better Auth handler error");
+      if (!reply.raw.headersSent) {
+        reply.raw.statusCode = 500;
+        reply.raw.end("Auth error");
+      }
+    }
+  },
 });
 
 // Routes

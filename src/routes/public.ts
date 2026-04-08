@@ -32,6 +32,7 @@ export async function publicRoutes(app: FastifyInstance) {
          ON CONFLICT (email) DO UPDATE SET name = COALESCE(EXCLUDED.name, waitlist.name)`,
         [email, name, (request.headers["referer"] as string) || null]
       );
+      console.log(`[Waitlist] Email signup: ${email} (${name || 'no name'})`);
     } catch (err: any) {
       console.error("[Waitlist] Insert failed:", err.message);
       return reply.view("index.ejs", { user: null, success: false, error: "Something went wrong. Please try again." });
@@ -59,6 +60,7 @@ export async function publicRoutes(app: FastifyInstance) {
              source = CASE WHEN waitlist.source = 'email' THEN 'google' ELSE waitlist.source END`,
           [user.email.toLowerCase(), user.name || null, user.id]
         );
+        console.log(`[Waitlist] Google signup: ${user.email}`);
       } catch (err: any) {
         console.error("[Waitlist] Google sync failed:", err.message);
       }
