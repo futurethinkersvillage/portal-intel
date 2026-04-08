@@ -1,0 +1,78 @@
+
+<div>
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-display font-bold">Users</h1>
+      <p class="text-sm text-stone-500 mt-1"><%= users.length %> registered &middot; <%= users.filter(u => u.role === 'admin').length %> admin</p>
+    </div>
+    <a href="/admin" class="text-sm text-stone-500 hover:text-stone-200 transition-colors flex items-center gap-1.5">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+      Dashboard
+    </a>
+  </div>
+
+  <% if (users.length === 0) { %>
+    <div class="text-center py-20">
+      <div class="w-16 h-16 rounded-2xl bg-stone-800/50 flex items-center justify-center mx-auto mb-5">
+        <svg class="w-7 h-7 text-stone-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      </div>
+      <p class="text-stone-400 text-sm">No users registered yet.</p>
+    </div>
+  <% } else { %>
+    <div class="space-y-3">
+      <% users.forEach(function(u) { %>
+        <div class="bg-stone-900/60 border <%= u.role === 'admin' ? 'border-accent-500/30' : 'border-stone-800/60' %> rounded-2xl p-5 hover:border-stone-700/60 transition-colors">
+          <div class="flex items-start justify-between gap-4">
+            <div class="flex items-start gap-4 flex-1 min-w-0">
+              <% if (u.image) { %>
+                <img src="<%= u.image %>" alt="" class="w-11 h-11 rounded-full ring-1 ring-stone-800 shrink-0">
+              <% } else { %>
+                <div class="w-11 h-11 rounded-full bg-brand-800 flex items-center justify-center text-brand-300 text-base font-semibold ring-1 ring-stone-800 shrink-0"><%= (u.name || '?').charAt(0).toUpperCase() %></div>
+              <% } %>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-1 flex-wrap">
+                  <span class="font-medium text-sm text-stone-100"><%= u.name || 'Unnamed' %></span>
+                  <% if (u.role === 'admin') { %>
+                    <span class="text-[10px] uppercase tracking-widest font-semibold text-accent-400 bg-accent-500/10 border border-accent-500/20 px-1.5 py-0.5 rounded">Admin</span>
+                  <% } %>
+                  <% if (!u.onboarded) { %>
+                    <span class="text-[10px] uppercase tracking-widest font-semibold text-stone-500 bg-stone-800 border border-stone-700/60 px-1.5 py-0.5 rounded">Pending Setup</span>
+                  <% } %>
+                </div>
+                <div class="text-xs text-stone-500 truncate"><%= u.email %></div>
+                <div class="text-xs text-stone-600 mt-1.5 flex items-center gap-3">
+                  <span>Joined <%= new Date(u.createdAt).toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' }) %></span>
+                  <% if (u.saved_count > 0) { %>
+                    <span class="flex items-center gap-1">
+                      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"/></svg>
+                      <%= u.saved_count %> saved
+                    </span>
+                  <% } %>
+                  <% if (u.comment_count > 0) { %>
+                    <span class="flex items-center gap-1">
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                      <%= u.comment_count %> comments
+                    </span>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+            <div class="shrink-0">
+              <% if (u.role === 'admin') { %>
+                <form method="POST" action="/admin/users/<%= u.id %>/role" onsubmit="return confirm('Demote <%= u.name || u.email %> to subscriber? They will lose admin access.')">
+                  <input type="hidden" name="role" value="subscriber">
+                  <button type="submit" class="text-xs px-3 py-1.5 rounded-lg border border-stone-700/60 text-stone-400 hover:border-stone-600 hover:text-stone-300 transition-colors">Demote</button>
+                </form>
+              <% } else { %>
+                <form method="POST" action="/admin/users/<%= u.id %>/role" onsubmit="return confirm('Promote <%= u.name || u.email %> to admin? They will get full admin access.')">
+                  <input type="hidden" name="role" value="admin">
+                  <button type="submit" class="text-xs px-3 py-1.5 rounded-lg border border-stone-700/60 text-stone-400 hover:border-accent-500/40 hover:text-accent-400 transition-colors">Promote to Admin</button>
+                </form>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+</div>

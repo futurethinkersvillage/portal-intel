@@ -20,12 +20,22 @@ export async function getUser(request: FastifyRequest): Promise<AuthUser | null>
     });
     if (!session?.user) return null;
 
-    // Get or create user_profiles row
+    // Bootstrap admin: if this user's email matches ADMIN_EMAIL, ensure they're admin.
+    // ADMIN_EMAIL can be a comma-separated list of emails for multiple admins.
+    const adminEmails = (process.env.ADMIN_EMAIL || "")
+      .split(",")
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean);
+    const isBootstrapAdmin = adminEmails.includes((session.user.email || "").toLowerCase());
+
+    // Get or create user_profiles row, optionally promoting to admin
     const { rows } = await pool.query(
-      `INSERT INTO user_profiles (user_id) VALUES ($1)
-       ON CONFLICT (user_id) DO UPDATE SET updated_at = now()
+      `INSERT INTO user_profiles (user_id, role) VALUES ($1, $2)
+       ON CONFLICT (user_id) DO UPDATE SET
+         role = CASE WHEN $2 = 'admin' THEN 'admin' ELSE user_profiles.role END,
+         updated_at = now()
        RETURNING role, onboarded`,
-      [session.user.id]
+      [session.user.id, isBootstrapAdmin ? "admin" : "subscriber"]
     );
 
     return {

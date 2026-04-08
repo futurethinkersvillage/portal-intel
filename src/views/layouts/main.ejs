@@ -82,15 +82,39 @@
         </div>
       </div>
       <div class="flex items-center gap-3">
-        <a href="/preferences" class="hidden sm:block text-sm text-stone-500 hover:text-stone-200 transition-colors p-1.5">
+        <a href="/preferences" class="hidden sm:block text-sm text-stone-500 hover:text-stone-200 transition-colors p-1.5" aria-label="Preferences">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
         </a>
-        <div class="hidden sm:flex items-center gap-2">
-          <% if (user.image) { %>
-            <img src="<%= user.image %>" alt="" class="w-7 h-7 rounded-full ring-1 ring-stone-800">
-          <% } else { %>
-            <div class="w-7 h-7 rounded-full bg-brand-800 flex items-center justify-center text-brand-400 text-xs font-semibold ring-1 ring-stone-800"><%= user.name?.charAt(0)?.toUpperCase() || '?' %></div>
-          <% } %>
+        <div x-data="{ open: false }" class="hidden sm:flex items-center relative">
+          <button @click="open = !open" @click.away="open = false" class="flex items-center gap-2 hover:bg-stone-800/60 rounded-lg p-1 transition-colors" aria-label="Account menu">
+            <% if (user.image) { %>
+              <img src="<%= user.image %>" alt="" class="w-7 h-7 rounded-full ring-1 ring-stone-800">
+            <% } else { %>
+              <div class="w-7 h-7 rounded-full bg-brand-800 flex items-center justify-center text-brand-400 text-xs font-semibold ring-1 ring-stone-800"><%= user.name?.charAt(0)?.toUpperCase() || '?' %></div>
+            <% } %>
+            <svg class="w-3 h-3 text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div x-show="open" x-cloak x-transition class="absolute right-0 top-full mt-2 w-56 bg-stone-900 border border-stone-800 rounded-xl shadow-xl shadow-black/40 py-1.5 z-50">
+            <div class="px-3 py-2 border-b border-stone-800/60">
+              <div class="text-sm font-medium text-stone-200 truncate"><%= user.name %></div>
+              <div class="text-xs text-stone-500 truncate"><%= user.email %></div>
+              <% if (user.role === 'admin') { %>
+                <div class="text-[10px] uppercase tracking-widest font-semibold text-accent-400 mt-1">Admin</div>
+              <% } %>
+            </div>
+            <a href="/profile/edit" class="block px-3 py-2 text-sm text-stone-300 hover:bg-stone-800/60 hover:text-stone-100 transition-colors">Profile</a>
+            <a href="/preferences" class="block px-3 py-2 text-sm text-stone-300 hover:bg-stone-800/60 hover:text-stone-100 transition-colors">Preferences</a>
+            <% if (user.role === 'admin') { %>
+              <a href="/admin/users" class="block px-3 py-2 text-sm text-stone-300 hover:bg-stone-800/60 hover:text-stone-100 transition-colors">Manage Users</a>
+            <% } %>
+            <div class="border-t border-stone-800/60 my-1"></div>
+            <form method="POST" action="/api/auth/sign-out">
+              <button type="submit" class="w-full text-left px-3 py-2 text-sm text-stone-300 hover:bg-red-500/10 hover:text-red-400 transition-colors flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                Sign out
+              </button>
+            </form>
+          </div>
         </div>
         <!-- Mobile hamburger -->
         <button @click="mobileOpen = !mobileOpen" class="md:hidden p-2 -mr-2 rounded-lg hover:bg-stone-800/60 transition-colors" aria-label="Toggle menu">
@@ -109,9 +133,15 @@
         <% if (user.role === 'admin') { %>
           <a href="/admin" class="px-3 py-2.5 rounded-lg text-sm text-accent-400 hover:text-accent-300 hover:bg-accent-500/10 transition-colors">Admin</a>
         <% } %>
-        <div class="border-t border-stone-800/60 mt-2 pt-2 flex items-center gap-3 px-3">
-          <a href="/preferences" class="text-sm text-stone-500 hover:text-stone-200 transition-colors">Preferences</a>
-          <span class="text-sm text-stone-600"><%= user.name %></span>
+        <div class="border-t border-stone-800/60 mt-2 pt-2 flex flex-col">
+          <a href="/preferences" class="px-3 py-2.5 rounded-lg text-sm text-stone-400 hover:text-stone-100 hover:bg-stone-800/60 transition-colors">Preferences</a>
+          <% if (user.role === 'admin') { %>
+            <a href="/admin/users" class="px-3 py-2.5 rounded-lg text-sm text-stone-400 hover:text-stone-100 hover:bg-stone-800/60 transition-colors">Manage Users</a>
+          <% } %>
+          <form method="POST" action="/api/auth/sign-out">
+            <button type="submit" class="w-full text-left px-3 py-2.5 rounded-lg text-sm text-stone-400 hover:text-red-400 hover:bg-red-500/10 transition-colors">Sign out</button>
+          </form>
+          <div class="text-xs text-stone-600 px-3 pt-2 truncate"><%= user.email %></div>
         </div>
       </div>
     </div>

@@ -536,6 +536,37 @@ export async function adminRoutes(app: FastifyInstance) {
     return reply.redirect("/admin/items");
   });
 
+  // User management
+  app.get("/users", async (request, reply) => {
+    const user = (request as any).user;
+    const { rows: users } = await pool.query(
+      `SELECT u.id, u.name, u.email, u.image, u."createdAt",
+              up.role, up.onboarded, up.status, up.preferences,
+              (SELECT COUNT(*) FROM saved_items WHERE user_id = u.id)::int as saved_count,
+              (SELECT COUNT(*) FROM comments WHERE author_id = u.id)::int as comment_count
+       FROM "user" u
+       LEFT JOIN user_profiles up ON up.user_id = u.id
+       ORDER BY
+         CASE WHEN up.role = 'admin' THEN 0 ELSE 1 END,
+         u."createdAt" DESC
+       LIMIT 200`
+    );
+    return reply.view("admin/users.ejs", { user, users });
+  });
+
+  app.post("/users/:id/role", async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const { role } = request.body as { role: string };
+    if (role !== "admin" && role !== "subscriber") return reply.redirect("/admin/users");
+
+    await pool.query(
+      `INSERT INTO user_profiles (user_id, role) VALUES ($1, $2)
+       ON CONFLICT (user_id) DO UPDATE SET role = $2, updated_at = now()`,
+      [id, role]
+    );
+    return reply.redirect("/admin/users");
+  });
+
   // Comment moderation
   app.get("/comments", async (request, reply) => {
     const user = (request as any).user;
