@@ -69,19 +69,14 @@ export async function publicRoutes(app: FastifyInstance) {
     return reply.view("waitlist-thanks.ejs", { user, email: displayEmail });
   });
 
-  // Temporary debug: query waitlist via secret token
-  app.get("/debug/waitlist", async (request, reply) => {
-    const query = request.query as { token?: string };
-    if (query.token !== "portal-intel-debug-2026") {
-      return reply.code(404).send("Not found");
-    }
-    const { rows: waitlist } = await pool.query(
-      `SELECT email, name, source, created_at FROM waitlist ORDER BY created_at DESC`
+  // One-shot cleanup: delete the test waitlist row (will be removed next deploy)
+  app.post("/debug/cleanup", async (request, reply) => {
+    const body = request.body as { token?: string };
+    if (body.token !== "portal-intel-debug-2026") return reply.code(404).send("Not found");
+    const { rowCount } = await pool.query(
+      `DELETE FROM waitlist WHERE email = 'verify-test@example.com'`
     );
-    const { rows: stats } = await pool.query(
-      `SELECT COUNT(*)::int as total FROM waitlist`
-    );
-    return reply.send({ total: stats[0].total, entries: waitlist });
+    return reply.send({ deleted: rowCount });
   });
 
   // One-click unsubscribe (works without login)
