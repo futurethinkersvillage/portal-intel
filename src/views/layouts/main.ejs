@@ -107,12 +107,10 @@
               <a href="/admin/users" class="block px-3 py-2 text-sm text-stone-300 hover:bg-stone-800/60 hover:text-stone-100 transition-colors">Manage Users</a>
             <% } %>
             <div class="border-t border-stone-800/60 my-1"></div>
-            <form method="POST" action="/api/auth/sign-out">
-              <button type="submit" class="w-full text-left px-3 py-2 text-sm text-stone-300 hover:bg-red-500/10 hover:text-red-400 transition-colors flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                Sign out
-              </button>
-            </form>
+            <button type="button" onclick="signOut()" class="w-full text-left px-3 py-2 text-sm text-stone-300 hover:bg-red-500/10 hover:text-red-400 transition-colors flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+              Sign out
+            </button>
           </div>
         </div>
         <!-- Mobile hamburger -->
@@ -137,9 +135,7 @@
           <% if (user.role === 'admin') { %>
             <a href="/admin/users" class="px-3 py-2.5 rounded-lg text-sm text-stone-400 hover:text-stone-100 hover:bg-stone-800/60 transition-colors">Manage Users</a>
           <% } %>
-          <form method="POST" action="/api/auth/sign-out">
-            <button type="submit" class="w-full text-left px-3 py-2.5 rounded-lg text-sm text-stone-400 hover:text-red-400 hover:bg-red-500/10 transition-colors">Sign out</button>
-          </form>
+          <button type="button" onclick="signOut()" class="w-full text-left px-3 py-2.5 rounded-lg text-sm text-stone-400 hover:text-red-400 hover:bg-red-500/10 transition-colors">Sign out</button>
           <div class="text-xs text-stone-600 px-3 pt-2 truncate"><%= user.email %></div>
         </div>
       </div>
@@ -150,6 +146,22 @@
   <main class="max-w-6xl mx-auto px-4 sm:px-6 py-8 flex-1 w-full">
     <%- body %>
   </main>
+
+  <script>
+    async function signOut() {
+      try {
+        await fetch('/api/auth/sign-out', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: '{}'
+        });
+        window.location.href = '/';
+      } catch (e) {
+        console.error('Sign out failed', e);
+        window.location.href = '/';
+      }
+    }
+  </script>
 
   <footer class="border-t border-stone-800/60 mt-auto">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-stone-600">
