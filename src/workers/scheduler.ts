@@ -35,11 +35,15 @@ export async function scheduleScrapeJobs() {
 
     if (!isDue(cron, lastScraped)) continue;
 
+    // Skip disabled sources entirely
+    if (source.scrape_method === "disabled") continue;
+
     const jobData = {
       sourceId: source.id,
       url: source.url,
       categories: source.categories,
       region: source.region,
+      scrapeMethod: source.scrape_method || "auto",
     };
 
     if (source.type === "rss") {

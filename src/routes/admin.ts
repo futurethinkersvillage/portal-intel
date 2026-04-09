@@ -73,9 +73,9 @@ export async function adminRoutes(app: FastifyInstance) {
     const body = request.body as any;
     const categories = Array.isArray(body.categories) ? body.categories : body.categories ? [body.categories] : [];
     await pool.query(
-      `UPDATE sources SET name=$1, url=$2, type=$3, categories=$4, region=$5, trust_level=$6, scrape_frequency=$7, notes=$8, updated_at=now()
-       WHERE id=$9`,
-      [body.name, body.url, body.type, categories, body.region, body.trust_level, body.scrape_frequency || "0 6 * * *", body.notes || null, id]
+      `UPDATE sources SET name=$1, url=$2, type=$3, categories=$4, region=$5, trust_level=$6, scrape_frequency=$7, notes=$8, scrape_method=$9, updated_at=now()
+       WHERE id=$10`,
+      [body.name, body.url, body.type, categories, body.region, body.trust_level, body.scrape_frequency || "0 6 * * *", body.notes || null, body.scrape_method || "auto", id]
     );
     return reply.redirect("/admin/sources");
   });
@@ -86,7 +86,8 @@ export async function adminRoutes(app: FastifyInstance) {
     if (!rows[0]) return reply.redirect("/admin/sources");
     const source = rows[0];
     const { rssQueue, htmlQueue } = await import("../workers/scheduler.js");
-    const jobData = { sourceId: source.id, url: source.url, categories: source.categories, region: source.region };
+    if (source.scrape_method === "disabled") return reply.redirect("/admin/sources");
+    const jobData = { sourceId: source.id, url: source.url, categories: source.categories, region: source.region, scrapeMethod: source.scrape_method || "auto" };
     if (source.type === "rss") await rssQueue.add(`rss-manual-${source.id}`, jobData, { removeOnComplete: 10, removeOnFail: 10 });
     else if (source.type === "html") await htmlQueue.add(`html-manual-${source.id}`, jobData, { removeOnComplete: 10, removeOnFail: 10 });
     return reply.redirect("/admin/sources");
@@ -255,11 +256,13 @@ export async function adminRoutes(app: FastifyInstance) {
 
     let rss = 0, html = 0;
     for (const source of sources) {
+      if (source.scrape_method === "disabled") continue;
       const jobData = {
         sourceId: source.id,
         url: source.url,
         categories: source.categories,
         region: source.region,
+        scrapeMethod: source.scrape_method || "auto",
       };
       if (source.type === "rss") {
         await rssQueue.add(`rss-manual-${source.id}-${Date.now()}`, jobData, {

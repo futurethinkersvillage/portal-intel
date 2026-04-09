@@ -185,6 +185,16 @@
                   <% }) %>
                 </select>
               </div>
+              <div>
+                <label class="block text-xs font-medium mb-1">Scrape Method</label>
+                <select name="scrape_method" class="w-full bg-stone-800 border border-stone-700 rounded px-3 py-2 text-sm">
+                  <option value="auto" <%= (source.scrape_method || 'auto') === 'auto' ? 'selected' : '' %>>auto (free scraper, no escalation)</option>
+                  <option value="static" <%= source.scrape_method === 'static' ? 'selected' : '' %>>static (known-static HTML)</option>
+                  <option value="js" <%= source.scrape_method === 'js' ? 'selected' : '' %>>js (JS-rendered, skip without Firecrawl)</option>
+                  <option value="firecrawl" <%= source.scrape_method === 'firecrawl' ? 'selected' : '' %>>firecrawl (always use Firecrawl)</option>
+                  <option value="disabled" <%= source.scrape_method === 'disabled' ? 'selected' : '' %>>disabled (never scrape)</option>
+                </select>
+              </div>
             </div>
             <div>
               <label class="block text-xs font-medium mb-1">Categories</label>
