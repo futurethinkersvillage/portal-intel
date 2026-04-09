@@ -1,4 +1,4 @@
-<div class="bg-stone-900/50 border border-stone-800/50 rounded-xl p-5 hover:border-stone-700/60 transition-colors group">
+<div class="bg-warm-dark border border-white/5 rounded-xl p-5 hover:border-white/10 transition-colors group">
   <div class="flex items-start gap-4">
     <div class="flex-1 min-w-0">
       <!-- Meta row -->
@@ -6,68 +6,142 @@
         <span class="text-xs font-medium px-2.5 py-0.5 rounded-md shrink-0"
               :class="categoryBadgeClass(item.category)"
               x-text="categoryLabel(item.category)"></span>
-        <span class="text-[11px] text-stone-600 uppercase tracking-wider font-medium" x-text="item.region"></span>
+        <span class="text-[11px] text-white/40 uppercase tracking-wider font-medium" x-text="item.region"></span>
         <template x-if="item.expires_at">
-          <span class="text-xs text-amber-400/90 font-medium flex items-center gap-1">
+          <span class="text-xs text-amber font-medium flex items-center gap-1">
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             <span x-text="formatDate(item.expires_at)"></span>
           </span>
         </template>
         <template x-if="item.pinned_at">
-          <span class="text-xs text-amber-400 font-medium flex items-center gap-1">
+          <span class="text-xs text-amber font-medium flex items-center gap-1">
             <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M5 5a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 21V5z"/></svg>
             Pinned
           </span>
         </template>
+        <template x-if="item.admin_vote === 1">
+          <span class="text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded">+1</span>
+        </template>
+        <template x-if="item.admin_vote === -1">
+          <span class="text-[11px] font-semibold text-red-400 bg-red-500/10 border border-red-500/20 px-1.5 py-0.5 rounded">-1</span>
+        </template>
         <template x-if="item.save_count > 0">
-          <span class="text-[11px] text-stone-600 ml-auto flex items-center gap-1">
+          <span class="text-[11px] text-white/40 ml-auto flex items-center gap-1">
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
             <span x-text="item.save_count"></span>
           </span>
         </template>
       </div>
 
-      <!-- Title -->
+      <!-- Title (goes to internal detail page) -->
       <a :href="'/feed/' + item.id"
-        class="font-semibold text-[15px] text-stone-100 hover:text-brand-300 transition-colors leading-snug block mb-2"
+        class="font-semibold text-[15px] text-white hover:text-amber transition-colors leading-snug block mb-2"
         x-text="item.title"></a>
 
       <!-- AI Summary -->
       <template x-if="item.summary">
-        <p class="text-sm text-stone-400 leading-relaxed mb-3 line-clamp-2" x-text="item.summary"></p>
+        <p class="text-sm text-white/60 leading-relaxed mb-3 line-clamp-2" x-text="item.summary"></p>
       </template>
 
       <!-- AI Actionability chip -->
       <template x-if="item.ai_actionability">
-        <div class="inline-flex items-center gap-1.5 text-xs text-brand-300 bg-brand-900/40 border border-brand-800/40 px-2.5 py-1 rounded-lg font-medium mb-3">
+        <div class="inline-flex items-center gap-1.5 text-xs text-amber bg-amber/10 border border-amber/20 px-2.5 py-1 rounded-lg font-medium mb-3">
           <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
           <span x-text="item.ai_actionability"></span>
         </div>
       </template>
 
-      <!-- Footer -->
-      <div class="flex items-center gap-2 text-[11px] text-stone-600">
+      <!-- Admin comment (if set) -->
+      <template x-if="item.admin_comment">
+        <div class="text-xs mt-1 mb-2 rounded-md px-2.5 py-1.5 bg-white/5 border border-white/10 text-white/60">
+          <span class="font-medium text-white/80" x-text="item.admin_vote === 1 ? 'Why good:' : item.admin_vote === -1 ? 'Why bad:' : 'Note:'"></span>
+          <span x-text="' ' + item.admin_comment"></span>
+        </div>
+      </template>
+
+      <!-- Footer: source + date -->
+      <div class="flex items-center gap-2 text-[11px] text-white/40">
         <span x-text="item.source_name || 'Community'"></span>
-        <span class="w-1 h-1 rounded-full bg-stone-700"></span>
+        <span class="w-1 h-1 rounded-full bg-white/20"></span>
         <span x-text="formatDate(item.collected_at)"></span>
       </div>
     </div>
 
-    <!-- Actions -->
+    <!-- Right side: save + admin controls -->
     <div class="flex flex-col items-end gap-2 shrink-0 pt-0.5">
-      <a :href="item.url" target="_blank" rel="noopener noreferrer"
-        class="text-xs bg-stone-800/80 hover:bg-stone-700/80 text-stone-300 hover:text-white px-3.5 py-2 rounded-lg transition-colors font-medium whitespace-nowrap inline-flex items-center gap-1.5 active:scale-[0.97]">
-        View
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-      </a>
+      <!-- Save button (all users) -->
       <button @click="toggleSave(item.id)"
-        class="p-2 rounded-lg hover:bg-stone-800/60 transition-colors"
-        :class="savedIds.has(item.id) ? 'text-brand-400' : 'text-stone-700 hover:text-stone-400'"
+        class="p-2 rounded-lg hover:bg-white/5 transition-colors"
+        :class="savedIds.has(item.id) ? 'text-amber' : 'text-white/30 hover:text-white/60'"
         :aria-label="savedIds.has(item.id) ? 'Remove from watchlist' : 'Save to watchlist'">
         <svg class="w-4 h-4" :fill="savedIds.has(item.id) ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
         </svg>
       </button>
+
+      <% if (user && user.role === 'admin') { %>
+        <!-- Admin vote+pin controls (admin only) -->
+        <div x-data="{ showForm: false, comment: item.admin_comment || '' }" class="flex flex-col items-end gap-1.5">
+          <div class="flex items-center gap-0.5">
+            <!-- Pin toggle -->
+            <button @click="fetch('/admin/items/' + item.id + '/pin', { method: 'POST' }).then(() => { item.pinned_at = item.pinned_at ? null : new Date().toISOString() })"
+              class="p-1.5 rounded-md transition-colors"
+              :class="item.pinned_at ? 'text-amber bg-amber/10' : 'text-white/30 hover:text-amber hover:bg-white/5'"
+              title="Pin to top">
+              <svg class="w-3.5 h-3.5" :fill="item.pinned_at ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+            </button>
+            <!-- Vote buttons (toggle comment form) -->
+            <button @click="showForm = !showForm; $nextTick(() => { if (showForm) $refs.commentInput.focus() })"
+              class="p-1.5 rounded-md transition-colors"
+              :class="item.admin_vote === 1 ? 'text-emerald-400 bg-emerald-500/10' : item.admin_vote === -1 ? 'text-red-400 bg-red-500/10' : 'text-white/30 hover:text-white/60 hover:bg-white/5'"
+              title="Vote (requires comment)">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/></svg>
+            </button>
+          </div>
+
+          <!-- Expanded admin vote form -->
+          <div x-show="showForm" x-cloak x-transition class="w-full sm:w-72 bg-warm-dark border border-white/10 rounded-lg p-3 mt-1">
+            <textarea x-ref="commentInput" x-model="comment" rows="2" placeholder="Why? (required)"
+              class="w-full bg-white/5 border border-white/10 rounded-md px-2.5 py-1.5 text-xs text-white placeholder-white/30 focus:border-amber/50 focus:ring-1 focus:ring-amber/30 focus:outline-none transition-colors resize-none"></textarea>
+            <div class="flex items-center gap-1.5 mt-2">
+              <button @click="
+                if (!comment.trim()) return;
+                fetch('/admin/items/' + item.id + '/vote', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                  body: 'vote=1&comment=' + encodeURIComponent(comment)
+                }).then(() => { item.admin_vote = 1; item.admin_comment = comment; showForm = false; });"
+                :disabled="!comment.trim()"
+                class="flex-1 text-xs px-3 py-1.5 rounded-md bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                Upvote
+              </button>
+              <button @click="
+                if (!comment.trim()) return;
+                fetch('/admin/items/' + item.id + '/vote', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                  body: 'vote=-1&comment=' + encodeURIComponent(comment)
+                }).then(() => { item.admin_vote = -1; item.admin_comment = comment; showForm = false; });"
+                :disabled="!comment.trim()"
+                class="flex-1 text-xs px-3 py-1.5 rounded-md bg-red-500/20 text-red-300 hover:bg-red-500/30 font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                Downvote
+              </button>
+              <template x-if="item.admin_vote !== 0">
+                <button @click="
+                  fetch('/admin/items/' + item.id + '/vote', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'vote=0&comment='
+                  }).then(() => { item.admin_vote = 0; item.admin_comment = null; showForm = false; });"
+                  class="text-xs px-2 py-1.5 rounded-md text-white/40 hover:text-white/70 hover:bg-white/5 transition-colors" title="Clear vote">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+              </template>
+            </div>
+            <p class="text-[10px] text-white/40 mt-1.5">Feedback trains the scraper.</p>
+          </div>
+        </div>
+      <% } %>
     </div>
   </div>
 </div>

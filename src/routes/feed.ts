@@ -8,9 +8,11 @@ export async function feedRoutes(app: FastifyInstance) {
   app.get("/", async (request, reply) => {
     const user = (request as any).user;
 
-    // Get all feed-eligible items — prefer AI summary over raw summary
+    // Get all feed-eligible items — prefer AI headline/summary over raw
     const { rows: rawItems } = await pool.query(
-      `SELECT ci.*, COALESCE(ci.ai_summary, ci.summary) as summary,
+      `SELECT ci.*,
+              COALESCE(ci.ai_headline, ci.title) as title,
+              COALESCE(ci.ai_summary, ci.summary) as summary,
               ci.ai_actionability,
               s.name as source_name,
               (SELECT COUNT(*) FROM saved_items si WHERE si.item_id = ci.id) as save_count

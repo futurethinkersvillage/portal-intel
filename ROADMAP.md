@@ -193,11 +193,18 @@ Priority order for the next work session:
 
 ---
 
-## Open questions for Mike
+## Answered decisions
 
-1. **Public item voting**: add or not? If yes, what does the community see — just counts, or ranked?
-2. **Jobs sources**: any preferred sources? Currently 0 items in jobs category
-3. **Firecrawl credits**: should I use the old key or generate a new one?
-4. **Zoom meeting visibility**: should ALL public meetings in your account sync, or only meetings with specific keywords in the title?
-5. **International land priority order**: which country/region first — Colombia, Argentina, Mexico, Portugal, Thailand?
-6. **Investment pledging**: is this real pledging (with Stripe pre-auth) or soft interest only (no money moves)?
+*Resolved questions from 2026-04-08:*
+
+1. **Public item voting**: ❌ **NO**. Only admin voting/commenting. Admin controls need to be surfaced directly on feed item cards (not just the detail page) so Mike can vote while scrolling.
+2. **"View" button on feed cards**: ❌ **Remove it**. Item title click goes to detail page. External source link only on the detail page.
+3. **Investment pledging**: ✅ **Soft interest only** — no money moves, no Stripe. Must be clearly labeled as "expression of interest, not a commitment" so users understand they aren't beholden to anything.
+4. **Priority order**: No preference — work through all items in the roadmap, tracking everything so nothing gets lost.
+
+## Still-open questions for Mike
+
+1. **Jobs sources**: any preferred sources? Currently 0 items in jobs category
+2. **Firecrawl credits**: should I use the old key `fc-e295636c59944320a5fdccf1102706b6` or generate a new one? Was failing with "insufficient credits" in last session
+3. **Zoom meeting visibility**: should ALL public meetings in your account sync, or only meetings with specific keywords in the title (land/portal/resilience/AI)? *Default plan: keyword-filter*
+4. **International land priority order**: which country/region first — Colombia, Argentina, Mexico, Portugal, Thailand?

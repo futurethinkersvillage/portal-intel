@@ -14,7 +14,7 @@ export async function adminRoutes(app: FastifyInstance) {
   // Admin dashboard
   app.get("/", async (request, reply) => {
     const user = (request as any).user;
-    const query = request.query as { scraped?: string };
+    const query = request.query as { scraped?: string; reenrich?: string; zoom_synced?: string; zoom_error?: string };
 
     const [itemCount, subCount, pendingSubs, sourceCount, usage] = await Promise.all([
       pool.query(`SELECT COUNT(*) as count FROM collected_items WHERE status != 'archived'`),
@@ -34,6 +34,9 @@ export async function adminRoutes(app: FastifyInstance) {
       },
       usage,
       scrapedCount: query.scraped ? parseInt(query.scraped) : null,
+      reenrichCount: query.reenrich ? parseInt(query.reenrich) : null,
+      zoomSyncedCount: query.zoom_synced ? parseInt(query.zoom_synced) : null,
+      zoomError: query.zoom_error || null,
     });
   });
 
@@ -87,6 +90,160 @@ export async function adminRoutes(app: FastifyInstance) {
     if (source.type === "rss") await rssQueue.add(`rss-manual-${source.id}`, jobData, { removeOnComplete: 10, removeOnFail: 10 });
     else if (source.type === "html") await htmlQueue.add(`html-manual-${source.id}`, jobData, { removeOnComplete: 10, removeOnFail: 10 });
     return reply.redirect("/admin/sources");
+  });
+
+  // Force re-enrichment of existing items (resets enriched_at so enrichment worker picks them up)
+  app.post("/reenrich", async (request, reply) => {
+    const body = request.body as { scope?: string };
+    const scope = body.scope || "unvoted"; // 'unvoted' | 'all' | 'recent'
+
+    let whereClause = "";
+    if (scope === "unvoted") {
+      // Skip items the admin has already voted on
+      whereClause = "WHERE admin_vote = 0 AND status != 'archived'";
+    } else if (scope === "recent") {
+      whereClause = "WHERE collected_at > now() - interval '30 days' AND status != 'archived'";
+    } else {
+      whereClause = "WHERE status != 'archived'";
+    }
+
+    const { rowCount } = await pool.query(
+      `UPDATE collected_items
+       SET enriched_at = NULL, status = 'pending', ai_headline = NULL, ai_summary = NULL, ai_actionability = NULL, ai_score = NULL
+       ${whereClause}`
+    );
+    console.log(`[Admin] Queued ${rowCount} items for re-enrichment (scope: ${scope})`);
+    return reply.redirect(`/admin?reenrich=${rowCount}`);
+  });
+
+  // Sync Zoom calls
+  app.post("/sync-zoom", async (request, reply) => {
+    try {
+      const { syncZoomCalls } = await import("../workers/zoom-sync.js");
+      const result = await syncZoomCalls();
+      const total = result.upcomingAdded + result.upcomingUpdated + result.pastAdded + result.pastUpdated;
+      return reply.redirect(`/admin?zoom_synced=${total}`);
+    } catch (err: any) {
+      console.error("[Admin] Zoom sync failed:", err.message);
+      return reply.redirect(`/admin?zoom_error=${encodeURIComponent(err.message)}`);
+    }
+  });
+
+  // Import a Facebook event by URL — tries Firecrawl first, redirects to manual form on failure
+  app.post("/events/import-fb", async (request, reply) => {
+    const user = (request as any).user;
+    const body = request.body as { url: string; is_past?: string };
+    if (!body.url) return reply.redirect("/admin/events");
+
+    try {
+      const { scrapeFacebookEvent } = await import("../lib/facebook-events.js");
+      const event = await scrapeFacebookEvent(body.url);
+      if (!event || !event.title) {
+        // Scrape failed — redirect to manual form with the URL prefilled
+        return reply.redirect(`/admin/events?fb_url=${encodeURIComponent(body.url)}&fb_error=scrape_failed`);
+      }
+
+      const slug = (event.title || "fb-event")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "")
+        .substring(0, 80) + "-" + Date.now().toString(36);
+
+      const eventDate = event.event_date ? new Date(event.event_date) : new Date();
+
+      await pool.query(
+        `INSERT INTO meetups (slug, title, description, location, address, event_date, is_public, created_by, event_url, image_url, source)
+         VALUES ($1, $2, $3, $4, $5, $6, true, $7, $8, $9, 'facebook')`,
+        [
+          slug,
+          event.title.substring(0, 300),
+          event.description || null,
+          event.location || "TBD",
+          event.address || null,
+          eventDate.toISOString(),
+          user.id,
+          event.event_url,
+          event.image_url || null,
+        ]
+      );
+      console.log(`[Admin] Imported FB event: ${event.title}`);
+      return reply.redirect("/admin/events?fb_imported=1");
+    } catch (err: any) {
+      console.error("[Admin] FB import failed:", err.message);
+      return reply.redirect(`/admin/events?fb_url=${encodeURIComponent(body.url)}&fb_error=${encodeURIComponent(err.message)}`);
+    }
+  });
+
+  // Manual event creation (also accepts event_url for Facebook fallback)
+  app.post("/events/create-external", async (request, reply) => {
+    const user = (request as any).user;
+    const body = request.body as {
+      title: string;
+      description?: string;
+      location: string;
+      address?: string;
+      event_date: string;
+      event_url?: string;
+      image_url?: string;
+      source?: string;
+    };
+
+    const slug = (body.title || "event")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "")
+      .substring(0, 80) + "-" + Date.now().toString(36);
+
+    await pool.query(
+      `INSERT INTO meetups (slug, title, description, location, address, event_date, is_public, created_by, event_url, image_url, source)
+       VALUES ($1, $2, $3, $4, $5, $6, true, $7, $8, $9, $10)`,
+      [
+        slug,
+        body.title.substring(0, 300),
+        body.description || null,
+        body.location || "TBD",
+        body.address || null,
+        body.event_date,
+        user.id,
+        body.event_url || null,
+        body.image_url || null,
+        body.source || "manual",
+      ]
+    );
+    return reply.redirect("/admin/events?fb_imported=1");
+  });
+
+  // Manual call creation (for seeding past Zoom calls that aren't available via API, etc.)
+  app.post("/calls/create", async (request, reply) => {
+    const body = request.body as {
+      title: string;
+      description?: string;
+      scheduled_at: string;
+      duration_minutes?: string;
+      join_url?: string;
+      recording_url?: string;
+      categories?: string;
+      is_past?: string;
+    };
+
+    const categories = body.categories ? body.categories.split(",").map((c) => c.trim()).filter(Boolean) : [];
+    const isPast = body.is_past === "true" || new Date(body.scheduled_at) < new Date();
+
+    await pool.query(
+      `INSERT INTO calls (title, description, scheduled_at, duration_minutes, join_url, recording_url, categories, is_past, source)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'manual')`,
+      [
+        body.title.substring(0, 300),
+        body.description || null,
+        body.scheduled_at,
+        body.duration_minutes ? parseInt(body.duration_minutes) : null,
+        body.join_url || null,
+        body.recording_url || null,
+        categories,
+        isPast,
+      ]
+    );
+    return reply.redirect("/admin/events?call_created=1");
   });
 
   // Scrape all active sources at once
@@ -402,11 +559,18 @@ export async function adminRoutes(app: FastifyInstance) {
     const { id } = request.params as { id: string };
     const { vote, comment } = request.body as { vote: string; comment?: string };
     const voteVal = parseInt(vote);
-    if (voteVal !== 1 && voteVal !== -1 && voteVal !== 0) return reply.redirect("/admin/items");
+    // Detect AJAX calls from feed cards (fetch without Accept: text/html)
+    const isAjax = (request.headers["accept"] || "").indexOf("text/html") === -1;
+    const respond = (status: number, body?: any) => {
+      if (isAjax) return reply.code(status).send(body || { ok: status < 400 });
+      return reply.redirect("/admin/items");
+    };
+
+    if (voteVal !== 1 && voteVal !== -1 && voteVal !== 0) return respond(400);
 
     // Require comment for non-zero votes
     if (voteVal !== 0 && (!comment || !comment.trim())) {
-      return reply.redirect("/admin/items");
+      return respond(400, { error: "Comment required" });
     }
 
     // Set the vote and comment
@@ -459,7 +623,7 @@ export async function adminRoutes(app: FastifyInstance) {
       }
     }
 
-    return reply.redirect("/admin/items");
+    return respond(200);
   });
 
   // Admin feedback: add note to an item
@@ -533,6 +697,8 @@ export async function adminRoutes(app: FastifyInstance) {
       `UPDATE collected_items SET pinned_at = CASE WHEN pinned_at IS NULL THEN now() ELSE NULL END WHERE id = $1`,
       [id]
     );
+    const isAjax = (request.headers["accept"] || "").indexOf("text/html") === -1;
+    if (isAjax) return reply.send({ ok: true });
     return reply.redirect("/admin/items");
   });
 
@@ -669,12 +835,13 @@ export async function adminRoutes(app: FastifyInstance) {
   // Meetup management
   app.get("/events", async (request, reply) => {
     const user = (request as any).user;
+    const query = request.query as { fb_url?: string; fb_error?: string; fb_imported?: string; call_created?: string };
     const { rows: meetups } = await pool.query(
       `SELECT m.*, COUNT(r.id)::int as rsvp_count
        FROM meetups m LEFT JOIN meetup_rsvps r ON r.meetup_id = m.id
        GROUP BY m.id ORDER BY m.event_date DESC`
     );
-    return reply.view("admin/events.ejs", { user, meetups });
+    return reply.view("admin/events.ejs", { user, meetups, flash: query });
   });
 
   app.post("/events", async (request, reply) => {

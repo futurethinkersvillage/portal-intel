@@ -106,7 +106,17 @@ export async function publicRoutes(app: FastifyInstance) {
     if (isWaitlistMode() && (!user || user.role !== "admin")) {
       return reply.redirect(user ? "/waitlist/thanks" : "/");
     }
-    return reply.view("calls.ejs", { user });
+
+    const { rows: upcomingCalls } = await pool.query(
+      `SELECT * FROM calls WHERE is_past = false AND is_public = true
+       ORDER BY scheduled_at ASC LIMIT 50`
+    );
+    const { rows: pastCalls } = await pool.query(
+      `SELECT * FROM calls WHERE is_past = true AND is_public = true
+       ORDER BY scheduled_at DESC LIMIT 50`
+    );
+
+    return reply.view("calls.ejs", { user, upcomingCalls, pastCalls });
   });
 
   app.get("/archive", async (request, reply) => {

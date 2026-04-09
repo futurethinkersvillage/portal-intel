@@ -81,17 +81,34 @@ ${feedbackContext}
 Items to analyze:
 ${itemDescriptions}
 
-For each item (by number), provide:
-1. "summary" — A concise 1-2 sentence actionable summary written as a compelling headline. Focus on what someone can DO with this information.
-2. "actionability" — Brief note: what action can someone take? (e.g. "Apply by June 15", "Register online", "View listing", "Informational only")
-3. "score" — Actionability score 0.0-1.0 (1.0 = immediate action possible with clear deadline, 0.5 = useful but no urgency, 0.1 = informational/not actionable, 0.0 = should be excluded)
-4. "best_category" — The single best category slug from: ${categorySlugs}
-5. "expires" — ISO date string if you can infer a deadline/expiry, or null
+For each item (by number), provide these fields as JSON:
 
-Respond in JSON only:
+1. "headline" — A COMPELLING, ACTIONABLE headline. MAX 80 characters. REQUIREMENTS:
+   - LEAD with the concrete noun or action verb: "160-acre homestead near Lillooet, \\$480K", "Apply by Jun 15: \\$50K rural innovation grant", "Sunday Oct 19: Permaculture meetup in Kamloops"
+   - SURFACE key facts in the headline itself: price, location, deadline, dollar amount, acreage, capacity
+   - CUT vague phrases: "update on", "news about", "announcement of", "all you need to know", "let's talk about"
+   - NO clickbait, no questions, no hype — just the facts that matter
+   - If the item is a land listing: include acreage + price + closest town
+   - If the item is a grant: include amount + deadline
+   - If the item is an event: include date + location
+   - If the item is a job: include role + location/remote + salary if stated
+   - DO NOT just copy the original title — rewrite it to pass these rules
+   - If the original already passes all rules, you may keep it minimally modified
+
+2. "summary" — 1-2 sentences. State what it IS, what makes it relevant, and the concrete next step. Skip intros. Front-load the specifics.
+
+3. "actionability" — Very brief next action. Examples: "Apply by Jun 15", "Register online", "View listing", "Contact seller", "Informational"
+
+4. "score" — 0.0-1.0 actionability score. 1.0 = immediate action with clear deadline/price/contact. 0.5 = useful but no urgency. 0.1 = informational only. 0.0 = exclude per filtering rules.
+
+5. "best_category" — One slug from: ${categorySlugs}
+
+6. "expires" — ISO date string if deadline/expiry can be inferred, else null
+
+Respond in JSON only (no markdown fences):
 {
   "items": [
-    {"index": 1, "summary": "...", "actionability": "...", "score": 0.7, "best_category": "grants", "expires": "2026-06-15T00:00:00Z"}
+    {"index": 1, "headline": "...", "summary": "...", "actionability": "...", "score": 0.7, "best_category": "grants", "expires": "2026-06-15T00:00:00Z"}
   ]
 }`,
         },
@@ -147,14 +164,16 @@ Respond in JSON only:
       // Update the item with AI enrichment
       await pool.query(
         `UPDATE collected_items SET
-          ai_summary = $1,
-          ai_actionability = $2,
-          ai_score = $3,
-          category = COALESCE($4, category),
-          expires_at = COALESCE($5, expires_at),
+          ai_headline = $1,
+          ai_summary = $2,
+          ai_actionability = $3,
+          ai_score = $4,
+          category = COALESCE($5, category),
+          expires_at = COALESCE($6, expires_at),
           enriched_at = now()
-         WHERE id = $6`,
+         WHERE id = $7`,
         [
+          e.headline?.substring(0, 300) || null,
           e.summary?.substring(0, 500) || null,
           e.actionability?.substring(0, 200) || null,
           typeof e.score === "number" ? e.score : null,

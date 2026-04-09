@@ -5,6 +5,143 @@
     <a href="/events" target="_blank" class="text-xs text-stone-500 hover:text-stone-300">View public page →</a>
   </div>
 
+  <% var fbUrl = (flash && flash.fb_url) || null; %>
+  <% var fbError = (flash && flash.fb_error) || null; %>
+  <% var fbImported = flash && flash.fb_imported; %>
+  <% var callCreated = flash && flash.call_created; %>
+
+  <% if (fbImported) { %>
+    <div class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-sm px-4 py-3 rounded-xl mb-4 flex items-center gap-2">
+      <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      Event imported. View it at <a href="/events" class="underline hover:text-white">/events</a>.
+    </div>
+  <% } %>
+  <% if (callCreated) { %>
+    <div class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-sm px-4 py-3 rounded-xl mb-4 flex items-center gap-2">
+      <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      Call created. View it at <a href="/calls" class="underline hover:text-white">/calls</a>.
+    </div>
+  <% } %>
+  <% if (fbError) { %>
+    <div class="bg-amber/10 border border-amber/20 text-amber text-sm px-4 py-3 rounded-xl mb-4 flex items-start gap-2">
+      <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+      <div>
+        <div class="font-medium">Automatic scrape failed</div>
+        <div class="text-xs mt-0.5">Enter the event details manually using the form below.</div>
+      </div>
+    </div>
+  <% } %>
+
+  <!-- Facebook Event Import -->
+  <details class="bg-stone-900/60 border border-stone-800/60 rounded-2xl mb-3 overflow-hidden" <%= fbError ? 'open' : '' %>>
+    <summary class="px-5 py-4 cursor-pointer text-sm font-medium hover:text-amber transition-colors flex items-center gap-2">
+      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+      Import Facebook Event
+    </summary>
+    <div class="p-5 pt-0 space-y-5">
+      <form method="POST" action="/admin/events/import-fb" class="space-y-3">
+        <div>
+          <label class="block text-xs font-medium mb-1.5">Facebook event URL (auto-scrape)</label>
+          <input type="url" name="url" required placeholder="https://www.facebook.com/events/..." value="<%= fbUrl || '' %>"
+            class="w-full bg-stone-800/60 border border-stone-700/60 rounded-lg px-3 py-2.5 text-sm focus:border-amber/50 focus:ring-1 focus:ring-amber/30 transition-colors">
+          <p class="text-xs text-stone-500 mt-1.5">Paste the public Facebook event URL. Tries Firecrawl first; falls back to the manual form below if it fails.</p>
+        </div>
+        <button type="submit" class="inline-flex items-center gap-2 bg-amber hover:bg-amber/90 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors active:scale-[0.97]">
+          Scrape &amp; Import
+        </button>
+      </form>
+
+      <div class="border-t border-stone-800/60 pt-4">
+        <p class="text-xs font-semibold text-stone-500 uppercase tracking-widest mb-3">Manual Entry (if scrape fails)</p>
+        <form method="POST" action="/admin/events/create-external" class="space-y-3">
+          <div class="grid sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium mb-1">Title</label>
+              <input type="text" name="title" required class="w-full bg-stone-800/60 border border-stone-700/60 rounded-lg px-3 py-2 text-sm focus:border-amber/50 focus:ring-1 focus:ring-amber/30 transition-colors">
+            </div>
+            <div>
+              <label class="block text-xs font-medium mb-1">Date &amp; time</label>
+              <input type="datetime-local" name="event_date" required class="w-full bg-stone-800/60 border border-stone-700/60 rounded-lg px-3 py-2 text-sm focus:border-amber/50 focus:ring-1 focus:ring-amber/30 transition-colors">
+            </div>
+            <div>
+              <label class="block text-xs font-medium mb-1">Location</label>
+              <input type="text" name="location" required placeholder="Clearwater, BC" class="w-full bg-stone-800/60 border border-stone-700/60 rounded-lg px-3 py-2 text-sm focus:border-amber/50 focus:ring-1 focus:ring-amber/30 transition-colors">
+            </div>
+            <div>
+              <label class="block text-xs font-medium mb-1">Source</label>
+              <select name="source" class="w-full bg-stone-800/60 border border-stone-700/60 rounded-lg px-3 py-2 text-sm focus:border-amber/50 focus:ring-1 focus:ring-amber/30 transition-colors">
+                <option value="facebook">Facebook</option>
+                <option value="eventbrite">Eventbrite</option>
+                <option value="meetup.com">Meetup.com</option>
+                <option value="manual">Other</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-medium mb-1">External URL (e.g. Facebook event link)</label>
+            <input type="url" name="event_url" value="<%= fbUrl || '' %>" placeholder="https://..." class="w-full bg-stone-800/60 border border-stone-700/60 rounded-lg px-3 py-2 text-sm focus:border-amber/50 focus:ring-1 focus:ring-amber/30 transition-colors">
+          </div>
+          <div>
+            <label class="block text-xs font-medium mb-1">Description</label>
+            <textarea name="description" rows="3" class="w-full bg-stone-800/60 border border-stone-700/60 rounded-lg px-3 py-2 text-sm focus:border-amber/50 focus:ring-1 focus:ring-amber/30 transition-colors"></textarea>
+          </div>
+          <div>
+            <label class="block text-xs font-medium mb-1">Address (optional)</label>
+            <input type="text" name="address" class="w-full bg-stone-800/60 border border-stone-700/60 rounded-lg px-3 py-2 text-sm focus:border-amber/50 focus:ring-1 focus:ring-amber/30 transition-colors">
+          </div>
+          <button type="submit" class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/15 text-white text-sm font-medium px-4 py-2.5 rounded-lg border border-white/10 transition-colors active:scale-[0.97]">
+            Add Event
+          </button>
+        </form>
+      </div>
+    </div>
+  </details>
+
+  <!-- Manual Call Creation -->
+  <details class="bg-stone-900/60 border border-stone-800/60 rounded-2xl mb-3 overflow-hidden">
+    <summary class="px-5 py-4 cursor-pointer text-sm font-medium hover:text-amber transition-colors flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+      Add Call Manually (past or future)
+    </summary>
+    <form method="POST" action="/admin/calls/create" class="p-5 pt-0 space-y-3">
+      <div class="grid sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-medium mb-1">Title</label>
+          <input type="text" name="title" required class="w-full bg-stone-800/60 border border-stone-700/60 rounded-lg px-3 py-2 text-sm focus:border-amber/50 focus:ring-1 focus:ring-amber/30 transition-colors">
+        </div>
+        <div>
+          <label class="block text-xs font-medium mb-1">Date &amp; time</label>
+          <input type="datetime-local" name="scheduled_at" required class="w-full bg-stone-800/60 border border-stone-700/60 rounded-lg px-3 py-2 text-sm focus:border-amber/50 focus:ring-1 focus:ring-amber/30 transition-colors">
+        </div>
+        <div>
+          <label class="block text-xs font-medium mb-1">Duration (minutes)</label>
+          <input type="number" name="duration_minutes" placeholder="60" class="w-full bg-stone-800/60 border border-stone-700/60 rounded-lg px-3 py-2 text-sm focus:border-amber/50 focus:ring-1 focus:ring-amber/30 transition-colors">
+        </div>
+        <div>
+          <label class="block text-xs font-medium mb-1">Categories (comma-separated)</label>
+          <input type="text" name="categories" placeholder="land,resilience" class="w-full bg-stone-800/60 border border-stone-700/60 rounded-lg px-3 py-2 text-sm focus:border-amber/50 focus:ring-1 focus:ring-amber/30 transition-colors">
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-medium mb-1">Description</label>
+        <textarea name="description" rows="2" class="w-full bg-stone-800/60 border border-stone-700/60 rounded-lg px-3 py-2 text-sm focus:border-amber/50 focus:ring-1 focus:ring-amber/30 transition-colors"></textarea>
+      </div>
+      <div class="grid sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-medium mb-1">Join URL (upcoming only)</label>
+          <input type="url" name="join_url" placeholder="https://zoom.us/j/..." class="w-full bg-stone-800/60 border border-stone-700/60 rounded-lg px-3 py-2 text-sm focus:border-amber/50 focus:ring-1 focus:ring-amber/30 transition-colors">
+        </div>
+        <div>
+          <label class="block text-xs font-medium mb-1">Recording URL (past only)</label>
+          <input type="url" name="recording_url" placeholder="https://zoom.us/rec/..." class="w-full bg-stone-800/60 border border-stone-700/60 rounded-lg px-3 py-2 text-sm focus:border-amber/50 focus:ring-1 focus:ring-amber/30 transition-colors">
+        </div>
+      </div>
+      <button type="submit" class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/15 text-white text-sm font-medium px-4 py-2.5 rounded-lg border border-white/10 transition-colors active:scale-[0.97]">
+        Add Call
+      </button>
+    </form>
+  </details>
+
   <!-- Create Event Form -->
   <details class="bg-stone-900/60 border border-stone-800/60 rounded-2xl mb-6 overflow-hidden">
     <summary class="px-5 py-4 cursor-pointer text-sm font-medium hover:text-brand-400 transition-colors flex items-center gap-2">

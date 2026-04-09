@@ -4,20 +4,31 @@ import { requireString, optionalString, requireUrl } from "../lib/validate.js";
 import pool from "../lib/db.js";
 
 export async function eventRoutes(app: FastifyInstance) {
-  // Public events listing
+  // Public events listing: upcoming + past sections
   app.get("/", async (request, reply) => {
     const user = await getUser(request);
 
-    const { rows: meetups } = await pool.query(
+    const { rows: upcomingMeetups } = await pool.query(
       `SELECT m.*, COUNT(r.id)::int as rsvp_count
        FROM meetups m
        LEFT JOIN meetup_rsvps r ON r.meetup_id = m.id
-       WHERE m.is_public = true AND m.event_date > now() - interval '1 day'
+       WHERE m.is_public = true AND m.event_date >= now() - interval '1 day'
        GROUP BY m.id
-       ORDER BY m.event_date ASC`
+       ORDER BY m.event_date ASC
+       LIMIT 50`
     );
 
-    return reply.view("events.ejs", { user, meetups });
+    const { rows: pastMeetups } = await pool.query(
+      `SELECT m.*, COUNT(r.id)::int as rsvp_count
+       FROM meetups m
+       LEFT JOIN meetup_rsvps r ON r.meetup_id = m.id
+       WHERE m.is_public = true AND m.event_date < now() - interval '1 day'
+       GROUP BY m.id
+       ORDER BY m.event_date DESC
+       LIMIT 30`
+    );
+
+    return reply.view("events.ejs", { user, meetups: upcomingMeetups, pastMeetups });
   });
 
   // Individual event page
