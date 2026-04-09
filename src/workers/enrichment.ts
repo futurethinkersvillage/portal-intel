@@ -105,10 +105,20 @@ For each item (by number), provide these fields as JSON:
 
 6. "expires" — ISO date string if deadline/expiry can be inferred, else null
 
+7. "details" — ONLY for best_category = "land". An object with any of these fields that can be extracted from the content (omit fields that are not present):
+   - price (string with currency, e.g. "$480,000")
+   - acreage (string, e.g. "160 acres" or "65 hectares")
+   - zoning (string, e.g. "ALR", "RR-1", "Resort Commercial")
+   - water_rights (string, e.g. "Well + creek", "Municipal", "Riparian rights included")
+   - access (string, e.g. "Year-round road", "4WD only", "Fly-in")
+   - power (string, e.g. "BC Hydro", "Off-grid solar", "No power")
+   - closest_town (string, e.g. "Lillooet", "Kamloops")
+   For non-land items, set details to null.
+
 Respond in JSON only (no markdown fences):
 {
   "items": [
-    {"index": 1, "headline": "...", "summary": "...", "actionability": "...", "score": 0.7, "best_category": "grants", "expires": "2026-06-15T00:00:00Z"}
+    {"index": 1, "headline": "...", "summary": "...", "actionability": "...", "score": 0.7, "best_category": "grants", "expires": "2026-06-15T00:00:00Z", "details": null}
   ]
 }`,
         },
@@ -170,8 +180,9 @@ Respond in JSON only (no markdown fences):
           ai_score = $4,
           category = COALESCE($5, category),
           expires_at = COALESCE($6, expires_at),
+          details = COALESCE($7::jsonb, details),
           enriched_at = now()
-         WHERE id = $7`,
+         WHERE id = $8`,
         [
           e.headline?.substring(0, 300) || null,
           e.summary?.substring(0, 500) || null,
@@ -179,6 +190,7 @@ Respond in JSON only (no markdown fences):
           typeof e.score === "number" ? e.score : null,
           e.best_category || null,
           e.expires || null,
+          e.details ? JSON.stringify(e.details) : null,
           item.id,
         ]
       );

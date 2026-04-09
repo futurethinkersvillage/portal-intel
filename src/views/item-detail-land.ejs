@@ -1,0 +1,225 @@
+<%
+  // Pull structured details from the JSONB column; fall back to nulls if missing
+  var details = item.details || {};
+  var price = details.price || null;
+  var acreage = details.acreage || null;
+  var zoning = details.zoning || null;
+  var water = details.water_rights || null;
+  var access = details.access || null;
+  var power = details.power || null;
+  var closestTown = details.closest_town || null;
+%>
+
+<!-- Hero header -->
+<article class="bg-warm-dark border border-white/10 rounded-2xl p-6 sm:p-8 mb-6">
+  <div class="flex flex-wrap items-center gap-2 mb-4">
+    <span class="text-xs font-medium px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-400"><%= categoryData.land?.icon || '' %> Rural Land &amp; Property</span>
+    <span class="text-[11px] text-white/40 uppercase tracking-wider font-medium"><%= item.region %></span>
+    <% if (item.pinned_at) { %>
+      <span class="text-xs text-amber font-medium flex items-center gap-1">
+        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M5 5a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 21V5z"/></svg>
+        Pinned
+      </span>
+    <% } %>
+  </div>
+
+  <h1 class="text-2xl sm:text-3xl lg:text-4xl font-display font-bold text-white mb-4 leading-tight"><%= item.title %></h1>
+
+  <% if (item.summary) { %>
+    <p class="text-white/70 leading-relaxed mb-5 text-base"><%= item.summary %></p>
+  <% } %>
+
+  <!-- Key stats grid (shown when we have any structured data) -->
+  <% if (price || acreage || zoning || water || access || closestTown) { %>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mt-6 pt-6 border-t border-white/5">
+      <% if (price) { %>
+        <div>
+          <div class="text-[10px] uppercase tracking-widest font-semibold text-white/40 mb-1">Price</div>
+          <div class="text-lg font-semibold text-amber"><%= price %></div>
+        </div>
+      <% } %>
+      <% if (acreage) { %>
+        <div>
+          <div class="text-[10px] uppercase tracking-widest font-semibold text-white/40 mb-1">Acreage</div>
+          <div class="text-lg font-semibold text-white"><%= acreage %></div>
+        </div>
+      <% } %>
+      <% if (closestTown) { %>
+        <div>
+          <div class="text-[10px] uppercase tracking-widest font-semibold text-white/40 mb-1">Closest Town</div>
+          <div class="text-sm font-medium text-white"><%= closestTown %></div>
+        </div>
+      <% } %>
+      <% if (zoning) { %>
+        <div>
+          <div class="text-[10px] uppercase tracking-widest font-semibold text-white/40 mb-1">Zoning</div>
+          <div class="text-sm font-medium text-white"><%= zoning %></div>
+        </div>
+      <% } %>
+      <% if (water) { %>
+        <div>
+          <div class="text-[10px] uppercase tracking-widest font-semibold text-white/40 mb-1">Water</div>
+          <div class="text-sm font-medium text-white"><%= water %></div>
+        </div>
+      <% } %>
+      <% if (access) { %>
+        <div>
+          <div class="text-[10px] uppercase tracking-widest font-semibold text-white/40 mb-1">Access</div>
+          <div class="text-sm font-medium text-white"><%= access %></div>
+        </div>
+      <% } %>
+      <% if (power) { %>
+        <div>
+          <div class="text-[10px] uppercase tracking-widest font-semibold text-white/40 mb-1">Power</div>
+          <div class="text-sm font-medium text-white"><%= power %></div>
+        </div>
+      <% } %>
+    </div>
+  <% } %>
+
+  <div class="flex flex-wrap items-center gap-4 pt-6 mt-6 border-t border-white/5">
+    <% if (item.url) { %>
+      <a href="<%= item.url %>" target="_blank" rel="noopener noreferrer"
+        class="inline-flex items-center gap-2 bg-amber hover:bg-amber/90 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition-colors active:scale-[0.97] shadow-lg shadow-amber/20">
+        View Listing
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+      </a>
+    <% } %>
+    <% if (user) { %>
+      <form method="POST" action="/feed/save/<%= item.id %>" onsubmit="event.preventDefault(); fetch(this.action, { method: 'POST' }).then(() => location.reload());">
+        <button type="submit" class="inline-flex items-center gap-2 text-sm bg-white/5 hover:bg-white/10 text-white/80 hover:text-white px-4 py-2.5 rounded-xl border border-white/10 transition-colors">
+          <svg class="w-4 h-4" fill="<%= isSaved ? 'currentColor' : 'none' %>" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+          <%= isSaved ? 'Saved' : 'Save' %>
+        </button>
+      </form>
+    <% } %>
+    <div class="text-xs text-white/40 ml-auto flex items-center gap-2">
+      <span><%= item.source_name || 'Community' %></span>
+      <span class="w-1 h-1 rounded-full bg-white/20"></span>
+      <span><%= new Date(item.collected_at).toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' }) %></span>
+    </div>
+  </div>
+</article>
+
+<!-- Investment Interest Widget -->
+<% if (user) { %>
+<div class="bg-warm-dark border border-amber/30 rounded-2xl p-6 sm:p-8 mb-6">
+  <div class="flex items-start gap-3 mb-4">
+    <div class="w-10 h-10 rounded-xl bg-amber/10 flex items-center justify-center shrink-0">
+      <svg class="w-5 h-5 text-amber" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+    </div>
+    <div>
+      <h2 class="text-lg font-display font-semibold text-white">Pool Interest</h2>
+      <p class="text-sm text-white/60 mt-0.5">See if other members want to invest alongside you</p>
+    </div>
+  </div>
+
+  <!-- Tally bar -->
+  <% if (interestStats && interestStats.member_count > 0) { %>
+    <div class="bg-white/5 border border-white/10 rounded-xl p-4 mb-5">
+      <div class="flex items-baseline justify-between mb-2">
+        <div class="flex items-baseline gap-2">
+          <span class="text-2xl font-bold text-amber tabular-nums">$<%= (interestStats.total_pledged || 0).toLocaleString() %></span>
+          <span class="text-xs text-white/50">soft interest pooled</span>
+        </div>
+        <div class="text-xs text-white/60">
+          <%= interestStats.member_count %> <%= interestStats.member_count === 1 ? 'member' : 'members' %> interested
+        </div>
+      </div>
+      <% if (price) { %>
+        <% var priceNum = parseInt(String(price).replace(/[^0-9]/g, '')); %>
+        <% if (priceNum > 0) { %>
+          <% var pct = Math.min(100, Math.round((interestStats.total_pledged / priceNum) * 100)); %>
+          <div class="h-1.5 bg-white/5 rounded-full overflow-hidden">
+            <div class="h-full bg-amber rounded-full transition-all" style="width: <%= pct %>%"></div>
+          </div>
+          <div class="text-[11px] text-white/40 mt-1.5"><%= pct %>% of asking price (<%= price %>)</div>
+        <% } %>
+      <% } %>
+    </div>
+  <% } %>
+
+  <!-- Important disclaimer -->
+  <div class="bg-amber/5 border border-amber/20 rounded-xl p-3 mb-5 flex items-start gap-2">
+    <svg class="w-4 h-4 text-amber shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    <div class="text-xs text-white/70 leading-relaxed">
+      <strong class="text-amber">This is soft interest only.</strong> No money moves, no commitment, no obligation. Expressing interest signals to the community that you'd consider investing if a pool forms. It lets us gauge interest and reach out only if a formal opportunity takes shape.
+    </div>
+  </div>
+
+  <!-- Form: express interest OR show current pledge -->
+  <% if (userInterest) { %>
+    <div class="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 mb-4">
+      <div class="flex items-start justify-between gap-3">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span class="text-sm font-medium text-emerald-300">Your interest is registered</span>
+          </div>
+          <div class="text-xs text-white/60 space-y-0.5 mt-1.5">
+            <% if (userInterest.pledge_amount) { %>
+              <div>Soft pledge: <span class="text-white font-medium">$<%= userInterest.pledge_amount.toLocaleString() %></span></div>
+            <% } %>
+            <% if (userInterest.timeline) { %>
+              <div>Timeline: <span class="text-white"><%= {now: 'Ready now', '3m': 'Within 3 months', '6m': 'Within 6 months', '12m': 'Within 12 months'}[userInterest.timeline] %></span></div>
+            <% } %>
+            <% if (userInterest.contact_consent) { %>
+              <div class="text-white/50">You will be contacted if a pool forms.</div>
+            <% } %>
+          </div>
+        </div>
+        <form method="POST" action="/feed/<%= item.id %>/interest/delete">
+          <button type="submit" class="text-xs text-white/50 hover:text-red-400 transition-colors">Withdraw</button>
+        </form>
+      </div>
+    </div>
+  <% } else { %>
+    <form method="POST" action="/feed/<%= item.id %>/interest" class="space-y-4">
+      <div>
+        <label class="block text-xs font-medium text-white/70 mb-1.5">Soft pledge amount <span class="text-white/40">(optional)</span></label>
+        <div class="relative">
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-white/40">$</span>
+          <input type="number" name="pledge_amount" min="0" step="1000" placeholder="50,000"
+            class="w-full bg-white/5 border border-white/10 rounded-xl pl-7 pr-3 py-2.5 text-sm text-white placeholder-white/30 focus:border-amber/50 focus:ring-1 focus:ring-amber/30 focus:outline-none transition-colors">
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-white/70 mb-1.5">Timeline</label>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <% [
+            { value: 'now', label: 'Ready now' },
+            { value: '3m', label: '3 months' },
+            { value: '6m', label: '6 months' },
+            { value: '12m', label: '12 months' },
+          ].forEach(function(t) { %>
+            <label class="cursor-pointer">
+              <input type="radio" name="timeline" value="<%= t.value %>" class="hidden peer">
+              <div class="p-2.5 rounded-lg border text-center text-xs transition-colors peer-checked:border-amber/50 peer-checked:bg-amber/10 peer-checked:text-amber border-white/10 bg-white/5 text-white/70 hover:border-white/20">
+                <%= t.label %>
+              </div>
+            </label>
+          <% }) %>
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-white/70 mb-1.5">Note <span class="text-white/40">(optional)</span></label>
+        <textarea name="note" rows="2" placeholder="Anything specific we should know?"
+          class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white placeholder-white/30 focus:border-amber/50 focus:ring-1 focus:ring-amber/30 focus:outline-none transition-colors resize-none"></textarea>
+      </div>
+      <label class="flex items-start gap-2.5 cursor-pointer">
+        <input type="checkbox" name="contact_consent" value="true" checked class="mt-0.5 rounded border-white/20 bg-white/5 text-amber focus:ring-amber/30">
+        <span class="text-xs text-white/70">You may contact me if a pool forms around this listing.</span>
+      </label>
+      <button type="submit" class="w-full inline-flex items-center justify-center gap-2 bg-amber hover:bg-amber/90 text-white font-semibold py-3 rounded-xl transition-colors active:scale-[0.98] shadow-lg shadow-amber/20">
+        Register Interest
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+      </button>
+    </form>
+  <% } %>
+</div>
+<% } else { %>
+  <div class="bg-warm-dark border border-white/10 rounded-2xl p-6 text-center mb-6">
+    <p class="text-white/60 text-sm mb-3">Sign in to express interest in this listing.</p>
+    <a href="/" class="text-sm text-amber hover:text-amber/80 transition-colors">Join the Network &rarr;</a>
+  </div>
+<% } %>

@@ -107,7 +107,9 @@ export async function feedRoutes(app: FastifyInstance) {
     }
 
     const { rows: itemRows } = await pool.query(
-      `SELECT ci.*, COALESCE(ci.ai_summary, ci.summary) as summary,
+      `SELECT ci.*,
+              COALESCE(ci.ai_headline, ci.title) as title,
+              COALESCE(ci.ai_summary, ci.summary) as summary,
               s.name as source_name
        FROM collected_items ci
        LEFT JOIN sources s ON ci.source_id = s.id
@@ -116,6 +118,7 @@ export async function feedRoutes(app: FastifyInstance) {
     );
 
     if (!itemRows[0]) return reply.code(404).send("Not found");
+    const item = itemRows[0];
 
     // Fetch comments with author info
     const { rows: comments } = await pool.query(
@@ -136,12 +139,79 @@ export async function feedRoutes(app: FastifyInstance) {
       [user.id, itemId]
     );
 
+    // Interest stats for land items: total pledged + member count + this user's pledge
+    let interestStats = null;
+    let userInterest = null;
+    if (item.category === "land") {
+      const { rows: stats } = await pool.query(
+        `SELECT
+           COUNT(*)::int as member_count,
+           COALESCE(SUM(pledge_amount), 0)::int as total_pledged
+         FROM item_interest WHERE item_id = $1`,
+        [itemId]
+      );
+      interestStats = stats[0];
+
+      const { rows: myInterest } = await pool.query(
+        `SELECT * FROM item_interest WHERE item_id = $1 AND user_id = $2`,
+        [itemId, user.id]
+      );
+      userInterest = myInterest[0] || null;
+    }
+
     return reply.view("item-detail.ejs", {
       user,
-      item: itemRows[0],
+      item,
       comments,
       isSaved: savedRows.length > 0,
+      interestStats,
+      userInterest,
     });
+  });
+
+  // Express interest in a land item (soft pledge)
+  app.post("/:itemId/interest", async (request, reply) => {
+    const user = (request as any).user;
+    const { itemId } = request.params as { itemId: string };
+    const body = request.body as {
+      pledge_amount?: string;
+      timeline?: string;
+      contact_consent?: string;
+      note?: string;
+    };
+
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(itemId)) {
+      return reply.code(404).send({ error: "Not found" });
+    }
+
+    const validTimelines = ["now", "3m", "6m", "12m"];
+    const timeline = body.timeline && validTimelines.includes(body.timeline) ? body.timeline : null;
+    const pledgeAmount = body.pledge_amount ? Math.max(0, parseInt(body.pledge_amount)) : null;
+    const contactConsent = body.contact_consent === "true" || body.contact_consent === "on";
+
+    await pool.query(
+      `INSERT INTO item_interest (item_id, user_id, pledge_amount, timeline, contact_consent, note)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       ON CONFLICT (item_id, user_id) DO UPDATE SET
+         pledge_amount = EXCLUDED.pledge_amount,
+         timeline = EXCLUDED.timeline,
+         contact_consent = EXCLUDED.contact_consent,
+         note = EXCLUDED.note`,
+      [itemId, user.id, pledgeAmount, timeline, contactConsent, body.note?.substring(0, 500) || null]
+    );
+
+    return reply.redirect(`/feed/${itemId}`);
+  });
+
+  // Withdraw interest
+  app.post("/:itemId/interest/delete", async (request, reply) => {
+    const user = (request as any).user;
+    const { itemId } = request.params as { itemId: string };
+    await pool.query(
+      `DELETE FROM item_interest WHERE item_id = $1 AND user_id = $2`,
+      [itemId, user.id]
+    );
+    return reply.redirect(`/feed/${itemId}`);
   });
 
   // Post a comment on an item

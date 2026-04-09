@@ -1,73 +1,25 @@
 
-<div class="max-w-3xl mx-auto">
-  <a href="/feed" class="text-xs text-stone-500 hover:text-stone-300 transition-colors mb-6 inline-flex items-center gap-1.5">
+<div class="max-w-4xl mx-auto">
+  <a href="/feed" class="text-xs text-white/40 hover:text-white transition-colors mb-6 inline-flex items-center gap-1.5">
     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
     Back to Feed
   </a>
 
-  <!-- Item Card (expanded) -->
-  <article class="bg-stone-900/60 border border-stone-800/60 rounded-2xl p-6 sm:p-8 mb-8">
-    <div class="flex flex-wrap items-center gap-2 mb-4">
-      <span class="text-xs font-medium px-2.5 py-1 rounded-md <%= categoryData[item.category]?.badge || 'bg-stone-800 text-stone-400' %>"><%= categoryData[item.category]?.icon || '' %> <%= categoryData[item.category]?.label || item.category %></span>
-      <span class="text-[11px] text-stone-600 uppercase tracking-wider font-medium"><%= item.region %></span>
-      <% if (item.expires_at) { %>
-        <span class="text-xs text-amber-400 font-medium flex items-center gap-1">
-          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          Closes <%= new Date(item.expires_at).toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' }) %>
-        </span>
-      <% } %>
-      <% if (item.pinned_at) { %>
-        <span class="text-xs text-amber-400 font-medium flex items-center gap-1">
-          <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M5 5a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 21V5z"/></svg>
-          Pinned
-        </span>
-      <% } %>
-    </div>
+  <% if (item.category === 'land') { %>
+    <%- include('./item-detail-land.ejs') %>
+  <% } else { %>
+    <%- include('./item-detail-generic.ejs') %>
+  <% } %>
 
-    <h1 class="text-2xl sm:text-3xl font-display font-bold text-stone-50 mb-4 leading-tight"><%= item.title %></h1>
-
-    <% if (item.summary) { %>
-      <p class="text-stone-300 leading-relaxed mb-5 text-base"><%= item.summary %></p>
-    <% } %>
-
-    <% if (item.ai_actionability) { %>
-      <div class="inline-flex items-center gap-2 text-sm text-brand-300 bg-brand-900/40 border border-brand-800/40 px-4 py-2 rounded-xl font-medium mb-6">
-        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
-        <%= item.ai_actionability %>
-      </div>
-    <% } %>
-
-    <div class="flex flex-wrap items-center gap-4 pt-4 border-t border-stone-800/60">
-      <% if (item.url) { %>
-        <a href="<%= item.url %>" target="_blank" rel="noopener noreferrer"
-          class="inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition-colors active:scale-[0.97] shadow-lg shadow-brand-500/20">
-          View Source
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-        </a>
-      <% } %>
-      <% if (user) { %>
-        <form method="POST" action="/feed/save/<%= item.id %>" onsubmit="event.preventDefault(); fetch(this.action, { method: 'POST' }).then(() => location.reload());">
-          <button type="submit" class="inline-flex items-center gap-2 text-sm bg-stone-800/60 hover:bg-stone-800 text-stone-300 hover:text-white px-4 py-2.5 rounded-xl transition-colors">
-            <svg class="w-4 h-4" :fill="<%= isSaved ? "'currentColor'" : "'none'" %>" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
-            <%= isSaved ? 'Saved' : 'Save' %>
-          </button>
-        </form>
-      <% } %>
-      <div class="text-xs text-stone-500 ml-auto flex items-center gap-2">
-        <span><%= item.source_name || 'Community' %></span>
-        <span class="w-1 h-1 rounded-full bg-stone-700"></span>
-        <span><%= new Date(item.collected_at).toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' }) %></span>
-      </div>
-    </div>
-  </article>
-
-  <!-- Comments -->
-  <%- include('./partials/comment-thread.ejs', {
-    targetType: 'item',
-    targetId: item.id,
-    comments: comments,
-    user: user,
-    postUrl: '/feed/' + item.id + '/comments',
-    callbackUrl: '/feed/' + item.id
-  }) %>
+  <!-- Comments (shared across all categories) -->
+  <div class="mt-10">
+    <%- include('./partials/comment-thread.ejs', {
+      targetType: 'item',
+      targetId: item.id,
+      comments: comments,
+      user: user,
+      postUrl: '/feed/' + item.id + '/comments',
+      callbackUrl: '/feed/' + item.id
+    }) %>
+  </div>
 </div>

@@ -2,7 +2,7 @@
 
 Living planning document tracking all features, requests, and open questions for intel.portal.place. Updated as new requirements come in so nothing gets lost.
 
-**Last updated:** 2026-04-08
+**Last updated:** 2026-04-08 (afternoon — deploy of headlines, Zoom, calls page, land detail, admin feed controls)
 
 ---
 
@@ -52,11 +52,16 @@ Living planning document tracking all features, requests, and open questions for
 - ✅ Manual scraping only — "Scrape All Sources" button on admin dashboard
 
 ### ⬜ Open gaps (from recent feedback 2026-04-08)
-- ⬜ **Better AI-written headlines**: current feed titles are "un-actionable and hard to understand at a glance". Rewrite enrichment prompt to force compelling, specific, action-oriented headlines with key facts (price, location, deadline) in the first line
-- ⬜ **Public upvote/downvote on feed items** — currently only admins vote. Signed-in members need a way to signal value without writing a comment. Separate from admin votes (admin = "on-strategy?", users = "does this resonate?")
-- ⬜ **Fix Firecrawl credits on production** — was failing with "insufficient credits", user said they recharged, need to verify old key still works or get new one
-- ⬜ **Re-enrich existing items** — items already in feed were collected before the content filtering + better prompts were deployed. Need a one-time re-enrichment pass
-- ⬜ **Jobs category has 0 items** — no working RSS feeds found. Need to discover jobs sources (WorkBC, Job Bank RSS, remote work boards filtered for BC/AB)
+### ✅ Just shipped (2026-04-08 afternoon)
+- ✅ **AI-written headlines** — enrichment prompt rewritten to force action-oriented, fact-leading titles (max 80 chars, lead with verb/noun, surface price/deadline/location). New `ai_headline` column in DB. Feed query uses it as displayed title.
+- ✅ **Re-enrich button** in admin dashboard — queues all unvoted items for re-processing with the new prompt
+- ✅ **Admin vote/comment/pin controls inline on every feed card** — required-comment vote buttons + pin toggle directly on cards. Optimistic UI updates via fetch().
+- ✅ **"View" button removed from feed cards** — title links only to detail page; external source link only on detail page
+- ✅ **Decision: NO public upvote/downvote** — only admin voting. Members signal value via comments + saves.
+
+### ⬜ Open gaps
+- ⬜ **Fix Firecrawl credits** — all 4 keys (Portal Intel, Mission Control, Client Research, Default) currently show 0 remaining credits. Blocks Facebook event scraping AND HTML source scraping. **Mike action needed.**
+- ⬜ **Jobs category has 0 items** — no working RSS feeds found. Need to discover jobs sources
 
 ---
 
@@ -67,28 +72,45 @@ Living planning document tracking all features, requests, and open questions for
 - ✅ Calls placeholder page
 - ✅ Admin events management (create, RSVPs, CSV export)
 
-### 🟡 In progress (requested 2026-04-08)
-- 🟡 **Zoom call sync**: automatic ingestion of public calls from Mike's Zoom account via Server-to-Server OAuth API. Filter by topic keywords: land, portal, resilience, AI. Add to Calls page. *Credentials available in system_context.md*
-- 🟡 **Facebook events scraping via Firecrawl**: Mike uses Facebook for events. Need to scrape + add to Events page
-- 🟡 **Past events section** at bottom of both Events and Calls pages
-- 🟡 **Initial seed data requested**:
-  - Tonight's FB event: https://www.facebook.com/events/1939875699956068/
-  - Last in-person event (past): https://www.facebook.com/events/2385177575332592/
-  - Yesterday's Zoom call (past): fetch from Mike's Zoom account
-- 🟡 **Recurring meetup scraper for Interior BC**: scrape Facebook + web search for cultural/business meetups in Interior BC region. Location filtering required. Needs admin dashboard sync button. May need additional tooling (FB events are hard to scrape).
+### ✅ Just shipped (2026-04-08 afternoon)
+- ✅ **Zoom S2S OAuth client** (`src/lib/zoom.ts`) with topic keyword filter for land/portal/resilience/AI
+- ✅ **Zoom sync worker** (`src/workers/zoom-sync.ts`) — pulls upcoming meetings + past recordings, upserts to `calls` table
+- ✅ **`calls` table** (migration 013) — separate from meetups, with `is_past`, `recording_url`, `categories`, `zoom_meeting_id`
+- ✅ **`/calls` page rebuilt** — upcoming + past sections with join URLs, recording links, category badges
+- ✅ **`/events` page** — past events section at the bottom
+- ✅ **Facebook event import** — admin form at `/admin/events` tries Firecrawl scrape, falls back to manual entry form (because Firecrawl is currently 0 credits)
+- ✅ **Manual call creation** — admin can add past Zoom calls directly via `/admin/events`
+- ✅ **"Sync Zoom" button** in admin dashboard
+- ✅ **Zoom env vars** (`ZOOM_ACCOUNT_ID`, `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET`) added to Coolify
+
+### ⬜ Still pending
+- ⬜ **Initial seed data** — Mike to manually add via admin UI (or click "Sync Zoom" once and the past Zoom call from yesterday should appear if it has a recording)
+- ⬜ **Recurring meetup scraper for Interior BC** — needs Firecrawl credits to work; deferred to next session
+- ⬜ **Zoom recording transcripts** — Whisper transcription pipeline (deferred)
+- ⬜ **Call summaries from transcripts** — Claude-generated post-call notes (deferred)
 
 ---
 
-## 🏞️ Rural Land & Property (New ideas 2026-04-08)
+## 🏞️ Rural Land & Property
 
-### ⬜ Planned
-- ⬜ **Custom land listing detail pages** — dedicated layout per land project with key info: acreage, price, zoning, water rights, access, deadline. Replaces the generic item-detail for `category === 'land'`
-- ⬜ **"Interested in investing" button** — users signal interest in pooling funds
-- ⬜ **Fund pooling widget** — tallies amount needed vs. total pledged interest. Shows momentum (e.g. "$250K pledged of $1.2M needed")
-- ⬜ **Map view for all land listings** — mapbox or google maps showing BC + AB land pins, filterable by category/region/price
-- ⬜ **International land watching** — add Colombia, Argentina, Mexico, Portugal, Thailand as scrape targets. Need language translation (Spanish → English)
-- ⬜ **Land-type sub-scrapers**: discover sources for specific types — resorts for sale, retreat centers, eco-villages, off-grid homesteads, tiny home communities
-- ⬜ **Admin "Add Land Region" tool** — specify new country/province + keywords, system discovers sources and starts scraping
+### ✅ Just shipped (2026-04-08 afternoon)
+- ✅ **Custom land listing detail page** — `src/views/item-detail-land.ejs`. Shows key stats grid (price, acreage, zoning, water, access, power, closest town), expanded summary, View Listing CTA, and the investment pooling widget below
+- ✅ **Investment pooling widget** with soft-interest pledging:
+  - Tally bar showing "$X pooled · N members interested" with progress vs. asking price
+  - Pledge form: amount, timeline (now / 3m / 6m / 12m), contact consent, optional note
+  - **Clearly labeled disclaimer**: "This is soft interest only. No money moves, no commitment, no obligation."
+  - Withdraw button if you've already pledged
+- ✅ **`item_interest` table** — stores pledges with `pledge_amount`, `timeline`, `contact_consent`, `note`. Unique per (item, user).
+- ✅ **`details` JSONB column on collected_items** — enrichment populates this with structured land data (price, acreage, zoning, etc.)
+- ✅ **Enrichment prompt extended** to extract land details for `category='land'` items
+- ✅ **Item detail dispatcher** — `/feed/:itemId` picks `item-detail-land.ejs` for land items, `item-detail-generic.ejs` for everything else
+
+### ⬜ Still planned
+- ⬜ **Map view for all land listings** — mapbox or leaflet showing pins, filterable
+- ⬜ **International land watching** — add Colombia, Argentina, Mexico, Portugal, Thailand as scrape targets. Spanish→English translation in enrichment.
+- ⬜ **Land-type sub-scrapers** — discover sources for: resorts for sale, retreat centers, eco-villages, off-grid homesteads, tiny home communities
+- ⬜ **Admin "Add Land Region" tool** — enter country/keywords, system discovers sources
+- ⬜ **Land detail page enhancements** — once Mike has real land items in the feed: photo gallery, similar listings, "people who pooled here also looked at..."
 
 ---
 
