@@ -80,8 +80,8 @@
       </button>
 
       <% if (user && user.role === 'admin') { %>
-        <!-- Admin vote+pin controls (admin only) -->
-        <div x-data="{ showForm: false, comment: item.admin_comment || '' }" class="flex flex-col items-end gap-1.5">
+        <!-- Admin controls (admin only): upvote / downvote / pin -->
+        <div x-data="{ showComment: false, pendingVote: 0, comment: item.admin_comment || '' }" class="flex flex-col items-end gap-1.5">
           <div class="flex items-center gap-0.5">
             <!-- Pin toggle -->
             <button @click="fetch('/admin/items/' + item.id + '/pin', { method: 'POST' }).then(() => { item.pinned_at = item.pinned_at ? null : new Date().toISOString() })"
@@ -90,55 +90,45 @@
               title="Pin to top">
               <svg class="w-3.5 h-3.5" :fill="item.pinned_at ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
             </button>
-            <!-- Vote buttons (toggle comment form) -->
-            <button @click="showForm = !showForm; $nextTick(() => { if (showForm) $refs.commentInput.focus() })"
+            <!-- Upvote -->
+            <button @click="pendingVote = 1; showComment = true; $nextTick(() => $refs.commentBox && $refs.commentBox.focus())"
               class="p-1.5 rounded-md transition-colors"
-              :class="item.admin_vote === 1 ? 'text-emerald-400 bg-emerald-500/10' : item.admin_vote === -1 ? 'text-red-400 bg-red-500/10' : 'text-white/30 hover:text-white/60 hover:bg-white/5'"
-              title="Vote (requires comment)">
+              :class="item.admin_vote === 1 ? 'text-emerald-400 bg-emerald-500/10' : 'text-white/30 hover:text-emerald-400 hover:bg-emerald-500/10'"
+              title="Upvote (requires comment)">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/></svg>
+            </button>
+            <!-- Downvote -->
+            <button @click="pendingVote = -1; showComment = true; $nextTick(() => $refs.commentBox && $refs.commentBox.focus())"
+              class="p-1.5 rounded-md transition-colors"
+              :class="item.admin_vote === -1 ? 'text-red-400 bg-red-500/10' : 'text-white/30 hover:text-red-400 hover:bg-red-500/10'"
+              title="Downvote (requires comment)">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018c.163 0 .326.02.485.06L17 4m-7 10v5a2 2 0 002 2h.095c.5 0 .905-.405.905-.905 0-.714.211-1.412.608-2.006L17 13V4m-7 10h2M17 4h2.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0116.264 15H14"/></svg>
             </button>
           </div>
 
-          <!-- Expanded admin vote form -->
-          <div x-show="showForm" x-cloak x-transition class="w-full sm:w-72 bg-warm-dark border border-white/10 rounded-lg p-3 mt-1">
-            <textarea x-ref="commentInput" x-model="comment" rows="2" placeholder="Why? (required)"
-              class="w-full bg-white/5 border border-white/10 rounded-md px-2.5 py-1.5 text-xs text-white placeholder-white/30 focus:border-amber/50 focus:ring-1 focus:ring-amber/30 focus:outline-none transition-colors resize-none"></textarea>
-            <div class="flex items-center gap-1.5 mt-2">
+          <!-- Comment box — appears after clicking up/down -->
+          <div x-show="showComment" style="display:none" class="w-64 bg-warm-dark border border-white/10 rounded-lg p-2.5 mt-0.5">
+            <p class="text-[10px] mb-1.5 font-medium" :class="pendingVote === 1 ? 'text-emerald-400' : 'text-red-400'" x-text="pendingVote === 1 ? 'Why is this good?' : 'Why is this bad?'"></p>
+            <textarea x-ref="commentBox" x-model="comment" rows="2" placeholder="Required — trains the AI"
+              class="w-full bg-white/5 border border-white/10 rounded-md px-2 py-1.5 text-xs text-white placeholder-white/30 focus:border-amber/50 focus:ring-1 focus:ring-amber/30 focus:outline-none transition-colors resize-none"></textarea>
+            <div class="flex gap-1.5 mt-2">
               <button @click="
                 if (!comment.trim()) return;
                 fetch('/admin/items/' + item.id + '/vote', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                  body: 'vote=1&comment=' + encodeURIComponent(comment)
-                }).then(() => { item.admin_vote = 1; item.admin_comment = comment; showForm = false; });"
+                  body: 'vote=' + pendingVote + '&comment=' + encodeURIComponent(comment)
+                }).then(() => { item.admin_vote = pendingVote; item.admin_comment = comment; showComment = false; });"
                 :disabled="!comment.trim()"
-                class="flex-1 text-xs px-3 py-1.5 rounded-md bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
-                Upvote
+                class="flex-1 text-xs py-1.5 rounded-md font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                :class="pendingVote === 1 ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : 'bg-red-500/20 text-red-300 hover:bg-red-500/30'"
+                x-text="pendingVote === 1 ? 'Submit upvote' : 'Submit downvote'">
               </button>
-              <button @click="
-                if (!comment.trim()) return;
-                fetch('/admin/items/' + item.id + '/vote', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                  body: 'vote=-1&comment=' + encodeURIComponent(comment)
-                }).then(() => { item.admin_vote = -1; item.admin_comment = comment; showForm = false; });"
-                :disabled="!comment.trim()"
-                class="flex-1 text-xs px-3 py-1.5 rounded-md bg-red-500/20 text-red-300 hover:bg-red-500/30 font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
-                Downvote
+              <button @click="showComment = false"
+                class="text-xs px-2 py-1.5 rounded-md text-white/40 hover:text-white/60 hover:bg-white/5 transition-colors">
+                Cancel
               </button>
-              <template x-if="item.admin_vote !== 0">
-                <button @click="
-                  fetch('/admin/items/' + item.id + '/vote', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: 'vote=0&comment='
-                  }).then(() => { item.admin_vote = 0; item.admin_comment = null; showForm = false; });"
-                  class="text-xs px-2 py-1.5 rounded-md text-white/40 hover:text-white/70 hover:bg-white/5 transition-colors" title="Clear vote">
-                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-              </template>
             </div>
-            <p class="text-[10px] text-white/40 mt-1.5">Feedback trains the scraper.</p>
           </div>
         </div>
       <% } %>
