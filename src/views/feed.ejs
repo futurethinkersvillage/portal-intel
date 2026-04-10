@@ -186,6 +186,7 @@ function feedApp() {
     get filteredItems() {
       const q = this.search.toLowerCase().trim();
       return this.items.filter(item => {
+        if (item._removed) return false;
         if (this.activeCategory && item.category !== this.activeCategory) return false;
         if (this.activeRegion && item.region !== this.activeRegion) return false;
         if (q) {

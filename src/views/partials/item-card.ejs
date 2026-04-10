@@ -150,7 +150,12 @@
                   method: 'POST',
                   headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                   body: 'vote=' + pendingVote + '&comment=' + encodeURIComponent(comment)
-                }).then(() => { item.admin_vote = pendingVote; item.admin_comment = comment; showComment = false; });"
+                }).then(() => {
+                  item.admin_vote = pendingVote;
+                  item.admin_comment = comment;
+                  showComment = false;
+                  if (pendingVote === -1) item._removed = true;
+                });"
                 :disabled="!comment.trim()"
                 class="flex-1 text-xs py-1.5 rounded-md font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                 :class="pendingVote === 1 ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : 'bg-red-500/20 text-red-300 hover:bg-red-500/30'"
