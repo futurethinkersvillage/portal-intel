@@ -693,6 +693,49 @@ export async function adminRoutes(app: FastifyInstance) {
     return reply.redirect("/admin/downvoted");
   });
 
+  // Re-enrich a single item with optional feedback (admin 🔁 button)
+  app.post("/items/:id/reenrich", async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const body = request.body as { feedback?: string };
+    const { enrichSingleItem } = await import("../workers/enrichment.js");
+    const ok = await enrichSingleItem(id, body.feedback || "");
+    return reply.send({ ok, message: ok ? "Re-enriched successfully" : "Failed to re-enrich" });
+  });
+
+  // Admin feedback dashboard — all voted items
+  app.get("/feedback", async (request, reply) => {
+    const user = (request as any).user;
+    const { rows: upvoted } = await pool.query(
+      `SELECT ci.id, COALESCE(ci.ai_headline, ci.title) as title, ci.admin_comment,
+              ci.category, ci.region, ci.collected_at, s.name as source_name
+       FROM collected_items ci
+       LEFT JOIN sources s ON ci.source_id = s.id
+       WHERE ci.admin_vote = 1 AND ci.admin_comment IS NOT NULL
+       ORDER BY ci.collected_at DESC LIMIT 100`
+    );
+    const { rows: downvoted } = await pool.query(
+      `SELECT ci.id, COALESCE(ci.ai_headline, ci.title) as title, ci.admin_comment,
+              ci.category, ci.region, ci.collected_at, s.name as source_name
+       FROM collected_items ci
+       LEFT JOIN sources s ON ci.source_id = s.id
+       WHERE ci.admin_vote = -1 AND ci.admin_comment IS NOT NULL
+       ORDER BY ci.collected_at DESC LIMIT 100`
+    );
+    return reply.view("admin/feedback.ejs", { user, upvoted, downvoted });
+  });
+
+  // Update admin comment on a voted item (from feedback dashboard)
+  app.post("/items/:id/comment", async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const body = request.body as { comment: string };
+    if (!body.comment?.trim()) return reply.code(400).send({ error: "Comment required" });
+    await pool.query(
+      `UPDATE collected_items SET admin_comment = $1 WHERE id = $2`,
+      [body.comment.trim().substring(0, 1000), id]
+    );
+    return reply.send({ ok: true });
+  });
+
   // Pin/unpin an item
   app.post("/items/:id/pin", async (request, reply) => {
     const { id } = request.params as { id: string };

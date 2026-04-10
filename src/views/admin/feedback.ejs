@@ -1,0 +1,109 @@
+<div>
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-display font-bold">Feedback Log</h1>
+      <p class="text-sm text-white/40 mt-1">All voted items with comments — feeds back into the AI enrichment prompt on every scrape.</p>
+    </div>
+    <a href="/admin" class="text-xs text-white/40 hover:text-white/70 border border-white/10 px-3 py-1.5 rounded-lg transition">&larr; Dashboard</a>
+  </div>
+
+  <!-- Upvoted -->
+  <div class="mb-10">
+    <h2 class="text-xs font-semibold uppercase tracking-widest text-emerald-400 mb-4 flex items-center gap-2">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/></svg>
+      Upvoted (<%= upvoted.length %>)
+    </h2>
+    <% if (upvoted.length === 0) { %>
+      <p class="text-sm text-white/30 py-4">No upvoted items with comments yet. Upvote feed items with a note to build this list.</p>
+    <% } else { %>
+      <div class="space-y-2">
+        <% upvoted.forEach(function(item) { %>
+          <div x-data="{ editing: false, comment: '<%= (item.admin_comment || '').replace(/'/g, '&#39;') %>' }" class="bg-emerald-500/5 border border-emerald-500/15 rounded-xl p-4">
+            <div class="flex items-start gap-3">
+              <div class="flex-1 min-w-0">
+                <a href="/feed/<%= item.id %>" class="font-medium text-sm text-white hover:text-amber transition line-clamp-1"><%= item.title %></a>
+                <div class="flex items-center gap-2 text-[11px] text-white/40 mt-1">
+                  <span class="uppercase"><%= item.category %></span>
+                  <span>·</span>
+                  <span><%= item.source_name || 'Unknown' %></span>
+                  <span>·</span>
+                  <span><%= new Date(item.collected_at).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' }) %></span>
+                </div>
+              </div>
+              <button @click="editing = !editing" class="text-[11px] text-white/30 hover:text-white/70 border border-white/10 px-2 py-1 rounded-md transition shrink-0">
+                Edit note
+              </button>
+            </div>
+            <div class="mt-2.5">
+              <template x-if="!editing">
+                <p class="text-xs text-emerald-300/80 bg-emerald-500/10 border border-emerald-500/20 rounded-md px-2.5 py-1.5" x-text="comment || '(no comment)'"></p>
+              </template>
+              <template x-if="editing">
+                <div class="flex gap-2">
+                  <textarea x-model="comment" rows="2" class="flex-1 bg-white/5 border border-white/10 rounded-md px-2.5 py-1.5 text-xs text-white placeholder-white/30 focus:border-emerald-500/50 focus:outline-none resize-none"></textarea>
+                  <button @click="
+                    fetch('/admin/items/<%= item.id %>/comment', {
+                      method: 'POST',
+                      headers: {'Content-Type':'application/x-www-form-urlencoded'},
+                      body: 'comment=' + encodeURIComponent(comment)
+                    }).then(() => editing = false)"
+                    class="text-xs px-3 py-1.5 bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 rounded-md font-medium transition self-end">Save</button>
+                </div>
+              </template>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+
+  <!-- Downvoted -->
+  <div>
+    <h2 class="text-xs font-semibold uppercase tracking-widest text-red-400 mb-4 flex items-center gap-2">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018c.163 0 .326.02.485.06L17 4m-7 10v5a2 2 0 002 2h.095c.5 0 .905-.405.905-.905 0-.714.211-1.412.608-2.006L17 13V4m-7 10h2M17 4h2.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0116.264 15H14"/></svg>
+      Downvoted (<%= downvoted.length %>)
+    </h2>
+    <% if (downvoted.length === 0) { %>
+      <p class="text-sm text-white/30 py-4">No downvoted items with comments yet.</p>
+    <% } else { %>
+      <div class="space-y-2">
+        <% downvoted.forEach(function(item) { %>
+          <div x-data="{ editing: false, comment: '<%= (item.admin_comment || '').replace(/'/g, '&#39;') %>' }" class="bg-red-500/5 border border-red-500/15 rounded-xl p-4">
+            <div class="flex items-start gap-3">
+              <div class="flex-1 min-w-0">
+                <a href="/feed/<%= item.id %>" class="font-medium text-sm text-white hover:text-amber transition line-clamp-1"><%= item.title %></a>
+                <div class="flex items-center gap-2 text-[11px] text-white/40 mt-1">
+                  <span class="uppercase"><%= item.category %></span>
+                  <span>·</span>
+                  <span><%= item.source_name || 'Unknown' %></span>
+                  <span>·</span>
+                  <span><%= new Date(item.collected_at).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' }) %></span>
+                </div>
+              </div>
+              <button @click="editing = !editing" class="text-[11px] text-white/30 hover:text-white/70 border border-white/10 px-2 py-1 rounded-md transition shrink-0">
+                Edit note
+              </button>
+            </div>
+            <div class="mt-2.5">
+              <template x-if="!editing">
+                <p class="text-xs text-red-300/80 bg-red-500/10 border border-red-500/20 rounded-md px-2.5 py-1.5" x-text="comment || '(no comment)'"></p>
+              </template>
+              <template x-if="editing">
+                <div class="flex gap-2">
+                  <textarea x-model="comment" rows="2" class="flex-1 bg-white/5 border border-white/10 rounded-md px-2.5 py-1.5 text-xs text-white placeholder-white/30 focus:border-red-500/50 focus:outline-none resize-none"></textarea>
+                  <button @click="
+                    fetch('/admin/items/<%= item.id %>/comment', {
+                      method: 'POST',
+                      headers: {'Content-Type':'application/x-www-form-urlencoded'},
+                      body: 'comment=' + encodeURIComponent(comment)
+                    }).then(() => editing = false)"
+                    class="text-xs px-3 py-1.5 bg-red-500/20 text-red-300 hover:bg-red-500/30 rounded-md font-medium transition self-end">Save</button>
+                </div>
+              </template>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+</div>

@@ -215,6 +215,121 @@ Respond in JSON only (no markdown fences):
   }
 }
 
+/**
+ * Re-enrich a single item with optional extra feedback injected into the prompt.
+ * Used by the admin 🔁 button to immediately apply feedback to a specific item.
+ */
+export async function enrichSingleItem(itemId: string, extraFeedback?: string): Promise<boolean> {
+  const client = getClient();
+  if (!client) return false;
+
+  const { rows } = await pool.query<ItemRow>(
+    `SELECT id, title, summary, category, region, url, expires_at FROM collected_items WHERE id = $1`,
+    [itemId]
+  );
+  if (!rows[0]) return false;
+  const item = rows[0];
+
+  const itemDescription = `[1] Title: ${item.title}\nSummary: ${item.summary || "none"}\nCategory: ${item.category}\nRegion: ${item.region}\nURL: ${item.url || "none"}\nExpires: ${item.expires_at || "unknown"}`;
+
+  let feedbackContext = "";
+  try {
+    feedbackContext = await getDownvoteFeedbackContext();
+  } catch {}
+
+  if (extraFeedback?.trim()) {
+    feedbackContext += `\nSPECIFIC FEEDBACK FOR THIS ITEM: ${extraFeedback.trim()}\nApply this feedback when rewriting the headline and summary.`;
+  }
+
+  const categorySlugs = CATEGORIES.map((c) => c.slug).join(", ");
+
+  try {
+    const resp = await client.messages.create({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 512,
+      messages: [
+        {
+          role: "user",
+          content: `You are an intelligence analyst for a regional platform serving people actively building resilient, off-grid, and rural communities in British Columbia and Alberta, Canada.
+
+Categories: ${categoryList}
+
+CONTENT FILTERING RULES (strict):
+- EXCLUDE: ESG/DEI-related incentives or programs
+- EXCLUDE: Nursing positions, clinical health jobs, hospital/medical job postings
+- EXCLUDE: Aspirational "dreamer" content with no concrete details
+- FOCUS ON: Concrete, actionable items for people actively investing in resilience infrastructure
+- If an item should be excluded based on these rules, set its score to 0.0
+${feedbackContext}
+
+Item to re-analyze:
+${itemDescription}
+
+Respond in JSON only (no markdown fences):
+{"items": [{"index": 1, "headline": "...", "summary": "...", "actionability": "...", "score": 0.7, "best_category": "grants", "expires": null, "details": null}]}`,
+        },
+      ],
+    });
+
+    await trackUsage({
+      service: "anthropic",
+      operation: "enrichment-single",
+      inputTokens: resp.usage.input_tokens,
+      outputTokens: resp.usage.output_tokens,
+      units: 1,
+      metadata: { model: "claude-haiku-4-5-20251001", itemId },
+    });
+
+    const text = (resp.content[0] as any).text;
+    let cleaned = text.trim();
+    if (cleaned.startsWith("```")) {
+      cleaned = cleaned.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "");
+    }
+    const firstBrace = cleaned.indexOf("{");
+    const lastBrace = cleaned.lastIndexOf("}");
+    if (firstBrace >= 0 && lastBrace > firstBrace) {
+      cleaned = cleaned.substring(firstBrace, lastBrace + 1);
+    }
+    const parsed = JSON.parse(cleaned);
+    const e = (parsed.items || [])[0];
+    if (!e) return false;
+
+    if (typeof e.score === "number" && e.score === 0) {
+      await pool.query(
+        `UPDATE collected_items SET ai_score = 0, status = 'archived', enriched_at = now() WHERE id = $1`,
+        [itemId]
+      );
+    } else {
+      await pool.query(
+        `UPDATE collected_items SET
+          ai_headline = $1,
+          ai_summary = $2,
+          ai_actionability = $3,
+          ai_score = $4,
+          category = COALESCE($5, category),
+          expires_at = COALESCE($6, expires_at),
+          details = COALESCE($7::jsonb, details),
+          enriched_at = now()
+         WHERE id = $8`,
+        [
+          e.headline?.substring(0, 300) || null,
+          e.summary?.substring(0, 500) || null,
+          e.actionability?.substring(0, 200) || null,
+          typeof e.score === "number" ? e.score : null,
+          e.best_category || null,
+          e.expires || null,
+          e.details ? JSON.stringify(e.details) : null,
+          itemId,
+        ]
+      );
+    }
+    return true;
+  } catch (err: any) {
+    console.error("[Enrichment] Single-item error:", err.message);
+    return false;
+  }
+}
+
 export function startEnrichmentLoop() {
   // Run every 5 minutes
   const interval = setInterval(async () => {

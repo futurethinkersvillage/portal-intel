@@ -106,6 +106,38 @@
             </button>
           </div>
 
+          <!-- Re-enrich with feedback button -->
+          <div x-data="{ showReenrich: false, reenrichNote: '', reenriching: false, done: false }" class="relative">
+            <button @click="showReenrich = !showReenrich"
+              class="p-1.5 rounded-md transition-colors text-white/30 hover:text-sky-400 hover:bg-sky-500/10"
+              title="Re-generate with feedback">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            </button>
+            <div x-show="showReenrich" style="display:none" class="absolute right-0 top-8 z-10 w-64 bg-warm-dark border border-white/10 rounded-lg p-2.5 shadow-xl">
+              <p class="text-[10px] text-sky-400 font-medium mb-1.5">Re-generate with feedback</p>
+              <textarea x-model="reenrichNote" rows="2" placeholder="What should change? (optional)"
+                class="w-full bg-white/5 border border-white/10 rounded-md px-2 py-1.5 text-xs text-white placeholder-white/30 focus:border-sky-500/50 focus:outline-none transition-colors resize-none"></textarea>
+              <div class="flex gap-1.5 mt-2">
+                <button @click="
+                  reenriching = true;
+                  fetch('/admin/items/' + item.id + '/reenrich', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/x-www-form-urlencoded'},
+                    body: 'feedback=' + encodeURIComponent(reenrichNote)
+                  }).then(r => r.json()).then(d => {
+                    reenriching = false;
+                    if (d.ok) { done = true; showReenrich = false; setTimeout(() => location.reload(), 800); }
+                  });"
+                  :disabled="reenriching"
+                  class="flex-1 text-xs py-1.5 rounded-md bg-sky-500/20 text-sky-300 hover:bg-sky-500/30 font-medium transition disabled:opacity-50">
+                  <span x-show="!reenriching">Regenerate</span>
+                  <span x-show="reenriching">Working…</span>
+                </button>
+                <button @click="showReenrich = false" class="text-xs px-2 py-1.5 text-white/40 hover:text-white/60 hover:bg-white/5 rounded-md transition">Cancel</button>
+              </div>
+            </div>
+          </div>
+
           <!-- Comment box — appears after clicking up/down -->
           <div x-show="showComment" style="display:none" class="w-64 bg-warm-dark border border-white/10 rounded-lg p-2.5 mt-0.5">
             <p class="text-[10px] mb-1.5 font-medium" :class="pendingVote === 1 ? 'text-emerald-400' : 'text-red-400'" x-text="pendingVote === 1 ? 'Why is this good?' : 'Why is this bad?'"></p>
