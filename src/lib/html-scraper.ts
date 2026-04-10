@@ -6,6 +6,7 @@
 import * as cheerio from "cheerio";
 import Anthropic from "@anthropic-ai/sdk";
 import { trackUsage } from "./api-usage.js";
+import { getIntelStandards } from "./intel-standards.js";
 
 export interface ScrapedItem {
   title: string;
@@ -127,6 +128,9 @@ export async function scrapeUrl(
           role: "user",
           content: `${prompt}
 
+CONTENT STANDARDS — apply these when deciding what to extract:
+${getIntelStandards()}
+
 PAGE CONTENT:
 ${mainContent}
 
@@ -135,6 +139,7 @@ Return ONLY valid JSON with this shape (no markdown fences):
 
 Rules:
 - Include only distinct, actionable items (listings, grants, jobs, events). Skip nav links, disclaimers, footers.
+- Apply the CONTENT STANDARDS above — do NOT extract items that would score 0.0 (bike parts, tourism marketing, obituaries, sports, out-of-province jobs, ESG programs, etc.)
 - "category" must be one of: ${categories.join(", ")}
 - Omit fields that are not present. Return {"items":[]} if nothing relevant found.`,
         },

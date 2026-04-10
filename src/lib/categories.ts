@@ -1,5 +1,6 @@
 export const CATEGORIES = [
   { slug: "land", label: "Rural Land & Property", description: "Homesteads, campsites, glamping retreats, tiny home villages, park model RV sites, recreational land, and rural real estate across BC and Alberta", icon: "🏔️", color: "emerald" },
+  { slug: "intl-land", label: "International Land", description: "Resorts, retreat centers, eco-lodges, farms, and rural land for sale in Argentina, Colombia, and other target countries — priced in USD with operational potential", icon: "🌎", color: "lime" },
   { slug: "grants", label: "Grants & Funding", description: "Rural land development, farming, land-based hospitality, glamping, off-grid energy grants and incentive programs", icon: "💰", color: "amber" },
   { slug: "community", label: "Community & Network", description: "People, profiles, services offered and needed, maker spaces, networking for builders and operators", icon: "🤝", color: "sky" },
   { slug: "jobs", label: "Jobs & Work", description: "Remote work, farmhand/work-stay, living-off-the-land employment opportunities", icon: "💼", color: "violet" },
@@ -11,22 +12,25 @@ export const CATEGORIES = [
 export const REGIONS = [
   { slug: "bc", label: "British Columbia" },
   { slug: "ab", label: "Alberta" },
+  { slug: "intl", label: "International" },
   { slug: "national", label: "National" },
 ] as const;
 
 // Color mappings for category badges (Tailwind classes)
 export const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
-  land:      { bg: "bg-emerald-500/10", text: "text-emerald-400" },
-  grants:    { bg: "bg-amber-500/10",   text: "text-amber-400" },
-  community: { bg: "bg-sky-500/10",     text: "text-sky-400" },
-  jobs:      { bg: "bg-violet-500/10",  text: "text-violet-400" },
-  events:    { bg: "bg-rose-500/10",    text: "text-rose-400" },
-  buysell:   { bg: "bg-teal-500/10",   text: "text-teal-400" },
-  risks:     { bg: "bg-red-500/10",    text: "text-red-400" },
+  land:       { bg: "bg-emerald-500/10", text: "text-emerald-400" },
+  "intl-land":{ bg: "bg-lime-500/10",    text: "text-lime-400" },
+  grants:     { bg: "bg-amber-500/10",   text: "text-amber-400" },
+  community:  { bg: "bg-sky-500/10",     text: "text-sky-400" },
+  jobs:       { bg: "bg-violet-500/10",  text: "text-violet-400" },
+  events:     { bg: "bg-rose-500/10",    text: "text-rose-400" },
+  buysell:    { bg: "bg-teal-500/10",    text: "text-teal-400" },
+  risks:      { bg: "bg-red-500/10",     text: "text-red-400" },
 };
 
 export const CATEGORY_ICONS: Record<string, string> = {
   land: "🏔️",
+  "intl-land": "🌎",
   grants: "💰",
   community: "🤝",
   jobs: "💼",

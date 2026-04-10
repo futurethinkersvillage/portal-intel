@@ -3,6 +3,7 @@ import pool from "../lib/db.js";
 import { CATEGORIES } from "../lib/categories.js";
 import { trackUsage } from "../lib/api-usage.js";
 import { getDownvoteFeedbackContext } from "../lib/feedback-context.js";
+import { getIntelStandards } from "../lib/intel-standards.js";
 
 const categoryList = CATEGORIES.map((c) => `${c.slug}: ${c.label}`).join(", ");
 
@@ -69,14 +70,7 @@ export async function enrichItems() {
 
 Categories: ${categoryList}
 
-CONTENT FILTERING RULES (strict):
-- EXCLUDE: ESG/DEI-related incentives or programs
-- EXCLUDE: Nursing positions, clinical health jobs, hospital/medical job postings
-- EXCLUDE: Aspirational "dreamer" content with no concrete details, no experience, no track record
-- EXCLUDE: Generic government press releases with no actionable content
-- FOCUS ON: Concrete, actionable items for people actively investing in resilience infrastructure
-- For health/wellness: include holistic wellness only, NOT clinical/nursing/medical
-- If an item should be excluded based on these rules, set its score to 0.0
+${getIntelStandards()}
 ${feedbackContext}
 Items to analyze:
 ${itemDescriptions}
@@ -254,12 +248,7 @@ export async function enrichSingleItem(itemId: string, extraFeedback?: string): 
 
 Categories: ${categoryList}
 
-CONTENT FILTERING RULES (strict):
-- EXCLUDE: ESG/DEI-related incentives or programs
-- EXCLUDE: Nursing positions, clinical health jobs, hospital/medical job postings
-- EXCLUDE: Aspirational "dreamer" content with no concrete details
-- FOCUS ON: Concrete, actionable items for people actively investing in resilience infrastructure
-- If an item should be excluded based on these rules, set its score to 0.0
+${getIntelStandards()}
 ${feedbackContext}
 
 Item to re-analyze:
