@@ -33,9 +33,17 @@ function buildPrompt(categories: string[], region: string): string {
     .map((slug) => CATEGORIES.find((c) => c.slug === slug)?.label || slug)
     .join(", ");
 
-  return `Extract all distinct opportunities, listings, programs, events, or items from this page that are relevant to: ${catNames}. This is for a regional intelligence platform serving people actively building resilient, off-grid, and rural communities in British Columbia and Alberta, Canada.
+  const regionContext = region === "intl"
+    ? "Argentina and Colombia (primary focus: rural properties, eco-lodges, retreat centers, farms, ranches priced in USD)"
+    : "British Columbia and Alberta, Canada";
 
-Focus on actionable items — things people can apply to, attend, buy, or act on. For each item extract: title, a brief description, the URL/link, any date or deadline, location if mentioned, and price if mentioned.
+  const intlExtra = region === "intl"
+    ? "\n\nFor international land: extract price in USD, property size (hectares or acres), exact location (region/department/province), and any contact or inquiry details. Prioritize operational properties (working lodges, farms, retreat centers) over raw land."
+    : "";
+
+  return `Extract all distinct opportunities, listings, programs, events, or items from this page that are relevant to: ${catNames}. This is for a regional intelligence platform serving people actively building resilient, off-grid, and rural communities in ${regionContext}.
+
+Focus on actionable items — things people can apply to, attend, buy, or act on. For each item extract: title, a brief description, the URL/link, any date or deadline, location if mentioned, and price if mentioned.${intlExtra}
 
 EXCLUDE: ESG/DEI-specific incentives, nursing/clinical health job postings, aspirational content without concrete details. Focus on items relevant to builders, investors, and operators with real experience in resilience infrastructure.
 

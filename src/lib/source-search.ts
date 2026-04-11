@@ -142,8 +142,8 @@ Extract and recommend 3-8 sources (RSS feeds, data portals, news sites, listing 
 - name: Short descriptive name
 - url: The actual URL
 - type: "rss" if it's an RSS/Atom feed, "api" if it's an API, "html" if it needs scraping
-- categories: Array of matching category slugs from: land, grants, operators, jobs, events, infrastructure
-- region: "bc", "ab", or "national"
+- categories: Array of matching category slugs from: land, intl-land, grants, community, jobs, events, buysell, risks
+- region: "bc", "ab", "national", or "intl" (use "intl" for Argentina/Colombia sources)
 - description: What kind of data this source provides
 - confidence: "high" if you're sure it exists and is useful, "medium" if likely useful, "low" if uncertain
 
