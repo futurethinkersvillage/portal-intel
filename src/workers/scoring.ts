@@ -1,4 +1,5 @@
 import pool from "../lib/db.js";
+import { isEnabled } from "../lib/system-settings.js";
 
 const WEIGHTS = {
   recency: 0.20,
@@ -161,6 +162,7 @@ export function startScoringLoop() {
   // Score every 30 minutes
   const interval = setInterval(async () => {
     try {
+      if (!(await isEnabled("scoring_enabled"))) return;
       await scoreItems();
       await expireItems();
     } catch (err) {

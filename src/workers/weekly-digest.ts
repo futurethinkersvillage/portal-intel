@@ -1,5 +1,6 @@
 import pool from "../lib/db.js";
 import { sendBulkEmails } from "../lib/email.js";
+import { isEnabled } from "../lib/system-settings.js";
 import { trackUsage } from "../lib/api-usage.js";
 import { CATEGORIES } from "../lib/categories.js";
 
@@ -168,6 +169,7 @@ export async function sendWeeklyDigest() {
 // Runs every Sunday at 8am (checks if it's time)
 export function startWeeklyDigestLoop() {
   const checkAndSend = async () => {
+    if (!(await isEnabled("digest_enabled"))) return;
     const now = new Date();
     // Run on Sundays (day 0) between 8:00–8:59am
     if (now.getUTCDay() === 0 && now.getUTCHours() === 15) { // 15 UTC = ~8am PT

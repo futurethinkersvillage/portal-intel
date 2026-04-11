@@ -4,6 +4,7 @@ import { CATEGORIES } from "../lib/categories.js";
 import { trackUsage } from "../lib/api-usage.js";
 import { getDownvoteFeedbackContext } from "../lib/feedback-context.js";
 import { getIntelStandards } from "../lib/intel-standards.js";
+import { isEnabled } from "../lib/system-settings.js";
 
 const categoryList = CATEGORIES.map((c) => `${c.slug}: ${c.label}`).join(", ");
 
@@ -323,14 +324,15 @@ export function startEnrichmentLoop() {
   // Run every 5 minutes
   const interval = setInterval(async () => {
     try {
+      if (!(await isEnabled("enrichment_enabled"))) return;
       await enrichItems();
     } catch (err) {
       console.error("[Enrichment] Loop error:", err);
     }
   }, 5 * 60 * 1000);
 
-  // Run immediately
-  enrichItems().catch(console.error);
+  // Do NOT run immediately on startup — wait for first interval tick
+  // (enrichment_enabled flag controls whether it runs)
 
   return interval;
 }

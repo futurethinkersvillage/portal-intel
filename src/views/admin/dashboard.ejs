@@ -59,6 +59,41 @@
     </div>
   <% } %>
 
+  <!-- Worker Controls -->
+  <div class="bg-stone-900/60 border border-stone-800/60 rounded-2xl p-5 mb-8" x-data="{}">
+    <h2 class="text-xs font-semibold tracking-widest uppercase text-stone-500 mb-4 flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+      Worker Controls
+    </h2>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <% (workerSettings || []).forEach(function(setting) { %>
+        <div x-data="{ enabled: <%= setting.value === 'true' ? 'true' : 'false' %>, loading: false }"
+             class="flex items-center justify-between gap-3 bg-stone-800/40 rounded-xl px-4 py-3 border transition-colors"
+             :class="enabled ? 'border-emerald-500/30' : 'border-stone-700/40'">
+          <div class="min-w-0">
+            <div class="text-sm font-medium" :class="enabled ? 'text-white' : 'text-stone-400'"><%= setting.label %></div>
+            <div class="text-xs text-stone-600 mt-0.5 leading-snug"><%= setting.description %></div>
+          </div>
+          <button
+            @click="
+              loading = true;
+              fetch('/admin/settings/toggle/<%= setting.key %>', { method: 'POST' })
+                .then(r => r.json())
+                .then(d => { enabled = d.value === 'true'; loading = false; })
+                .catch(() => { loading = false; });
+            "
+            :disabled="loading"
+            class="shrink-0 w-11 h-6 rounded-full transition-colors relative focus:outline-none disabled:opacity-50"
+            :class="enabled ? 'bg-emerald-500' : 'bg-stone-700'"
+            :title="enabled ? 'Click to disable' : 'Click to enable'">
+            <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"
+                  :class="enabled ? 'translate-x-5' : 'translate-x-0'"></span>
+          </button>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+
   <!-- Stat Tiles -->
   <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
     <div class="bg-stone-900/60 border border-brand-600/30 rounded-2xl p-5 hover:border-brand-500/50 transition-colors">

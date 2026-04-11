@@ -1,5 +1,6 @@
 import pool from "../lib/db.js";
 import { sendEmail } from "../lib/email.js";
+import { isEnabled } from "../lib/system-settings.js";
 
 const baseUrl = process.env.BASE_URL || "http://localhost:3000";
 
@@ -97,7 +98,8 @@ export async function sendDailyAlerts() {
 
 // Run daily at 8am
 export function startDailyAlertLoop() {
-  const interval = setInterval(() => {
+  const interval = setInterval(async () => {
+    if (!(await isEnabled("alerts_enabled"))) return;
     sendDailyAlerts().catch(console.error);
   }, 24 * 60 * 60 * 1000);
 

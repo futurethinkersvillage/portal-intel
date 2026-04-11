@@ -6,6 +6,7 @@ import { aiSourceSearch } from "../lib/source-search.js";
 import { generateEditorialIntro } from "../lib/newsletter-editorial.js";
 import { getUsageSummary } from "../lib/api-usage.js";
 import { sendBulkEmails } from "../lib/email.js";
+import { getAllSettings, setSetting } from "../lib/system-settings.js";
 import pool from "../lib/db.js";
 
 export async function adminRoutes(app: FastifyInstance) {
@@ -16,12 +17,13 @@ export async function adminRoutes(app: FastifyInstance) {
     const user = (request as any).user;
     const query = request.query as { scraped?: string; reenrich?: string; zoom_synced?: string; zoom_error?: string };
 
-    const [itemCount, subCount, pendingSubs, sourceCount, usage] = await Promise.all([
+    const [itemCount, subCount, pendingSubs, sourceCount, usage, workerSettings] = await Promise.all([
       pool.query(`SELECT COUNT(*) as count FROM collected_items WHERE status != 'archived'`),
       pool.query(`SELECT COUNT(*) as count FROM user_profiles WHERE status = 'active'`),
       pool.query(`SELECT COUNT(*) as count FROM submissions WHERE status = 'pending'`),
       pool.query(`SELECT COUNT(*) as count FROM sources WHERE active = true`),
       getUsageSummary(),
+      getAllSettings(),
     ]);
 
     return reply.view("admin/dashboard.ejs", {
@@ -33,6 +35,7 @@ export async function adminRoutes(app: FastifyInstance) {
         sources: sourceCount.rows[0].count,
       },
       usage,
+      workerSettings,
       scrapedCount: query.scraped ? parseInt(query.scraped) : null,
       reenrichCount: query.reenrich ? parseInt(query.reenrich) : null,
       zoomSyncedCount: query.zoom_synced ? parseInt(query.zoom_synced) : null,
@@ -91,6 +94,18 @@ export async function adminRoutes(app: FastifyInstance) {
     if (source.type === "rss") await rssQueue.add(`rss-manual-${source.id}`, jobData, { removeOnComplete: 10, removeOnFail: 10 });
     else if (source.type === "html") await htmlQueue.add(`html-manual-${source.id}`, jobData, { removeOnComplete: 10, removeOnFail: 10 });
     return reply.redirect("/admin/sources");
+  });
+
+  // Toggle a worker setting on/off
+  app.post("/settings/toggle/:key", async (request, reply) => {
+    const { key } = request.params as { key: string };
+    const allowed = ["enrichment_enabled", "scraping_enabled", "alerts_enabled", "digest_enabled", "scoring_enabled"];
+    if (!allowed.includes(key)) return reply.code(400).send({ error: "Unknown setting" });
+    const current = await getAllSettings();
+    const setting = current.find(s => s.key === key);
+    const newValue = setting?.value === "true" ? "false" : "true";
+    await setSetting(key, newValue);
+    return reply.send({ key, value: newValue });
   });
 
   // Force re-enrichment of existing items (resets enriched_at so enrichment worker picks them up)
