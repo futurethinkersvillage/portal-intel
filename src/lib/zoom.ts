@@ -132,7 +132,9 @@ export async function getMeeting(meetingId: number | string): Promise<ZoomMeetin
 
 /**
  * Check if a meeting topic matches the Portal Intel keyword filter.
- * Returns the matched categories, or empty array if it doesn't match.
+ * Returns category tags derived from the topic, or a generic ["general"] tag if no
+ * specific category matches — so all meetings from the account are synced.
+ * The admin controls visibility via the is_public flag per call.
  */
 export function matchTopicKeywords(topic: string, agenda?: string): string[] {
   const text = `${topic || ""} ${agenda || ""}`.toLowerCase();
@@ -142,8 +144,8 @@ export function matchTopicKeywords(topic: string, agenda?: string): string[] {
   if (/\b(land|property|homestead|farm|acreage|ranch|rural|village|off[- ]grid|off grid)\b/.test(text)) {
     matches.push("land");
   }
-  // Portal.Place specific
-  if (/\b(portal\.?place|portal place|smart village|wells gray)\b/.test(text)) {
+  // Portal.Place / FutureThinkers specific
+  if (/\b(portal\.?place|portal place|smart village|wells gray|futurethinkers?)\b/.test(text)) {
     matches.push("portal");
   }
   // Resilience / community building
@@ -153,6 +155,16 @@ export function matchTopicKeywords(topic: string, agenda?: string): string[] {
   // AI / tech
   if (/\b(ai|artificial intelligence|agent|llm|machine learning|claude|gpt|automation)\b/.test(text)) {
     matches.push("ai");
+  }
+  // Network / community calls
+  if (/\b(network|western canada|global network|community call|office hours|mastermind)\b/.test(text)) {
+    matches.push("community");
+  }
+
+  // Default: tag as "general" so all meetings from this account are synced.
+  // Admin can toggle is_public to hide/show individual calls.
+  if (matches.length === 0) {
+    matches.push("general");
   }
 
   return matches;

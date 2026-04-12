@@ -6,8 +6,6 @@
  * admin to review + confirm before inserting into the meetups table.
  */
 
-import { FirecrawlClient } from "firecrawl";
-
 export interface ScrapedFacebookEvent {
   title: string;
   description?: string;
@@ -52,19 +50,22 @@ export async function scrapeFacebookEvent(url: string): Promise<ScrapedFacebookE
     // Use as-is
   }
 
+  // Dynamically import Firecrawl
+  let FirecrawlClient: any;
+  try {
+    const mod = await import("firecrawl" as any);
+    FirecrawlClient = mod.FirecrawlClient || mod.default?.FirecrawlClient;
+  } catch {
+    throw new Error("Firecrawl package not available");
+  }
+
   const client = new FirecrawlClient({ apiKey });
 
   const prompt = `Extract the Facebook event details from this page. Return the event title, full description, start and end date/time (ISO 8601 format), location (venue name or city), full address if shown, image URL for the cover photo, host/organizer name, and number of attendees going. If any field is not visible, omit it.`;
 
   try {
     const result = await client.scrape(cleanUrl, {
-      formats: [
-        {
-          type: "json",
-          prompt,
-          schema: eventSchema,
-        },
-      ],
+      formats: [{ type: "json", prompt, schema: eventSchema }],
       waitFor: 5000,
       onlyMainContent: true,
     });

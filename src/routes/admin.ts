@@ -896,13 +896,44 @@ export async function adminRoutes(app: FastifyInstance) {
   // Meetup management
   app.get("/events", async (request, reply) => {
     const user = (request as any).user;
-    const query = request.query as { fb_url?: string; fb_error?: string; fb_imported?: string; call_created?: string };
+    const query = request.query as { fb_url?: string; fb_error?: string; fb_imported?: string; call_created?: string; zoom_synced?: string; zoom_error?: string };
     const { rows: meetups } = await pool.query(
       `SELECT m.*, COUNT(r.id)::int as rsvp_count
        FROM meetups m LEFT JOIN meetup_rsvps r ON r.meetup_id = m.id
        GROUP BY m.id ORDER BY m.event_date DESC`
     );
-    return reply.view("admin/events.ejs", { user, meetups, flash: query });
+    const { rows: calls } = await pool.query(
+      `SELECT * FROM calls ORDER BY scheduled_at DESC LIMIT 100`
+    );
+    return reply.view("admin/events.ejs", { user, meetups, calls, flash: query });
+  });
+
+  // Toggle call visibility
+  app.post("/calls/:id/toggle-public", async (request, reply) => {
+    const { id } = request.params as { id: string };
+    await pool.query(
+      `UPDATE calls SET is_public = NOT is_public WHERE id = $1`, [id]
+    );
+    return reply.redirect("/admin/events");
+  });
+
+  // Delete a call
+  app.post("/calls/:id/delete", async (request, reply) => {
+    const { id } = request.params as { id: string };
+    await pool.query(`DELETE FROM calls WHERE id = $1`, [id]);
+    return reply.redirect("/admin/events");
+  });
+
+  // Sync Zoom from events admin page
+  app.post("/sync-zoom-events", async (request, reply) => {
+    try {
+      const { syncZoomCalls } = await import("../workers/zoom-sync.js");
+      const result = await syncZoomCalls();
+      const total = result.upcomingAdded + result.upcomingUpdated + result.pastAdded + result.pastUpdated;
+      return reply.redirect(`/admin/events?zoom_synced=${total}`);
+    } catch (err: any) {
+      return reply.redirect(`/admin/events?zoom_error=${encodeURIComponent(err.message)}`);
+    }
   });
 
   app.post("/events", async (request, reply) => {
