@@ -34,6 +34,12 @@ export async function syncZoomCalls(): Promise<ZoomSyncResult> {
     result.upcomingFetched = upcoming.length;
 
     for (const m of upcoming) {
+      // Skip permanent/instant meeting rooms with no scheduled time
+      if (!m.start_time) {
+        result.skipped++;
+        continue;
+      }
+
       const categories = matchTopicKeywords(m.topic, m.agenda);
       if (categories.length === 0) {
         result.skipped++;
