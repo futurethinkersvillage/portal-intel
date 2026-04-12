@@ -46,8 +46,9 @@ export async function syncZoomCalls(): Promise<ZoomSyncResult> {
         continue;
       }
 
-      // Use uuid (unique per occurrence) for recurring meetings, fall back to id for one-off meetings
-      const meetingKey = m.uuid || String(m.id);
+      // Build a key unique per occurrence: "id:start_time" for recurring, plain id for one-off
+      // Zoom UUIDs are only unique after the meeting happens; upcoming occurrences share the same uuid
+      const meetingKey = `${m.id}:${m.start_time}`;
       const { rows: existing } = await pool.query(
         `SELECT id FROM calls WHERE zoom_meeting_id = $1`,
         [meetingKey]
@@ -114,7 +115,8 @@ export async function syncZoomCalls(): Promise<ZoomSyncResult> {
         continue;
       }
 
-      const meetingKey = rec.uuid || String(rec.id);
+      // For past recordings, uuid is unique per occurrence
+      const meetingKey = rec.uuid || `${rec.id}:${rec.start_time}`;
       // Find the first playable recording file (video)
       const videoFile = rec.recording_files?.find(
         (f) => f.file_type === "MP4" || f.file_type === "SHARED_SCREEN_WITH_SPEAKER_VIEW"
