@@ -46,10 +46,11 @@ export async function syncZoomCalls(): Promise<ZoomSyncResult> {
         continue;
       }
 
-      const meetingId = String(m.id);
+      // Use uuid (unique per occurrence) for recurring meetings, fall back to id for one-off meetings
+      const meetingKey = m.uuid || String(m.id);
       const { rows: existing } = await pool.query(
         `SELECT id FROM calls WHERE zoom_meeting_id = $1`,
-        [meetingId]
+        [meetingKey]
       );
 
       if (existing.length > 0) {
@@ -73,7 +74,7 @@ export async function syncZoomCalls(): Promise<ZoomSyncResult> {
             m.join_url,
             m.registration_url || null,
             categories,
-            meetingId,
+            meetingKey,
           ]
         );
         result.upcomingUpdated++;
@@ -82,7 +83,7 @@ export async function syncZoomCalls(): Promise<ZoomSyncResult> {
           `INSERT INTO calls (zoom_meeting_id, title, description, host_name, scheduled_at, duration_minutes, join_url, registration_url, categories, is_past, source)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, false, 'zoom')`,
           [
-            meetingId,
+            meetingKey,
             m.topic,
             m.agenda || null,
             m.host_email || null,
@@ -113,7 +114,7 @@ export async function syncZoomCalls(): Promise<ZoomSyncResult> {
         continue;
       }
 
-      const meetingId = String(rec.id);
+      const meetingKey = rec.uuid || String(rec.id);
       // Find the first playable recording file (video)
       const videoFile = rec.recording_files?.find(
         (f) => f.file_type === "MP4" || f.file_type === "SHARED_SCREEN_WITH_SPEAKER_VIEW"
@@ -122,7 +123,7 @@ export async function syncZoomCalls(): Promise<ZoomSyncResult> {
 
       const { rows: existing } = await pool.query(
         `SELECT id FROM calls WHERE zoom_meeting_id = $1`,
-        [meetingId]
+        [meetingKey]
       );
 
       if (existing.length > 0) {
@@ -144,7 +145,7 @@ export async function syncZoomCalls(): Promise<ZoomSyncResult> {
             recordingUrl,
             rec.password || null,
             categories,
-            meetingId,
+            meetingKey,
           ]
         );
         result.pastUpdated++;
@@ -153,7 +154,7 @@ export async function syncZoomCalls(): Promise<ZoomSyncResult> {
           `INSERT INTO calls (zoom_meeting_id, title, scheduled_at, duration_minutes, recording_url, recording_password, categories, is_past, source)
            VALUES ($1, $2, $3, $4, $5, $6, $7, true, 'zoom')`,
           [
-            meetingId,
+            meetingKey,
             rec.topic,
             rec.start_time,
             rec.duration,
